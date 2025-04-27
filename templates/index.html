@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>broadCastr v0.0.1</title>
+    <script>
+        async function callFunction(endpoint, outputId) {
+            const userInput = document.getElementById('userInput').value;
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ input: userInput })
+            });
+            const data = await response.json();
+            document.getElementById(outputId).innerText = data.output;
+        }
+    </script>
+</head>
+<body>
+	<h1>broadCastr v0.0.1</h1>
+    <h2>Run Backend Functions</h2>
+
+    <input type="text" id="userInput" input_text="Enter last.fm username">
+    <br><br>
+
+    <button onclick="callFunction('/run_overall', 'outputA')">Get overall top artists and plays</button>
+    <div id="outputA" style="margin-top:10px; margin-bottom:20px; color:blue;"></div>
+
+    <button onclick="callFunction('/run_yearly', 'outputB')">Get yearly top artists and plays</button>
+    <div id="outputB" style="margin-top:10px; margin-bottom:20px; color:green;"></div>
+</body>
+</html>
