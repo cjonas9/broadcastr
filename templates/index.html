@@ -22,13 +22,16 @@
 	<h1>broadCastr v0.0.1</h1>
     <h2>Run Backend Functions</h2>
 
-    <input type="text" id="userInput" input_text="Enter last.fm username">
+    Last.fm User Name: <input type="text" id="userInput" input_text="Enter last.fm username">
     <br><br>
 
-    <button onclick="callFunction('/run_overall', 'outputA')">Get overall top artists and plays</button>
+    <button onclick="callFunction('/run_overall', 'outputA')">Get overall top artists and plays from Last.fm</button>
     <div id="outputA" style="margin-top:10px; margin-bottom:20px; color:blue;"></div>
 
-    <button onclick="callFunction('/run_yearly', 'outputB')">Get yearly top artists and plays</button>
+    <button onclick="callFunction('/run_yearly', 'outputB')">Get yearly top artists and plays from Last.fm</button>
     <div id="outputB" style="margin-top:10px; margin-bottom:20px; color:green;"></div>
+
+    <button onclick="callFunction('/query_users', 'outputC')">Get broadCastr user list from database</button>
+    <div id="outputC" style="margin-top:10px; margin-bottom:20px; color:aqua;"></div>
 </body>
 </html>

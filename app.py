@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import db_query
+import sql_query
 
 app = Flask(__name__)
 
@@ -17,6 +18,11 @@ def run_a():
 def run_b():
     user_input = request.json.get('input')
     result = db_query.get_top_artist_plays_yearly(user_input)
+    return jsonify({'output': result})
+
+@app.route('/query_users', methods=['POST'])
+def run_c():
+    result = sql_query.get_users()
     return jsonify({'output': result})
 
 if __name__ == '__main__':
