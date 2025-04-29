@@ -22,7 +22,7 @@ def run_b():
 
 @app.route('/query_users', methods=['POST'])
 def run_c():
-    result = sql_query.queryUsers()
+    result = sql_query.query_users()
     return jsonify({'output': result})
 
 @app.route('/store_top_artists', methods=['POST'])
@@ -34,7 +34,7 @@ def run_d():
 @app.route('/query_top_artist_data', methods=['POST'])
 def run_e():
     user_input = request.json.get('input')
-    result = sql_query.queryTopArtistData(user_input, "overall")
+    result = sql_query.query_top_artists(user_input, "overall")
     return jsonify({'output': result})
 
 if __name__ == '__main__':
