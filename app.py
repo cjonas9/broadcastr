@@ -8,6 +8,10 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+@app.route('/backend_functions')
+def backend_functions():
+    return render_template('backendfunctions.html')
+
 @app.route('/run_overall', methods=['POST'])
 def run_a():
     user_input = request.json.get('input')
