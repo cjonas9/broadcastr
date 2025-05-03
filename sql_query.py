@@ -107,7 +107,7 @@ def query_top_artists(username, period):
     periodid = query_period_id(period)
 
     cursor.execute(
-        "SELECT User.BroadCastrProfileName, Artist.ArtistName, Period.PeriodName, " \
+        "SELECT User.LastFmProfileName, Artist.ArtistName, Period.PeriodName, " \
         "       TopArtist.Playcount, TopArtist.LastUpdated " \
         "FROM TopArtist " \
         "INNER JOIN User ON TopArtist.UserID = User.UserID " \
