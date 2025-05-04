@@ -128,7 +128,7 @@ def store_artist(artistname, mbid):
     Stores an artist record.
     Args:
         artistname: The name of the artist to store
-        mbid: The artist's last.fm mbid (sometimes blank)
+        mbid: The artist's last.fm mbid (sometimes blank) (mb stands for musicbrainz)
     Returns:
         numeric id of the inserted record
     """

@@ -19,6 +19,20 @@ def get_top_artist_plays():
     result = db_query.get_top_artist_plays(user_input, period)
     return jsonify({'output': result})
 
+@app.route('/get_top_album_plays', methods=['POST'])
+def get_top_album_plays():
+    user_input = request.json.get('input')
+    period = request.json.get('period')
+    result = db_query.get_top_album_plays(user_input, period)
+    return jsonify({'output': result})
+
+@app.route('/get_top_track_plays', methods=['POST'])
+def get_top_track_plays():
+    user_input = request.json.get('input')
+    period = request.json.get('period')
+    result = db_query.get_top_track_plays(user_input, period)
+    return jsonify({'output': result})
+
 @app.route('/query_users', methods=['POST'])
 def query_users():
     result = sql_query.query_users()

@@ -5,16 +5,19 @@ key = "68237ca563ba0ac6a5915f31452b32d1"
 shared_secret = "08921d66963667bccb9f00fe9b35d6e9" # used where?
 
 
-# NOTE: PERIOD CAN BE "7day", "1month", "12month", or "overall"
+# NOTE: PERIOD CAN BE "7day", "1month", "3month", "6month", "12month", or "overall"
 def get_top_artists(username, period, api_key=key, limit=20):
 	url = f"http://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={username}&api_key={api_key}&format=json&limit={limit}&period={period}"
+	return requests.get(url).json()
+
+def get_top_albums(username, period, api_key=key, limit=50):
+	url = f"http://ws.audioscrobbler.com/2.0/?method=user.gettopalbums&user={username}&api_key={api_key}&format=json&limit={limit}&period={period}"
 	return requests.get(url).json()
 
 def get_top_tracks(username, period, api_key=key, limit=50):
 	url = f"http://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={username}&api_key={api_key}&format=json&limit={limit}&period={period}"
 	return requests.get(url).json()
 
-# NOTE: PERIOD CAN BE "7day", "1month", "12month", or "overall"
 def get_artist_playcount(username, artist_name, period, api_key=key):
 	url = f"http://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={username}&api_key={api_key}&format=json&limit=1000&period={period}"
 	data = requests.get(url).json()
@@ -23,7 +26,6 @@ def get_artist_playcount(username, artist_name, period, api_key=key):
 			return int(artist["playcount"])
 	return 0
 
-# NOTE: PERIOD CAN BE "7day", "1month", "12month", or "overall"
 def get_track_playcount(username, track_name, artist_name, period, api_key=key):
 	url = f"http://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={username}&api_key={api_key}&format=json&limit=1000&period={period}"
 	data = requests.get(url).json()
@@ -40,6 +42,28 @@ def get_top_artist_plays(username, period):
 		top_artist_plays.append(top_artists_data[i]["playcount"])
 		top_artists.append(top_artists_data[i]["name"])
 	return pp.pformat(list(zip(top_artists, top_artist_plays)))
+
+def get_top_album_plays(username, period):
+	top_albums_data = get_top_albums(username, period)["topalbums"]["album"]
+	top_albums = []
+	top_albums_artist = []
+	top_albums_plays = []
+	for i in range(len(top_albums_data)):
+		top_albums_plays.append(top_albums_data[i]["playcount"])
+		top_albums_artist.append(top_albums_data[i]["artist"]["name"])
+		top_albums.append(top_albums_data[i]["name"])
+	return pp.pformat(list(zip(top_albums, top_albums_artist, top_albums_plays)))
+
+def get_top_track_plays(username, period):
+	top_tracks_data = get_top_tracks(username, period)["toptracks"]["track"]
+	top_tracks = []
+	top_tracks_artist = []
+	top_tracks_plays = []
+	for i in range(len(top_tracks_data)):
+		top_tracks_plays.append(top_tracks_data[i]["playcount"])
+		top_tracks_artist.append(top_tracks_data[i]["artist"]["name"])
+		top_tracks.append(top_tracks_data[i]["name"])
+	return pp.pformat(list(zip(top_tracks, top_tracks_artist, top_tracks_plays)))
 
 # if __name__ == "__main__":
 	# print(get_top_artist_plays("cjonas41"))
