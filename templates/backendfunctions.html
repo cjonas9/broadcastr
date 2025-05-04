@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>broadCastr v0.0.1</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/backendfunctions.css') }}">
     <script>
         async function callFunction(endpoint, outputId) {
             const userInput = document.getElementById('userInput').value;
@@ -22,24 +23,24 @@
 	<h1>broadCastr v0.0.1</h1>
     <h2>Run Backend Functions</h2>
 
-    Last.fm User Name: <input type="text" id="userInput" input_text="Enter last.fm username">
-    <br><br>
+    <div class="left-panel">
+        Last.fm User Name: <input type="text" id="userInput" input_text="Enter last.fm username" />
+        <br><br>
 
-    <button onclick="callFunction('/run_overall', 'outputA')">Get overall top artists and plays from Last.fm</button>
-    <div id="outputA" style="margin-top:10px; margin-bottom:20px; color:blue;"></div>
+        <button class="function-button" onclick="callFunction('/run_overall', 'output')">Get overall top artists and plays from Last.fm</button><br>
+        <button class="function-button" onclick="callFunction('/run_yearly', 'output')">Get yearly top artists and plays from Last.fm</button><br>
+        <button class="function-button" onclick="callFunction('/query_users', 'output')">Get broadCastr user list from database</button><br>
+        <button class="function-button" onclick="callFunction('/store_top_artists', 'output')">Store overall top artists to database</button><br>
+        <button class="function-button" onclick="callFunction('/query_top_artist_data', 'output')">Display overall top artists from database</button><br>
+    </div>
 
-    <button onclick="callFunction('/run_yearly', 'outputB')">Get yearly top artists and plays from Last.fm</button>
-    <div id="outputB" style="margin-top:10px; margin-bottom:20px; color:green;"></div>
+    <div class="right-panel">
+        <div id="output"></div>
+    </div>
 
-    <button onclick="callFunction('/query_users', 'outputC')">Get broadCastr user list from database</button>
-    <div id="outputC" style="margin-top:10px; margin-bottom:20px; color:aqua;"></div>
-
-    <button onclick="callFunction('/store_top_artists', 'outputD')">Store overall top artists to database</button>
-    <div id="outputD" style="margin-top:10px; margin-bottom:20px; color:black;"></div>
-
-    <button onclick="callFunction('/query_top_artist_data', 'outputE')">Display overall top artists from database</button>
-    <div id="outputE" style="margin-top:10px; margin-bottom:20px; color:black;"></div>
-
-    <a href="/">Link to Home</a>
+    <div class="bottom-panel">
+        <a href="/">Link to Home</a>
+    </div>
+    
 </body>
 </html>
