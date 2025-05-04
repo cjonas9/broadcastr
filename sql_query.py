@@ -59,6 +59,18 @@ def query_album_id(albumname, artistid):
     # Simply doing a name lookup for now, but MBID might be better with name as a fallback
     return query_id("AlbumID", "Album", [["AlbumName", albumname], ["ArtistID", artistid]])
 
+def query_track_id(trackname, artistid):
+    """
+    Queries the database for the numeric id of an track.
+    Args:
+        trackname: The track's name
+        artistid: The numeric database id of the track's artist
+    Returns:
+        numeric track id
+    """
+    # Simply doing a name lookup for now, but MBID might be better with name as a fallback
+    return query_id("TrackID", "Track", [["TrackName", trackname], ["ArtistID", artistid]])
+
 def query_period_id(period):
     """
     Queries the database for the numeric id of a period.
@@ -138,7 +150,7 @@ def query_top_artists(username, period):
         "INNER JOIN Period ON TopArtist.PeriodID = Period.PeriodID " \
         "WHERE TopArtist.UserID = ? " \
         "   AND TopArtist.PeriodID = ? " \
-        "ORDER BY Playcount DESC", (userid, periodid))
+        "ORDER BY TopArtist.Playcount DESC", (userid, periodid))
     data = cursor.fetchall()
 
     cursor.close()
@@ -174,7 +186,44 @@ def query_top_albums(username, period):
         "INNER JOIN Period ON TopAlbum.PeriodID = Period.PeriodID " \
         "WHERE TopAlbum.UserID = ? " \
         "   AND TopAlbum.PeriodID = ? " \
-        "ORDER BY Playcount DESC", (userid, periodid))
+        "ORDER BY TopAlbum.Playcount DESC", (userid, periodid))
+
+    data = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return json.dumps(data)
+
+def query_top_tracks(username, period):
+    """
+    Queries the database for a user's top track data for a specified period.
+    Args:
+        username: The last.fm profile name of the user data to query
+        period: The period to query data for
+    Returns:
+        json results for user's top track data
+    """
+    connection = sqlite3.connect(BROADCASTR_DB)
+    cursor = connection.cursor()
+
+    # Get the user's database id
+    userid = query_user_id(username)
+
+    # Get the period id (should eventually be passed in by id rather than name?)
+    periodid = query_period_id(period)
+
+    cursor.execute(
+        "SELECT User.LastFmProfileName, Track.TrackName, Artist.ArtistName, " \
+        "       Period.PeriodName, TopTrack.Playcount, TopTrack.LastUpdated " \
+        "FROM TopTrack " \
+        "INNER JOIN User ON TopTrack.UserID = User.UserID " \
+        "INNER JOIN Track ON TopTrack.TrackID = Track.TrackID " \
+        "INNER JOIN Artist ON Track.ArtistID = Artist.ArtistID " \
+        "INNER JOIN Period ON TopTrack.PeriodID = Period.PeriodID " \
+        "WHERE TopTrack.UserID = ? " \
+        "   AND TopTrack.PeriodID = ? " \
+        "ORDER BY TopTrack.Playcount DESC", (userid, periodid))
 
     data = cursor.fetchall()
 
@@ -224,6 +273,32 @@ def store_album(albumname, artistid, mbid):
         "INSERT INTO Album (AlbumName, ArtistID, MBID) " \
         "VALUES (?, ?, ?)",
         (albumname, artistid, mbid))
+
+    cursor.close()
+    connection.close()
+
+    print(f"New record ID: {cursor.lastrowid}")
+
+    return cursor.lastrowid
+
+def store_track(trackname, artistid, mbid):
+    """
+    Stores a track record.
+    Args:
+        trackname: The name of the track to store
+        mbid: The track's last.fm mbid (sometimes blank) (mb stands for musicbrainz)
+    Returns:
+        numeric id of the inserted record
+    """
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    print(f"storing track {trackname}, {mbid}")
+
+    cursor.execute(
+        "INSERT INTO Track (TrackName, ArtistID, MBID) " \
+        "VALUES (?, ?, ?)",
+        (trackname, artistid, mbid))
 
     cursor.close()
     connection.close()
@@ -361,6 +436,73 @@ def store_top_album(userid, albumid, periodid, playcount):
 
     return cursor.lastrowid
 
+def store_top_tracks(username, period):
+    """
+    Stores a user's top track data for a specified period.
+    Args:
+        username: The last.fm profile name of the user data to query
+        period: The period to query data for
+    Returns:
+        string indicating success
+    """
+    # Get the user's database id
+    userid = query_user_id(username)
+
+    # Get the period id (should eventually be passed in by id rather than name?)
+    periodid = query_period_id(period)
+
+    # Wipe user top tracks data for this period.
+    delete_top_tracks(userid, periodid)
+
+    # Get updated data
+    top_tracks_data = db_query.get_top_tracks(username, period)["toptracks"]["track"]
+    # print(top_tracks_data)
+
+    # Store updated data
+    for _, top_track in enumerate(top_tracks_data):
+        trackname = top_track["name"]
+        artistname = top_track["artist"]["name"]
+        artistmbid = top_track["artist"]["mbid"]
+        artistid = query_artist_id(artistname)
+        if artistid == 0:
+            artistid = store_artist(artistname, artistmbid)
+        trackmbid = top_track["mbid"]
+        trackid = query_track_id(trackname, artistid)
+        if trackid == 0:
+            trackid = store_track(trackname, artistid, trackmbid)
+
+        store_top_track(userid, trackid, periodid, top_track["playcount"])
+
+    return "top tracks stored successfully!"
+
+def store_top_track(userid, trackid, periodid, playcount):
+    """
+    Stores a user's top track data for a specified track, period, and playcount.
+    Args:
+        userid: The numeric user id
+        trackid: The numeric trackid
+        period: The numeric period id
+        playcount: The playcount for this user/track/period
+    Returns:
+        numeric id of the inserted record
+    """
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    # print(f"storing top track data")
+
+    cursor.execute(
+        "INSERT INTO TopTrack (UserID, TrackID, PeriodID, Playcount, LastUpdated) " \
+        "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", 
+        (userid, trackid, periodid, playcount))
+
+    cursor.close()
+    connection.close()
+
+    print(f"New record ID: {cursor.lastrowid}")
+
+    return cursor.lastrowid
+
 def delete_top_artists(userid, periodid):
     """
     Deletes user's top artist data for a specified period.
@@ -387,6 +529,21 @@ def delete_top_albums(userid, periodid):
     cursor = connection.cursor()
 
     cursor.execute("DELETE FROM TopAlbum WHERE UserID = ? AND PeriodID = ?", (userid, periodid))
+
+    cursor.close()
+    connection.close()
+
+def delete_top_tracks(userid, periodid):
+    """
+    Deletes user's top track data for a specified period.
+    Args:
+        userid: The numeric user id data should be deleted for
+        periodid: The period data should be deleted for
+    """
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    cursor.execute("DELETE FROM TopTrack WHERE UserID = ? AND PeriodID = ?", (userid, periodid))
 
     cursor.close()
     connection.close()

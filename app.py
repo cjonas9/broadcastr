@@ -66,5 +66,19 @@ def query_top_albums():
     result = sql_query.query_top_albums(user_input, period)
     return jsonify({'output': result})
 
+@app.route('/store_top_tracks', methods=['POST'])
+def store_top_tracks():
+    user_input = request.json.get('input')
+    period = request.json.get('period')
+    result = sql_query.store_top_tracks(user_input, period)
+    return jsonify({'output': result})
+
+@app.route('/query_top_tracks', methods=['POST'])
+def query_top_tracks():
+    user_input = request.json.get('input')
+    period = request.json.get('period')
+    result = sql_query.query_top_tracks(user_input, period)
+    return jsonify({'output': result})
+
 if __name__ == '__main__':
     app.run(debug=True)
