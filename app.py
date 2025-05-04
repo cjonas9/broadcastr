@@ -33,6 +33,12 @@ def get_top_track_plays():
     result = db_query.get_top_track_plays(user_input, period)
     return jsonify({'output': result})
 
+@app.route('/get_artist_tags', methods=['POST'])
+def get_artist_tags():
+    artist_input = request.json.get('artist')
+    result = db_query.get_artist_tag_counts(artist_input)
+    return jsonify({'output': result})
+
 @app.route('/query_users', methods=['POST'])
 def query_users():
     result = sql_query.query_users()

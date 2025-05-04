@@ -8,12 +8,17 @@
         async function callFunction(endpoint, outputId) {
             const userInput = document.getElementById('userInput').value;
             const periodInput = document.getElementById('periodInput').value;
+            const artistInput = document.getElementById('artistInput').value;
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ input: userInput, period: periodInput })
+                body: JSON.stringify({ 
+                    input: userInput, 
+                    period: periodInput,
+                    artist: artistInput
+                })
             });
             const data = await response.json();
             document.getElementById(outputId).innerText = data.output;
@@ -37,10 +42,12 @@
             <option value="6month">6 Months</option>
             <option value="12month">12 Months</option>
         </select><br>
+        Artist: <input type="text" id="artistInput" /><br>
         <h3>Interact with Last.fm API</h3>
         <button class="function-button" onclick="callFunction('/get_top_artist_plays', 'output')">Get top artists and plays from Last.fm</button><br>
         <button class="function-button" onclick="callFunction('/get_top_album_plays', 'output')">Get top albums and plays from Last.fm</button><br>
         <button class="function-button" onclick="callFunction('/get_top_track_plays', 'output')">Get top tracks and plays from Last.fm</button><br>
+        <button class="function-button" onclick="callFunction('/get_artist_tags', 'output')">Get an artist's tags from Last.fm</button><br>
         <h3>Database - Users</h3>
         <button class="function-button" onclick="callFunction('/query_users', 'output')">Get broadCastr user list from database</button><br>
         <h3>Database - Artists</h3>

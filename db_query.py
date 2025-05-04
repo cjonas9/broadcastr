@@ -18,6 +18,11 @@ def get_top_tracks(username, period, api_key=key, limit=50):
 	url = f"http://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={username}&api_key={api_key}&format=json&limit={limit}&period={period}"
 	return requests.get(url).json()
 
+def get_artist_tags(artistname, api_key=key):
+	url = f"http://ws.audioscrobbler.com/2.0/?method=artist.gettoptags&artist={artistname}&api_key={api_key}&format=json&autocorrect=0"
+	# print(requests.get(url).json())
+	return requests.get(url).json()
+
 def get_artist_playcount(username, artist_name, period, api_key=key):
 	url = f"http://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user={username}&api_key={api_key}&format=json&limit=1000&period={period}"
 	data = requests.get(url).json()
@@ -64,6 +69,15 @@ def get_top_track_plays(username, period):
 		top_tracks_artist.append(top_tracks_data[i]["artist"]["name"])
 		top_tracks.append(top_tracks_data[i]["name"])
 	return pp.pformat(list(zip(top_tracks, top_tracks_artist, top_tracks_plays)))
+
+def get_artist_tag_counts(artistname):
+	artist_tags_data = get_artist_tags(artistname)["toptags"]["tag"]
+	artist_tags = []
+	artist_tags_count = []
+	for i in range(len(artist_tags_data)):
+		artist_tags.append(artist_tags_data[i]["name"])
+		artist_tags_count.append(artist_tags_data[i]["count"])
+	return pp.pformat(list(zip(artist_tags, artist_tags_count)))
 
 # if __name__ == "__main__":
 	# print(get_top_artist_plays("cjonas41"))

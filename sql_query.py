@@ -61,7 +61,7 @@ def query_album_id(albumname, artistid):
 
 def query_track_id(trackname, artistid):
     """
-    Queries the database for the numeric id of an track.
+    Queries the database for the numeric id of a track.
     Args:
         trackname: The track's name
         artistid: The numeric database id of the track's artist
