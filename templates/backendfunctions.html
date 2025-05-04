@@ -7,12 +7,13 @@
     <script>
         async function callFunction(endpoint, outputId) {
             const userInput = document.getElementById('userInput').value;
+            const periodInput = document.getElementById('periodInput').value;
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ input: userInput })
+                body: JSON.stringify({ input: userInput, period: periodInput })
             });
             const data = await response.json();
             document.getElementById(outputId).innerText = data.output;
@@ -24,14 +25,20 @@
     <h2>Run Backend Functions</h2>
 
     <div class="left-panel">
-        Last.fm User Name: <input type="text" id="userInput" input_text="Enter last.fm username" />
-        <br><br>
-
-        <button class="function-button" onclick="callFunction('/run_overall', 'output')">Get overall top artists and plays from Last.fm</button><br>
-        <button class="function-button" onclick="callFunction('/run_yearly', 'output')">Get yearly top artists and plays from Last.fm</button><br>
+        
+        Last.fm User Name: <input type="text" id="userInput" input_text="" /><br>
+        Period:
+        <select id="periodInput">
+            <option value="overall">Overall</option>
+            <option value="7day">7 Days</option>
+            <option value="1month">1 Month</option>
+            <option value="12month">12 Months</option>
+        </select><br>
+        <br>
+        <button class="function-button" onclick="callFunction('/get_top_artist_plays', 'output')">Get top artists and plays from Last.fm</button><br>
         <button class="function-button" onclick="callFunction('/query_users', 'output')">Get broadCastr user list from database</button><br>
-        <button class="function-button" onclick="callFunction('/store_top_artists', 'output')">Store overall top artists to database</button><br>
-        <button class="function-button" onclick="callFunction('/query_top_artist_data', 'output')">Display overall top artists from database</button><br>
+        <button class="function-button" onclick="callFunction('/store_top_artists', 'output')">Store top artists to database</button><br>
+        <button class="function-button" onclick="callFunction('/query_top_artists', 'output')">Display top artists from database</button><br>
     </div>
 
     <div class="right-panel">

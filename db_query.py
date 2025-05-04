@@ -32,17 +32,8 @@ def get_track_playcount(username, track_name, artist_name, period, api_key=key):
 			return int(track["playcount"])
 	return 0
 
-def get_top_artist_plays_overall(username):
-	top_artists_data = get_top_artists(username, "overall")["topartists"]["artist"]
-	top_artists = []
-	top_artist_plays = []
-	for i in range(len(top_artists_data)):
-		top_artist_plays.append(top_artists_data[i]["playcount"])
-		top_artists.append(top_artists_data[i]["name"])
-	return pp.pformat(list(zip(top_artists, top_artist_plays)))
-
-def get_top_artist_plays_yearly(username):
-	top_artists_data = get_top_artists(username, "12month")["topartists"]["artist"]
+def get_top_artist_plays(username, period):
+	top_artists_data = get_top_artists(username, period)["topartists"]["artist"]
 	top_artists = []
 	top_artist_plays = []
 	for i in range(len(top_artists_data)):

@@ -12,33 +12,30 @@ def index():
 def backend_functions():
     return render_template('backendfunctions.html')
 
-@app.route('/run_overall', methods=['POST'])
-def run_a():
+@app.route('/get_top_artist_plays', methods=['POST'])
+def get_top_artist_plays():
     user_input = request.json.get('input')
-    result = db_query.get_top_artist_plays_overall(user_input)
-    return jsonify({'output': result})
-
-@app.route('/run_yearly', methods=['POST'])
-def run_b():
-    user_input = request.json.get('input')
-    result = db_query.get_top_artist_plays_yearly(user_input)
+    period = request.json.get('period')
+    result = db_query.get_top_artist_plays(user_input, period)
     return jsonify({'output': result})
 
 @app.route('/query_users', methods=['POST'])
-def run_c():
+def query_users():
     result = sql_query.query_users()
     return jsonify({'output': result})
 
 @app.route('/store_top_artists', methods=['POST'])
-def run_d():
+def store_top_artists():
     user_input = request.json.get('input')
-    result = sql_query.store_top_artists(user_input, "overall")
+    period = request.json.get('period')
+    result = sql_query.store_top_artists(user_input, period)
     return jsonify({'output': result})
 
-@app.route('/query_top_artist_data', methods=['POST'])
-def run_e():
+@app.route('/query_top_artists', methods=['POST'])
+def query_top_artists():
     user_input = request.json.get('input')
-    result = sql_query.query_top_artists(user_input, "overall")
+    period = request.json.get('period')
+    result = sql_query.query_top_artists(user_input, period)
     return jsonify({'output': result})
 
 if __name__ == '__main__':
