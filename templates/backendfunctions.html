@@ -26,6 +26,7 @@
 
     <div class="left-panel">
         
+        <h3>Parameters</h3>
         Last.fm User Name: <input type="text" id="userInput" input_text="" /><br>
         Period:
         <select id="periodInput">
@@ -36,13 +37,18 @@
             <option value="6month">6 Months</option>
             <option value="12month">12 Months</option>
         </select><br>
-        <br>
+        <h3>Interact with Last.fm API</h3>
         <button class="function-button" onclick="callFunction('/get_top_artist_plays', 'output')">Get top artists and plays from Last.fm</button><br>
         <button class="function-button" onclick="callFunction('/get_top_album_plays', 'output')">Get top albums and plays from Last.fm</button><br>
         <button class="function-button" onclick="callFunction('/get_top_track_plays', 'output')">Get top tracks and plays from Last.fm</button><br>
+        <h3>Database - Users</h3>
         <button class="function-button" onclick="callFunction('/query_users', 'output')">Get broadCastr user list from database</button><br>
+        <h3>Database - Artists</h3>
         <button class="function-button" onclick="callFunction('/store_top_artists', 'output')">Store top artists to database</button><br>
         <button class="function-button" onclick="callFunction('/query_top_artists', 'output')">Display top artists from database</button><br>
+        <h3>Database - Albums</h3>
+        <button class="function-button" onclick="callFunction('/store_top_albums', 'output')">Store top albums to database</button><br>
+        <button class="function-button" onclick="callFunction('/query_top_albums', 'output')">Display top albums from database</button><br>
         <br>
         <!-- <button class="function-button" onclick="callFunction('/store_all_data_for_all_users', 'output')">Store top artists to database</button><br> -->
     </div>
