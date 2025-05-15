@@ -266,7 +266,7 @@ def query_listens_for_artist(username, artistname, periodname):
     return row[0] if row else 0
 
 
-def get_top_listeners_for_artist(artistname, periodname, limit: int = 10):
+def query_top_listeners_for_artist(artistname, periodname, limit: int = 10):
     """
     Return a list of up to `limit` tuples (username, playcount),
     ordered by playcount DESC, for a given artist + period.
@@ -662,20 +662,32 @@ def init_user(username, firstname, lastname, email):
 		store_top_tracks(username, period)
 		time.sleep(0.05)
 
-# this list is 5 randomly selected NEIGHBORS of Christian, Lucas, and Madison. Asher I can't find ur last.fm name and it's not asher104
-rando_users = ["VanillaM1lk", "Redport2", "auganz", "gianna333", "rowkn", "nscott356", "inawordaverage", "Meto_martinez55", "Gstv0_", "tiez1901", "thereseannec", "Lapanenn", "hayleyukulele", "FadelShoughari", "PedroDark"]
+
+
+#################################################
+#												#
+#				DEAD CODE BELOW					#
+#				USED FOR DB STUFFING			#
+#												#
+#################################################
+
+"""
+# this list is 5 randomly selected NEIGHBORS of Christian, Lucas, and Madison, and Asher.
+rando_users = ["VanillaM1lk", "Redport2", "auganz", "gianna333", "rowkn", "nscott356", "inawordaverage", "Meto_martinez55", "Gstv0_", "tiez1901", "thereseannec", "Lapanenn", "hayleyukulele", "FadelShoughari", "PedroDark", "ericktheonlyone", "JCG_ahhhh", "mrirveing", "yenuu1", "dporterfield18"]
 for user in rando_users:
 	continue
 	init_user(user)
-
-for i, user in enumerate(rando_users):
+# NOTE: If you choose to use this again, you will need to replace 0 with whatever the last "randoUser" index was
+for i, user in enumerate(rando_users, 0):
 	continue
-	store_user(rando_users[i], "randoFirst" + str(i), "randoLast" + str(i), "randoemail" + str(i) + "@stanford.edu")
+	init_user(user, "randoFirst" + str(i), "randoLast" + str(i), "randoemail" + str(i) + "@stanford.edu")
 for user in rando_users:
 	continue
 	print("USER")
 	print(query_top_artists(user, "overall"))
 	print("")
-delete_user("cjonas41")
-init_user("cjonas41", "Christian", "Jonas", "cajon@stanford.edu")
-print(get_top_listeners_for_artist("Bladee", "overall"))
+
+# init_user("zugzug104", "Asher", "Hensley", "asher104@stanford.edu")
+print(get_top_listeners_for_artist("Larry June", "overall"))
+
+"""
