@@ -239,6 +239,61 @@ def query_top_tracks(username, period):
 
 	return json.dumps(data)
 
+def query_listens_for_artist(username, artistname, periodname):
+    """
+    Return the number of scrobbles (playcount) for a single user+artist+period.
+    Returns 0 if no record is found.
+    """
+    sql = """
+    SELECT TA.Playcount
+      FROM TopArtist AS TA
+      JOIN User   AS U ON TA.UserID   = U.UserID
+      JOIN Artist AS A ON TA.ArtistID = A.ArtistID
+      JOIN Period AS P ON TA.PeriodID = P.PeriodID
+     WHERE U.LastFmProfileName = ?
+       AND A.ArtistName       = ?
+       AND P.PeriodName       = ?
+    LIMIT 1
+    """
+
+    conn = sqlite3.connect(BROADCASTR_DB)
+    cur = conn.cursor()
+    cur.execute(sql, (username, artistname, periodname))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    return row[0] if row else 0
+
+
+def get_top_listeners_for_artist(artistname, periodname, limit: int = 10):
+    """
+    Return a list of up to `limit` tuples (username, playcount),
+    ordered by playcount DESC, for a given artist + period.
+    """
+    sql = """
+    SELECT U.LastFmProfileName AS username,
+           TA.Playcount            AS playcount
+      FROM TopArtist AS TA
+      JOIN User   AS U ON TA.UserID   = U.UserID
+      JOIN Artist AS A ON TA.ArtistID = A.ArtistID
+      JOIN Period AS P ON TA.PeriodID = P.PeriodID
+     WHERE A.ArtistName = ?
+       AND P.PeriodName = ?
+     ORDER BY TA.Playcount DESC
+     LIMIT ?
+    """
+
+    conn = sqlite3.connect(BROADCASTR_DB)
+    cur = conn.cursor()
+    cur.execute(sql, (artistname, periodname, limit))
+    results = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # results is List[(username:str, playcount:int)]
+    return results
+
 def store_artist(artistname, mbid):
 	"""
 	Stores an artist record.
@@ -527,6 +582,26 @@ def store_user(username, firstname, lastname, email):
 
 	print(f"New user stored with id: {cursor.lastrowid}")
 
+def delete_user(username):
+    """
+    Deletes the user with the given Last.fm profile name.
+    """
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "DELETE FROM User WHERE LastFmProfileName = ?",
+        (username,)
+    )
+
+    # How many rows were deleted?
+    deleted_count = cursor.rowcount
+
+    cursor.close()
+    connection.close()
+
+    print(f"Deleted {deleted_count} user(s) with username: {username}")
+
 def delete_top_artists(userid, periodid):
 	"""
 	Deletes user's top artist data for a specified period.
@@ -579,7 +654,7 @@ def delete_top_tracks(userid, periodid):
 # We can totally build this up for our needs as we go along
 def init_user(username, firstname, lastname, email):
 	store_user(username, firstname, lastname, email)
-	
+
 	periods = ["overall", "7day", "1month", "12month", "6month", "3month"]
 	for period in periods:
 		store_top_artists(username, period)
@@ -588,13 +663,19 @@ def init_user(username, firstname, lastname, email):
 		time.sleep(0.05)
 
 # this list is 5 randomly selected NEIGHBORS of Christian, Lucas, and Madison. Asher I can't find ur last.fm name and it's not asher104
-rando_users = ["VanillaM1lk", "Redport2", "auganz", "gianna333", "nscott356", "inawordaverage", "Meto_martinez55", "Gstv0_", "tiez1901", "thereseannec", "Lapanenn", "hayleyukulele", "FadelShoughari", "PedroDark"]
+rando_users = ["VanillaM1lk", "Redport2", "auganz", "gianna333", "rowkn", "nscott356", "inawordaverage", "Meto_martinez55", "Gstv0_", "tiez1901", "thereseannec", "Lapanenn", "hayleyukulele", "FadelShoughari", "PedroDark"]
 for user in rando_users:
 	continue
 	init_user(user)
 
-for i, user in enumerate(rando_users[1:], 1):
+for i, user in enumerate(rando_users):
 	continue
 	store_user(rando_users[i], "randoFirst" + str(i), "randoLast" + str(i), "randoemail" + str(i) + "@stanford.edu")
-
-# print(rando_users)
+for user in rando_users:
+	continue
+	print("USER")
+	print(query_top_artists(user, "overall"))
+	print("")
+delete_user("cjonas41")
+init_user("cjonas41", "Christian", "Jonas", "cajon@stanford.edu")
+print(get_top_listeners_for_artist("Bladee", "overall"))
