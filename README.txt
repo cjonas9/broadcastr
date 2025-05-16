@@ -1,7 +1,10 @@
 # INSTALLATION
 Run "pip install -r requirements.txt" from inside the broadcastr directory
 That should install everything this needs.
-Then, run "python app.py" to launch the website and go to the IP it tells you to (for me, and probably for you, it's http://127.0.0.1:5000/)
+IN TWO SEPARATE TERMINALS: 
+In broadcastr/, run python api.py. Then in Website278/, run npm run dev. Then this will be on http://localhost:5000/.
+
+FOR EXAMPLES OF HOW TO USE API to get real data: look at Website278/client/src/pages/ArtistDetail.tsx and Website278/client/src/components/TopArtists.tsx
 
 frontend: from website278 folder
 First time:

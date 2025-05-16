@@ -4,6 +4,11 @@ import sqlite3
 app = Flask(__name__)
 
 BROADCASTR_DB = "./data/broadcastr.db"
+print("Backend is running on port 8000...")
+def get_db_connection():
+    conn = sqlite3.connect(BROADCASTR_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def query_listens_for_artist(username, artistname, periodname):
     """
@@ -87,17 +92,105 @@ def api_listens():
     count  = query_listens_for_artist(user, artist, period)
     return jsonify({ "user": user, "artist": artist, "period": period, "plays": count })
 
-
 @app.route("/api/artist/top-listeners")
 def api_top_listeners():
+    artist = request.args.get("artist", "")
+    period = request.args.get("period", "")
+    limit  = int(request.args.get("limit", "10"))
+    results = query_top_listeners_for_artist(artist, period, limit)
+    # results is List[(username, playcount)]
+    top_listeners = [
+        {"username": row[0], "playcount": row[1]}
+        for row in results
+    ]
+    return jsonify({
+        "artist": artist,
+        "period": period,
+        "topListeners": top_listeners
+    })
+
+@app.route("/api/user/top-artists")
+def api_user_top_artists():
+    """
+    GET /api/user/top-artists?user=<LastFmProfileName>&period=<PeriodName>&limit=<n>
+    Returns JSON:
+      {
+        "topArtists": [
+          { "id": int, "name": str, "scrobbles": int, "imageUrl": str },
+          …
+        ]
+      }
+    """
+    user   = request.args.get("user", "")
+    period = request.args.get("period", "")
+    limit  = int(request.args.get("limit", "10"))
+
+    sql = """
+    SELECT A.ArtistID   AS id,
+           A.ArtistName AS name,
+           TA.Playcount  AS scrobbles
+      FROM TopArtist TA
+      JOIN User   U  ON TA.UserID   = U.UserID
+      JOIN Artist A  ON TA.ArtistID = A.ArtistID
+      JOIN Period P  ON TA.PeriodID = P.PeriodID
+     WHERE U.LastFmProfileName = ?
+       AND P.PeriodName        = ?
+     ORDER BY TA.Playcount DESC
+     LIMIT ?
+    """
+
+    conn = get_db_connection()
+    rows = conn.execute(sql, (user, period, limit)).fetchall()
+    conn.close()
+
+    top_artists = [
+        {
+          "id":          row["id"],
+          "name":        row["name"],
+          "scrobbles":   row["scrobbles"],
+          # If you don’t yet have images in your DB, you can leave it blank:
+          "imageUrl":    ""
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "topArtists": top_artists })
+'''
+@app.route("/api/artist/top-listeners")
+def api_top_listeners():
+    print("hello??")
     """GET /api/artist/top-listeners?artist=…&period=…&limit=…"""
     artist = request.args.get("artist", "")
     period = request.args.get("period", "")
     limit  = int(request.args.get("limit", "10"))
     top    = query_top_listeners_for_artist(artist, period, limit)
     return jsonify({ "artist": artist, "period": period, "topListeners": top })
+'''
+@app.route("/api/artist/by-id")
+@app.route("/artist/by-id")
+def get_artist_by_id():
+    artist_id = request.args.get("id", type=int)
+    if artist_id is None:
+        return jsonify({"error": "Missing or invalid artist ID"}), 400
+
+    conn = get_db_connection()
+    artist = conn.execute(
+        "SELECT ArtistID AS id, ArtistName AS name FROM Artist WHERE ArtistID = ?", (artist_id,)
+    ).fetchone()
+    conn.close()
+
+    if artist is None:
+        return jsonify({"error": "Artist not found"}), 404
+
+    return jsonify({
+        "artist": {
+            "id": artist["id"],
+            "name": artist["name"],
+        }
+    })
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    print("Backend is running on port 8000...")
+    app.run(host='127.0.0.1', port=8000, debug=True)
 
