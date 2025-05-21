@@ -18,6 +18,7 @@ import SwapPointsResults from "./pages/SwapPointsResults";
 import DirectMessage from "./pages/DirectMessage";
 import Feed from "./pages/Feed";
 import Profile from "@/pages/Profile";
+import BroadcastTrack from "./pages/BroadcastTrack";
 
 
 function Router() {
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/swap-points-results" component={SwapPointsResults}/>
       <Route path="/dm/:id" component={DirectMessage}/>
       <Route path="/profile" component={Profile}/>
+      <Route path="/broadcast-track" component={BroadcastTrack}/>
       <Route component={NotFound} />
     </Switch>
   );
