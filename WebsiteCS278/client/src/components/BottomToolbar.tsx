@@ -1,3 +1,10 @@
+/* 
+BottomToolBar.tsx: Component for the bottom toolbar
+-------------------------------------------------
+EXAMPLE USAGE:
+<BottomToolbar />
+*/
+
 import { User, List, Star } from "lucide-react";
 import { useLocation } from "wouter";
 

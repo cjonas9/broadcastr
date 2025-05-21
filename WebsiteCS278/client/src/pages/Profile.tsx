@@ -1,7 +1,7 @@
+// The user's personal profile page
 import ProfileHeader from "@/components/ProfileHeader";
 import { musicData } from "@/data/musicData";
 import TopArtists from "@/components/TopArtists";
-import ExplorationZones from "@/components/ExplorationZones";
 import {BottomToolbar} from "@/components/BottomToolbar";
 
 export default function Profile() {
@@ -16,7 +16,6 @@ export default function Profile() {
       />
       <main className="max-w-md mx-auto px-4 pb-16">
         <TopArtists />
-        <ExplorationZones />
       </main>
     </div>
   );

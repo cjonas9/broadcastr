@@ -1,3 +1,4 @@
+// Placeholder page for another user's profile page
 import { useRoute, useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 
