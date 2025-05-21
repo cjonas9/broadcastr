@@ -92,7 +92,7 @@ export const musicData = {
   friends: [
     {
       id: 101,
-      username: "@musiclover42",
+      username: "musiclover42",
       swag: 220,
       scrobbles: 2105,
       profileImage: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlciUyMHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=100&h=100",
@@ -113,7 +113,7 @@ export const musicData = {
     },
     {
       id: 102,
-      username: "@beatmaster",
+      username: "beatmaster",
       swag: 180,
       scrobbles: 1876,
       profileImage: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dXNlciUyMHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=100&h=100",
