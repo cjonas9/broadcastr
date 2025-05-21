@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/Home";
+import Home from "@/pages/Profile";
 import ArtistDetail from "@/pages/ArtistDetail";
 import ExplorationDetail from "@/pages/ExplorationDetail";
 import Friends from "./pages/Friends";
@@ -16,12 +16,14 @@ import { SwapProvider } from "./context/SwapContext";
 import TrackSwapResults from "./pages/TrackSwapResults";
 import SwapPointsResults from "./pages/SwapPointsResults";
 import DirectMessage from "./pages/DirectMessage";
+import Feed from "./pages/Feed";
+import Profile from "@/pages/Profile";
 
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={Feed} />
       <Route path="/artist/:id" component={ArtistDetail} />
       <Route path="/exploration/:id" component={ExplorationDetail} />
       <Route path="/friends" component={Friends} />
@@ -31,6 +33,7 @@ function Router() {
       <Route path="/track-swap-results" component={TrackSwapResults}/>
       <Route path="/swap-points-results" component={SwapPointsResults}/>
       <Route path="/dm/:id" component={DirectMessage}/>
+      <Route path="/profile" component={Profile}/>
       <Route component={NotFound} />
     </Switch>
   );
