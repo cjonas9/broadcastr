@@ -4,6 +4,8 @@ import { useLocation } from "wouter";
 import { ChevronRightIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
+const VITE_API_URL="https://broadcastr.onrender.com"
+
 type Artist = {
   id: number;
   name: string;
@@ -21,7 +23,7 @@ export default function TopArtists() {
 		// NOTE: THIS PART CAN FETCH WITH SESSION DATA INSTEAD
       try {
         const res = await fetch(
-          `/api/user/top-artists?user=cjonas41&period=overall&limit=10`
+          VITE_API_URL + `/api/user/top-artists?user=cjonas41&period=overall&limit=10`
         );
         const { topArtists } = await res.json();
         setArtists(topArtists);

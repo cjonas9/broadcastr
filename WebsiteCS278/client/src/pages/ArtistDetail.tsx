@@ -3,11 +3,13 @@ import { useRoute, useLocation } from "wouter";
 import { ArrowLeft, ChevronRightIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
+const VITE_API_URL="https://broadcastr.onrender.com"
+
 // API call to fetch artist by ID
 export async function getArtistById(id: number) {
   try {
 	//console.log("yea")
-    const res = await fetch(`/api/artist/by-id?id=${id}`);
+    const res = await fetch(VITE_API_URL + `/api/artist/by-id?id=${id}`);
 	//console.log("hi")
     if (!res.ok) return null;
 	console.log("hello")
@@ -66,14 +68,14 @@ export default function ArtistDetail() {
       setLoading(true);
       try {
         const tlRes = await fetch(
-          `/api/artist/top-listeners?artist=${encodeURIComponent(
+          VITE_API_URL + `/api/artist/top-listeners?artist=${encodeURIComponent(
             artist.name
           )}&period=overall&limit=50`
         );
         const { topListeners: fetchedTL } = await tlRes.json();
 
         const pRes = await fetch(
-          `/api/artist/listens?user=${encodeURIComponent(
+          VITE_API_URL + `/api/artist/listens?user=${encodeURIComponent(
             currentUser.username.replace(/^@/, "")
           )}&artist=${encodeURIComponent(artist.name)}&period=overall`
         );
