@@ -1,3 +1,4 @@
+// Placeholder page for a user's profile page that is not yet a friend
 import { useRoute, useLocation } from "wouter";
 import { musicData } from "@/data/musicData";
 import ProfileHeader from "@/components/ProfileHeader";

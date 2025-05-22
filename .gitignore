@@ -1,2 +1,4 @@
 __pycache__
 data/broadcastr.sqbpro
+node_modules/
+.DS_Store
