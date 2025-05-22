@@ -3,3 +3,4 @@ psycopg2-binary     # PostgreSQL driver
 python-dotenv       # For loading .env file
 requests            # To make req from Last.fm API
 flask				# to be able to run the server -- 
+gunicorn
