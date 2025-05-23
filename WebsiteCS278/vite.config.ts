@@ -17,9 +17,10 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: path.resolve(__dirname, 'dist/public'),
+    outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
   },
+  publicDir: "public",
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'client/src'),
