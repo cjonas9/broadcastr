@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, request
 import sqlite3
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 BROADCASTR_DB = "./data/broadcastr.db"
 print("Backend is running on port 8000...")
