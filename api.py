@@ -176,6 +176,49 @@ def api_user_followers():
 
     return jsonify({ "followers": followers })
 
+@app.route("/api/user/following")
+def api_user_following():
+    """
+    Retrieves records for who a user is following.
+    Example:
+        GET /api/user/following?user=<LastFmProfileName>&limit=<n>
+    Returns JSON:
+      {
+        "following": [
+          { "following": str, "followingsince": str },
+          …
+        ]
+      }
+    """
+    user = request.args.get("user", "")
+    limit = int(request.args.get("limit", -1))
+
+    user_id = sql_query.query_user_id(user)
+
+    if user_id == 0:
+        return jsonify({"error": "Missing or invalid user"}), 400
+
+    sql = """
+        SELECT Followee.LastFmProfileName as followee, Following.FollowingSince AS followingsince
+        FROM Following
+        INNER JOIN User AS Followee ON Following.FolloweeID = Followee.UserID
+        WHERE Following.FollowerID = ?
+        LIMIT ?
+    """
+    conn = get_db_connection()
+    rows = conn.execute(sql, (user_id, limit)).fetchall()
+    conn.close()
+
+    following = [
+        {
+          "following":      row["followee"],
+          "followingsince": row["followingsince"]
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "following": following })
+
 @app.route("/api/user/conversations")
 def api_user_conversations():
     """
