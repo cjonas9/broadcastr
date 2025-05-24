@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+import sql_query
 import sqlite3
 from flask_cors import CORS
 
@@ -206,6 +207,42 @@ def api_user_direct_messages():
 
     return jsonify({ "directMessages": direct_messages })
 
+@app.route("/api/send-direct-message", methods=['POST'])
+def api_send_direct_message():
+    """
+    POST /api/send-message?sender=<LastFmProfileName>&recipient=<LastFmProfileName>&message=<str>
+    Raises:
+        400 Bad Request: If the user, recipient, or message is not provided or invalid.
+    Returns:
+        201 Success: The database ID of the newly created direct message record.
+    """
+    user = request.args.get("user", "")
+    recipient = request.args.get("recipient", "")
+    message = request.args.get("message", "")
+
+    sender_id = sql_query.query_user_id(user)
+    recipient_id = sql_query.query_user_id(recipient)
+
+    if sender_id == 0:
+        return jsonify({"error": "Missing or invalid user"}), 400
+    if recipient_id == 0:
+        return jsonify({"error": "Missing or invalid recipient"}), 400
+    if not message.strip():
+        return jsonify({"error": "message is required"}), 400
+
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "INSERT INTO DirectMessage(SenderID, RecipientID, MessageBody, TimeSent) " \
+        "VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+        (sender_id, recipient_id, message))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"success": cursor.lastrowid}), 201
+
 @app.route("/api/user/top-artists")
 def api_user_top_artists():
     """
@@ -252,17 +289,7 @@ def api_user_top_artists():
     ]
 
     return jsonify({ "topArtists": top_artists })
-'''
-@app.route("/api/artist/top-listeners")
-def api_top_listeners():
-    print("hello??")
-    """GET /api/artist/top-listeners?artist=…&period=…&limit=…"""
-    artist = request.args.get("artist", "")
-    period = request.args.get("period", "")
-    limit  = int(request.args.get("limit", "10"))
-    top    = query_top_listeners_for_artist(artist, period, limit)
-    return jsonify({ "artist": artist, "period": period, "topListeners": top })
-'''
+
 @app.route("/api/artist/by-id")
 @app.route("/artist/by-id")
 def get_artist_by_id():
