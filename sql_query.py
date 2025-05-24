@@ -628,10 +628,17 @@ def store_user(username, firstname, lastname, email):
     cursor.close()
     connection.close()
 
+	# Store user data from last.fm such as profile pictures and profile url
+    store_user_last_fm_info(username)
+
     print(f"New user stored with id: {cursor.lastrowid}")
 
 def store_user_last_fm_info(username):
-
+    """
+    Fetches and stores a user's last.fm profile data such as profile pics and profile url.
+    Args:
+        username: The user's last.fm profile name
+    """
     user_id = query_user_id(username)
 
     result = db_query.get_user_info(username)
@@ -667,6 +674,9 @@ def store_user_last_fm_info(username):
         print(f"Could not locate Last.fm profile data for user: {username}")
 
 def store_all_users_last_fm_info():
+    """
+    Fetches and stores last.fm profile data such as profile pics and profile url for all users.
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
 

@@ -118,6 +118,9 @@ def api_user_create_profile():
     cursor.close()
     connection.close()
 
+    # Store user data from last.fm such as profile pictures and profile url
+    sql_query.store_user_last_fm_info(user)
+
     return jsonify({"success": cursor.lastrowid}), 201
 
 @user_profile_bp.route("/api/user/login", methods=['POST'])
