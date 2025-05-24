@@ -66,25 +66,6 @@ def query_top_listeners_for_artist(artistname, periodname, limit: int = 10):
     # results is List[(username:str, playcount:int)]
     return results
 
-def store_artist(artistname, mbid):
-	"""
-	Stores an artist record.
-	Args:
-		artistname: The name of the artist to store
-		mbid: The artist's last.fm mbid (sometimes blank) (mb stands for musicbrainz)
-	Returns:
-		numeric id of the inserted record
-	"""
-	connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
-	cursor = connection.cursor()
-
-	cursor.execute("INSERT INTO Artist (ArtistName, LastFmMbid) VALUES (?, ?)", (artistname, mbid))
-
-	cursor.close()
-	connection.close()
-
-	return cursor.lastrowid
-
 @app.route("/api/artist/listens")
 def api_listens():
     """GET /api/artist/listens?user=…&artist=…&period=…"""
@@ -110,6 +91,68 @@ def api_top_listeners():
         "period": period,
         "topListeners": top_listeners
     })
+
+@app.route("/api/user/direct-messages")
+def api_user_direct_messages():
+    """
+    GET /api/user/direct-messages?user=<LastFmProfileName>&conversant=<LastFmProfileName>&limit=<n>
+    Returns JSON:
+      {
+        "directMessages": [
+          { "id": int, "type": str, "sender": str, "recipient": str, "message": str, "timestamp": str },
+          …
+        ]
+      }
+    """
+    user = request.args.get("user", "")
+    conversant = request.args.get("conversant", "")
+    limit = int(request.args.get("limit", 50))
+
+    sql = """
+        SELECT *
+        FROM (
+            SELECT *
+            FROM (
+                SELECT 'Incoming' AS type, MessageReceived.DirectMessageID as id, Sender.LastFmProfileName AS sender,
+                        Recipient.LastFmProfileName AS recipient, MessageReceived.MessageBody AS message,
+                        MessageReceived.TimeSent AS timestamp
+                FROM DirectMessage AS MessageReceived
+                INNER JOIN User AS Recipient ON MessageReceived.RecipientID = Recipient.UserID
+                INNER JOIN User AS Sender ON MessageReceived.SenderID = Sender.UserID
+                WHERE Recipient.LastFmProfileName = ?
+                AND Sender.LastFmProfileName = ?
+                UNION ALL
+                SELECT 'Outgoing' As type, MessageSent.DirectMessageID as id, Sender.LastFmProfileName AS sender,
+                    Recipient.LastFmProfileName AS recipient, MessageSent.MessageBody AS message,
+                    MessageSent.TimeSent AS timestamp
+                FROM DirectMessage AS MessageSent
+                INNER JOIN User AS Recipient ON MessageSent.RecipientID = Recipient.UserID
+                INNER JOIN User AS Sender on MessageSent.SenderID = Sender.UserID
+                WHERE Sender.LastFmProfileName = ?
+                AND Recipient.LastFmProfileName = ?
+            ) AS innerData /* Inner data ensures we get the most recent messages when limiting */
+            ORDER BY innerData.timestamp DESC
+            LIMIT ?
+        ) AS outerData /* Outer data sorts the limited messages oldest to newest */
+        ORDER BY outerData.timestamp
+    """
+    conn = get_db_connection()
+    rows = conn.execute(sql, (user, conversant, user, conversant, limit)).fetchall()
+    conn.close()
+
+    direct_messages = [
+        {
+          "id":         row["id"],
+          "type":       row["type"],
+          "sender":     row["sender"],
+          "recipient":  row["recipient"],
+          "message":    row["message"],
+          "timestamp":  row["timestamp"],
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "directMessages": direct_messages })
 
 @app.route("/api/user/top-artists")
 def api_user_top_artists():
