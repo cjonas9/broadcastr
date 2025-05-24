@@ -1,21 +1,14 @@
 """
 This module provides API routes for interacting with the broadcastr backend/database.
 """
-import sqlite3
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import api_direct_messages
 import api_following
+import sql_query
 
 app = Flask(__name__)
 CORS(app)
-
-BROADCASTR_DB = "./data/broadcastr.db"
-print("Backend is running on port 8000...")
-def get_db_connection():
-    conn = sqlite3.connect(BROADCASTR_DB)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 def query_listens_for_artist(username, artistname, periodname):
     """
@@ -34,7 +27,7 @@ def query_listens_for_artist(username, artistname, periodname):
     LIMIT 1
     """
 
-    conn = sqlite3.connect(BROADCASTR_DB)
+    conn = sql_query.get_db_connection()
     cur = conn.cursor()
     cur.execute(sql, (username, artistname, periodname))
     row = cur.fetchone()
@@ -61,7 +54,7 @@ def query_top_listeners_for_artist(artistname, periodname, limit: int = 10):
      LIMIT ?
     """
 
-    conn = sqlite3.connect(BROADCASTR_DB)
+    conn = sql_query.get_db_connection()
     cur = conn.cursor()
     cur.execute(sql, (artistname, periodname, limit))
     results = cur.fetchall()
@@ -167,7 +160,7 @@ def api_user_top_artists():
      LIMIT ?
     """
 
-    conn = get_db_connection()
+    conn = sql_query.get_db_connection()
     rows = conn.execute(sql, (user, period, limit)).fetchall()
     conn.close()
 
@@ -191,7 +184,7 @@ def get_artist_by_id():
     if artist_id is None:
         return jsonify({"error": "Missing or invalid artist ID"}), 400
 
-    conn = get_db_connection()
+    conn = sql_query.get_db_connection()
     artist = conn.execute(
         "SELECT ArtistID AS id, ArtistName AS name FROM Artist WHERE ArtistID = ?", (artist_id,)
     ).fetchone()
