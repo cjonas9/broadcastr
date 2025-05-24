@@ -13,6 +13,16 @@ BROADCASTR_DB = "./data/broadcastr.db"
 key = "68237ca563ba0ac6a5915f31452b32d1"
 shared_secret = "08921d66963667bccb9f00fe9b35d6e9"
 
+def get_db_connection():
+    conn = sqlite3.connect(BROADCASTR_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_db_connection_isolation_none():
+    conn = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 def query_users():
 	"""
 	Queries the database for all user records.

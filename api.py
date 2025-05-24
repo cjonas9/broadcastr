@@ -4,7 +4,8 @@ This module provides API routes for interacting with the broadcastr backend/data
 import sqlite3
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import sql_query
+import api_direct_messages
+import api_following
 
 app = Flask(__name__)
 CORS(app)
@@ -96,369 +97,43 @@ def api_top_listeners():
         "topListeners": top_listeners
     })
 
+##############################################
+#                Following                   #
+##############################################
 @app.route("/api/user/follow", methods=['POST'])
-def api_user_follow():
-    """
-    Creates a following relationship between two users
-    Example:
-        POST /api/user/follow?follower=LastFmProfileName&followee=LastFmProfileName
-    Raises:
-        400 Bad Request: If the follower or followee is not provided or invalid.
-        400 Bad Request: If a following record already exists for this follower/followee
-                         combination.
-    Returns:
-        201 Success: The database ID of the newly created following record.
-    """
-    follower = request.args.get("follower", "")
-    followee = request.args.get("followee", "")
-
-    follower_id = sql_query.query_user_id(follower)
-    followee_id = sql_query.query_user_id(followee)
-
-    if follower_id == 0:
-        return jsonify({"error": "Missing or invalid follower"}), 400
-    if followee_id == 0:
-        return jsonify({"error": "Missing or invalid followee"}), 400
-
-    following_id = sql_query.query_following_id(follower_id, followee_id)
-
-    if following_id != 0:
-        return jsonify({"error": f"This following already exists: {following_id}"}), 400
-
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
-    cursor = connection.cursor()
-
-    cursor.execute(
-        "INSERT INTO Following(FollowerID, FolloweeID, FollowingSince) " \
-        "VALUES (?, ?, CURRENT_TIMESTAMP)",
-        (follower_id, followee_id))
-
-    cursor.close()
-    connection.close()
-
-    return jsonify({"success": cursor.lastrowid}), 201
+def api_user_follow_route():
+    return api_following.api_user_follow(request)
 
 @app.route("/api/user/unfollow", methods=['POST'])
-def api_user_unfollow():
-    """
-    Removes a following relationship between two users
-    Example:
-        POST /api/user/unfollow?follower=LastFmProfileName&followee=LastFmProfileName
-    Raises:
-        400 Bad Request: If the follower or followee is not provided or invalid.
-        400 Bad Request: If a following record does not exist for this follower/followee
-                         combination.
-    Returns:
-        200 Success: Indicates the following record was successfully removed.
-    """
-    follower = request.args.get("follower", "")
-    followee = request.args.get("followee", "")
-
-    follower_id = sql_query.query_user_id(follower)
-    followee_id = sql_query.query_user_id(followee)
-
-    if follower_id == 0:
-        return jsonify({"error": "Missing or invalid follower"}), 400
-    if followee_id == 0:
-        return jsonify({"error": "Missing or invalid followee"}), 400
-
-    following_id = sql_query.query_following_id(follower_id, followee_id)
-
-    if following_id == 0:
-        return jsonify({"error": "Could not locate a following between the specified users."}), 400
-
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
-    cursor = connection.cursor()
-
-    cursor.execute(
-        "DELETE FROM Following " \
-        "WHERE FollowingID = ?",
-        (following_id,))
-
-    cursor.close()
-    connection.close()
-
-    return jsonify({"success": f"Following {following_id} successfully removed."}), 200
-
+def api_user_unfollow_route():
+    return api_following.api_user_unfollow(request)
+   
 @app.route("/api/user/followers")
-def api_user_followers():
-    """
-    Retrieves records for who is following a user.
-    Example:
-        GET /api/user/followers?user=LastFmProfileName&limit=n
-    Returns JSON:
-      {
-        "followers": [
-          { "follower": str, "followingsince": str },
-          …
-        ]
-      }
-    """
-    user = request.args.get("user", "")
-    limit = int(request.args.get("limit", -1))
-
-    user_id = sql_query.query_user_id(user)
-
-    if user_id == 0:
-        return jsonify({"error": "Missing or invalid user"}), 400
-
-    sql = """
-        SELECT Follower.LastFmProfileName as follower, Following.FollowingSince AS followingsince
-        FROM Following
-        INNER JOIN User AS Follower ON Following.FollowerID = Follower.UserID
-        WHERE Following.FolloweeID = ?
-        LIMIT ?
-    """
-    conn = get_db_connection()
-    rows = conn.execute(sql, (user_id, limit)).fetchall()
-    conn.close()
-
-    followers = [
-        {
-          "follower":       row["follower"],
-          "followingsince": row["followingsince"]
-        }
-        for row in rows
-    ]
-
-    return jsonify({ "followers": followers })
+def api_user_followers_route():
+    return api_following.api_user_followers(request)
 
 @app.route("/api/user/following")
-def api_user_following():
-    """
-    Retrieves records for who a user is following.
-    Example:
-        GET /api/user/following?user=LastFmProfileName&limit=n
-    Returns JSON:
-      {
-        "following": [
-          { "following": str, "followingsince": str },
-          …
-        ]
-      }
-    """
-    user = request.args.get("user", "")
-    limit = int(request.args.get("limit", -1))
+def api_user_following_route():
+    return api_following.api_user_following(request)
 
-    user_id = sql_query.query_user_id(user)
-
-    if user_id == 0:
-        return jsonify({"error": "Missing or invalid user"}), 400
-
-    sql = """
-        SELECT Followee.LastFmProfileName as followee, Following.FollowingSince AS followingsince
-        FROM Following
-        INNER JOIN User AS Followee ON Following.FolloweeID = Followee.UserID
-        WHERE Following.FollowerID = ?
-        LIMIT ?
-    """
-    conn = get_db_connection()
-    rows = conn.execute(sql, (user_id, limit)).fetchall()
-    conn.close()
-
-    following = [
-        {
-          "following":      row["followee"],
-          "followingsince": row["followingsince"]
-        }
-        for row in rows
-    ]
-
-    return jsonify({ "following": following })
-
+##############################################
+#    Direct Messages and Conversations       #
+##############################################
 @app.route("/api/user/conversations")
-def api_user_conversations():
-    """
-    Retrives a conversations for a user.
-    Example:
-        GET /api/user/conversations?user=LastFmProfileName&limit=n
-    Returns JSON:
-      {
-        "conversations": [
-          { "conversant": str, "messagecount": int, "unreadcount": int, "lastconversation": str },
-          …
-        ]
-      }
-    """
-    user = request.args.get("user", "")
-    limit = int(request.args.get("limit", 50))
-
-    sql = """
-        SELECT conversant, COUNT(id) AS messagecount, SUM(unread) AS unreadcount, MAX(timestamp) AS lastconversation
-        FROM (
-            SELECT Sender.LastFmProfileName AS conversant, MessageReceived.DirectMessageID as id,
-                   CASE WHEN MessageReceived.Read = 1 THEN 0 ELSE 1 END AS Unread, MessageReceived.TimeSent AS timestamp
-            FROM DirectMessage AS MessageReceived
-            INNER JOIN User AS Sender ON MessageReceived.SenderID = Sender.UserID
-            INNER JOIN User AS Recipient ON MessageReceived.RecipientID = Recipient.UserID
-            WHERE Recipient.LastFmProfileName = ?
-            UNION
-            SELECT Recipient.LastFmProfileName AS conversant, MessageSent.DirectMessageID AS id,
-                   0 AS Unread, MessageSent.TimeSent as timestamp
-            FROM DirectMessage AS MessageSent
-            INNER JOIN User AS Sender ON MessageSent.SenderID = Sender.UserID
-            INNER JOIN User AS Recipient ON MessageSent.RecipientID = Recipient.UserID
-            WHERE Sender.LastFmProfileName = ?
-        ) AS data
-        GROUP BY conversant
-        ORDER BY lastconversation DESC
-        LIMIT ?
-    """
-    conn = get_db_connection()
-    rows = conn.execute(sql, (user, user, limit)).fetchall()
-    conn.close()
-
-    conversations = [
-        {
-          "conversant":         row["conversant"],
-          "messagecount":       row["messagecount"],
-          "unreadcount":        row["unreadcount"],
-          "lastconversation":   row["lastconversation"]
-        }
-        for row in rows
-    ]
-
-    return jsonify({ "conversations": conversations })
+def api_user_conversations_route():
+    return api_direct_messages.api_user_conversations(request)
 
 @app.route("/api/user/direct-messages")
-def api_user_direct_messages():
-    """
-    Retrieves direct messages between a user and another user (conversant).
-    Example:
-        GET /api/user/direct-messages?user=LastFmProfileName&conversant=LastFmProfileName&limit=n
-    Returns JSON:
-      {
-        "directMessages": [
-          { "id": int, "type": str, "sender": str, "recipient": str,
-          "message": str, "timestamp": str },
-          …
-        ]
-      }
-    """
-    user = request.args.get("user", "")
-    conversant = request.args.get("conversant", "")
-    limit = int(request.args.get("limit", 50))
-
-    sql = """
-        SELECT *
-        FROM (
-            SELECT *
-            FROM (
-                SELECT 'Incoming' AS type, MessageReceived.DirectMessageID as id, Sender.LastFmProfileName AS sender,
-                        Recipient.LastFmProfileName AS recipient, MessageReceived.MessageBody AS message,
-                        MessageReceived.TimeSent AS timestamp
-                FROM DirectMessage AS MessageReceived
-                INNER JOIN User AS Recipient ON MessageReceived.RecipientID = Recipient.UserID
-                INNER JOIN User AS Sender ON MessageReceived.SenderID = Sender.UserID
-                WHERE Recipient.LastFmProfileName = ?
-                   AND Sender.LastFmProfileName = ?
-                UNION
-                SELECT 'Outgoing' As type, MessageSent.DirectMessageID as id, Sender.LastFmProfileName AS sender,
-                    Recipient.LastFmProfileName AS recipient, MessageSent.MessageBody AS message,
-                    MessageSent.TimeSent AS timestamp
-                FROM DirectMessage AS MessageSent
-                INNER JOIN User AS Recipient ON MessageSent.RecipientID = Recipient.UserID
-                INNER JOIN User AS Sender on MessageSent.SenderID = Sender.UserID
-                WHERE Sender.LastFmProfileName = ?
-                   AND Recipient.LastFmProfileName = ?
-            ) AS innerData /* Inner data ensures we get the most recent messages when limiting */
-            ORDER BY innerData.timestamp DESC
-            LIMIT ?
-        ) AS outerData /* Outer data sorts the limited messages oldest to newest */
-        ORDER BY outerData.timestamp
-    """
-    conn = get_db_connection()
-    rows = conn.execute(sql, (user, conversant, user, conversant, limit)).fetchall()
-    conn.close()
-
-    direct_messages = [
-        {
-          "id":         row["id"],
-          "type":       row["type"],
-          "sender":     row["sender"],
-          "recipient":  row["recipient"],
-          "message":    row["message"],
-          "timestamp":  row["timestamp"]
-        }
-        for row in rows
-    ]
-
-    return jsonify({ "directMessages": direct_messages })
+def api_user_direct_messages_route():
+    return api_direct_messages.api_user_direct_messages(request)
 
 @app.route("/api/send-direct-message", methods=['POST'])
-def api_send_direct_message():
-    """
-    Sends a direct message from one user to another.
-    Example:
-        POST /api/send-direct-message?user=LastFmProfileName&recipient=LastFmProfileName&message=str
-    Raises:
-        400 Bad Request: If the user, recipient, or message is not provided or invalid.
-    Returns:
-        201 Success: The database ID of the newly created direct message record.
-    """
-    user = request.args.get("user", "")
-    recipient = request.args.get("recipient", "")
-    message = request.args.get("message", "")
-
-    sender_id = sql_query.query_user_id(user)
-    recipient_id = sql_query.query_user_id(recipient)
-
-    if sender_id == 0:
-        return jsonify({"error": "Missing or invalid sender"}), 400
-    if recipient_id == 0:
-        return jsonify({"error": "Missing or invalid recipient"}), 400
-    if not message.strip():
-        return jsonify({"error": "message is required"}), 400
-
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
-    cursor = connection.cursor()
-
-    cursor.execute(
-        "INSERT INTO DirectMessage(SenderID, RecipientID, MessageBody, TimeSent) " \
-        "VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
-        (sender_id, recipient_id, message))
-
-    cursor.close()
-    connection.close()
-
-    return jsonify({"success": cursor.lastrowid}), 201
+def api_send_direct_message_route():
+    return api_direct_messages.api_send_direct_message(request)
 
 @app.route("/api/mark-messages-read", methods=['POST'])
-def api_mark_messages_read():
-    """
-    Marks all messages as read for a conversation between two users.
-    Example:
-        POST /api/mark-messages-read?sender=LastFmProfileName&recipient=LastFmProfileName
-    Raises:
-        400 Bad Request: If the user or recipient is not provided or invalid.
-    Returns:
-        200 Success: Indicates all direct messages for this sender/recipient combo have 
-                     been marked as read.
-    """
-    user = request.args.get("user", "")
-    recipient = request.args.get("recipient", "")
-
-    sender_id = sql_query.query_user_id(user)
-    recipient_id = sql_query.query_user_id(recipient)
-
-    if sender_id == 0:
-        return jsonify({"error": "Missing or invalid sender"}), 400
-    if recipient_id == 0:
-        return jsonify({"error": "Missing or invalid recipient"}), 400
-
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
-    cursor = connection.cursor()
-
-    cursor.execute(
-        "Update DirectMessage " \
-        "SET Read = 1 " \
-        "WHERE SenderID = ? AND RecipientID = ?",
-        (sender_id, recipient_id))
-
-    cursor.close()
-    connection.close()
-
-    return jsonify({"success": "direct message records marked as read"}), 200
+def api_mark_messages_read_route():
+    return api_direct_messages.api_mark_messages_read(request)
 
 @app.route("/api/user/top-artists")
 def api_user_top_artists():
