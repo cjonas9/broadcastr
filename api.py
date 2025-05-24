@@ -3,11 +3,15 @@ This module provides API routes for interacting with the broadcastr backend/data
 """
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import api_direct_messages
-import api_following
+from api_direct_messages import direct_messages_bp
+from api_following import following_bp
 import sql_query
 
 app = Flask(__name__)
+
+app.register_blueprint(following_bp, url_prefix='/')
+app.register_blueprint(direct_messages_bp, url_prefix='/')
+
 CORS(app)
 
 def query_listens_for_artist(username, artistname, periodname):
@@ -89,44 +93,6 @@ def api_top_listeners():
         "period": period,
         "topListeners": top_listeners
     })
-
-##############################################
-#                Following                   #
-##############################################
-@app.route("/api/user/follow", methods=['POST'])
-def api_user_follow_route():
-    return api_following.api_user_follow(request)
-
-@app.route("/api/user/unfollow", methods=['POST'])
-def api_user_unfollow_route():
-    return api_following.api_user_unfollow(request)
-   
-@app.route("/api/user/followers")
-def api_user_followers_route():
-    return api_following.api_user_followers(request)
-
-@app.route("/api/user/following")
-def api_user_following_route():
-    return api_following.api_user_following(request)
-
-##############################################
-#    Direct Messages and Conversations       #
-##############################################
-@app.route("/api/user/conversations")
-def api_user_conversations_route():
-    return api_direct_messages.api_user_conversations(request)
-
-@app.route("/api/user/direct-messages")
-def api_user_direct_messages_route():
-    return api_direct_messages.api_user_direct_messages(request)
-
-@app.route("/api/send-direct-message", methods=['POST'])
-def api_send_direct_message_route():
-    return api_direct_messages.api_send_direct_message(request)
-
-@app.route("/api/mark-messages-read", methods=['POST'])
-def api_mark_messages_read_route():
-    return api_direct_messages.api_mark_messages_read(request)
 
 @app.route("/api/user/top-artists")
 def api_user_top_artists():

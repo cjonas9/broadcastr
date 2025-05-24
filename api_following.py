@@ -1,10 +1,13 @@
 """
 This module provides supporting functions for API routes pertaining to following.
 """
-from flask import jsonify
+from flask import Blueprint, jsonify, request
 import sql_query
 
-def api_user_follow(request):
+following_bp = Blueprint('following', __name__)
+
+@following_bp.route("/api/user/follow", methods=['POST'])
+def api_user_follow():
     """
     Creates a following relationship between two users
     Example:
@@ -45,7 +48,8 @@ def api_user_follow(request):
 
     return jsonify({"success": cursor.lastrowid}), 201
 
-def api_user_unfollow(request):
+@following_bp.route("/api/user/unfollow", methods=['POST'])
+def api_user_unfollow():
     """
     Removes a following relationship between two users
     Example:
@@ -86,7 +90,8 @@ def api_user_unfollow(request):
 
     return jsonify({"success": f"Following {following_id} successfully removed."}), 200
 
-def api_user_followers(request):
+@following_bp.route("/api/user/followers")
+def api_user_followers():
     """
     Retrieves records for who is following a user.
     Example:
@@ -128,7 +133,8 @@ def api_user_followers(request):
 
     return jsonify({ "followers": followers })
 
-def api_user_following(request):
+@following_bp.route("/api/user/following")
+def api_user_following():
     """
     Retrieves records for who a user is following.
     Example:

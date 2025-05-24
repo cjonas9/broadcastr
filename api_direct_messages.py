@@ -1,10 +1,13 @@
 """
 This module provides supporting functions for API routes pertaining to direct messages.
 """
-from flask import jsonify
+from flask import Blueprint, jsonify, request
 import sql_query
 
-def api_user_conversations(request):
+direct_messages_bp = Blueprint('direct-messages', __name__)
+
+@direct_messages_bp.route("/api/user/conversations")
+def api_user_conversations():
     """
     Retrives a conversations for a user.
     Example:
@@ -57,7 +60,8 @@ def api_user_conversations(request):
 
     return jsonify({ "conversations": conversations })
 
-def api_user_direct_messages(request):
+@direct_messages_bp.route("/api/user/direct-messages")
+def api_user_direct_messages():
     """
     Retrieves direct messages between a user and another user (conversant).
     Example:
@@ -121,7 +125,8 @@ def api_user_direct_messages(request):
 
     return jsonify({ "directMessages": direct_messages })
 
-def api_send_direct_message(request):
+@direct_messages_bp.route("/api/send-direct-message", methods=['POST'])
+def api_send_direct_message():
     """
     Sends a direct message from one user to another.
     Example:
@@ -158,7 +163,8 @@ def api_send_direct_message(request):
 
     return jsonify({"success": cursor.lastrowid}), 201
 
-def api_mark_messages_read(request):
+@direct_messages_bp.route("/api/mark-messages-read", methods=['POST'])
+def api_mark_messages_read():
     """
     Marks all messages as read for a conversation between two users.
     Example:
