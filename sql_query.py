@@ -78,6 +78,17 @@ def query_track_id(trackname, artistid):
 	# Simply doing a name lookup for now, but MBID might be better with name as a fallback
 	return query_id("TrackID", "Track", [["TrackName", trackname], ["ArtistID", artistid]])
 
+def query_following_id(follower_id, followee_id):
+	"""
+	Queries the database for the numeric id of a following.
+	Args:
+		follower_id: The follower's database id
+		followee_id: The followee's database id
+	Returns:
+		numeric following id
+	"""
+	return query_id("FollowingID", "Following", [["FollowerID", follower_id], ["FolloweeID", followee_id]])
+
 def query_period_id(period):
 	"""
 	Queries the database for the numeric id of a period.

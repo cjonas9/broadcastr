@@ -93,6 +93,48 @@ def api_top_listeners():
         "topListeners": top_listeners
     })
 
+@app.route("/api/user/follow", methods=['POST'])
+def api_user_follow():
+    """
+    Creates a following relationship between two users
+    Example:
+        POST /api/user-follow?follower=<LastFmProfileName>&followee=<LastFmProfileName>
+    Raises:
+        400 Bad Request: If the follower or followee is not provided or invalid.
+        400 Bad Request: If a following record already exists for this follower/followee
+                         combination.
+    Returns:
+        201 Success: The database ID of the newly created following record.
+    """
+    follower = request.args.get("follower", "")
+    followee = request.args.get("followee", "")
+
+    follower_id = sql_query.query_user_id(follower)
+    followee_id = sql_query.query_user_id(followee)
+
+    if follower_id == 0:
+        return jsonify({"error": "Missing or invalid follower"}), 400
+    if followee_id == 0:
+        return jsonify({"error": "Missing or invalid followee"}), 400
+
+    following_id = sql_query.query_following_id(follower_id, followee_id)
+
+    if following_id != 0:
+        return jsonify({"error": f"This following already exists: {following_id}"}), 400
+
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "INSERT INTO Following(FollowerID, FolloweeID, FollowingSince) " \
+        "VALUES (?, ?, CURRENT_TIMESTAMP)",
+        (follower_id, followee_id))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"success": cursor.lastrowid}), 201
+
 @app.route("/api/user/followers")
 def api_user_followers():
     """
@@ -158,7 +200,7 @@ def api_user_conversations():
             INNER JOIN User AS Sender ON MessageReceived.SenderID = Sender.UserID
             INNER JOIN User AS Recipient ON MessageReceived.RecipientID = Recipient.UserID
             WHERE Recipient.LastFmProfileName = ?
-            UNION ALL
+            UNION
             SELECT Recipient.LastFmProfileName AS conversant, MessageSent.DirectMessageID AS id,
                    0 AS Unread, MessageSent.TimeSent as timestamp
             FROM DirectMessage AS MessageSent
@@ -215,7 +257,7 @@ def api_user_direct_messages():
                 INNER JOIN User AS Sender ON MessageReceived.SenderID = Sender.UserID
                 WHERE Recipient.LastFmProfileName = ?
                    AND Sender.LastFmProfileName = ?
-                UNION ALL
+                UNION
                 SELECT 'Outgoing' As type, MessageSent.DirectMessageID as id, Sender.LastFmProfileName AS sender,
                     Recipient.LastFmProfileName AS recipient, MessageSent.MessageBody AS message,
                     MessageSent.TimeSent AS timestamp
