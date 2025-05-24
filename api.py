@@ -210,7 +210,7 @@ def api_user_direct_messages():
 @app.route("/api/send-direct-message", methods=['POST'])
 def api_send_direct_message():
     """
-    POST /api/send-message?sender=<LastFmProfileName>&recipient=<LastFmProfileName>&message=<str>
+    POST /api/send-direct-message?user=<LastFmProfileName>&recipient=<LastFmProfileName>&message=<str>
     Raises:
         400 Bad Request: If the user, recipient, or message is not provided or invalid.
     Returns:
@@ -242,6 +242,40 @@ def api_send_direct_message():
     connection.close()
 
     return jsonify({"success": cursor.lastrowid}), 201
+
+@app.route("/api/mark-messages-read", methods=['POST'])
+def api_mark_messages_read():
+    """
+    POST /api/mark-messages-read?sender=<LastFmProfileName>&recipient=<LastFmProfileName>
+    Raises:
+        400 Bad Request: If the user or recipient is not provided or invalid.
+    Returns:
+        200 Success: Indicates all direct messages for this sender/recipient combo have been marked as read.
+    """
+    user = request.args.get("user", "")
+    recipient = request.args.get("recipient", "")
+
+    sender_id = sql_query.query_user_id(user)
+    recipient_id = sql_query.query_user_id(recipient)
+
+    if sender_id == 0:
+        return jsonify({"error": "Missing or invalid sender"}), 400
+    if recipient_id == 0:
+        return jsonify({"error": "Missing or invalid recipient"}), 400
+
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "Update DirectMessage " \
+        "SET Read = 1 " \
+        "WHERE SenderID = ? AND RecipientID = ?",
+        (sender_id, recipient_id))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"success": "direct message records marked as read"}), 200
 
 @app.route("/api/user/top-artists")
 def api_user_top_artists():
