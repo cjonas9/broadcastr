@@ -18,7 +18,8 @@ def api_user_profile():
         "userProfile": [
           { "id": int, "profile": str, "firstname": str, "lastname": str,
           "email": str, "profileurl": str, "bootstrapped": int, "admin: int",
-          "lastlogin": str },
+          "lastlogin": str, "pfpsm": str, "pfpmed": str, "pfplg": str,
+           "pfpxl": str },
           …
         ]
       }
@@ -31,8 +32,10 @@ def api_user_profile():
 
     sql = """
         SELECT User.UserID AS id, User.LastFmProfileName AS profile, User.FirstName AS firstname,
-               User.LastName AS lastname, User.EmailAddress AS email, ProfileURL AS profileurl,
-               User.BootstrappedUser AS bootstrapped, User.Admin AS admin, User.LastLogin AS lastlogin
+               User.LastName AS lastname, User.EmailAddress AS email, LastFmProfileUrl AS profileurl,
+               User.BootstrappedUser AS bootstrapped, User.Admin AS admin, User.LastLogin AS lastlogin,
+               User.Pfpsmall AS pfpsm, User.PfpMedium as pfpmed, User.PfpLarge AS pfplg,
+               User.PfpExtraLarge AS pfpxl
         FROM User
         WHERE UserID = ?
     """
@@ -50,7 +53,11 @@ def api_user_profile():
           "profileurl":     row["profileurl"],
           "bootstrapped":   row["bootstrapped"],
           "admin":          row["admin"],
-          "lastlogin":      row["lastlogin"]
+          "lastlogin":      row["lastlogin"],
+          "pfpsm":          row["pfpsm"],
+          "pfpmed":         row["pfpmed"],
+          "pfplg":          row["pfplg"],
+          "pfpxl":          row["pfpxl"]
         }
         for row in rows
     ]

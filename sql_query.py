@@ -630,6 +630,61 @@ def store_user(username, firstname, lastname, email):
 
     print(f"New user stored with id: {cursor.lastrowid}")
 
+def store_user_last_fm_info(username):
+
+    user_id = query_user_id(username)
+
+    result = db_query.get_user_info(username)
+    print(result)
+    if "user" in result:
+        user_result = result["user"]
+        profile_url = user_result['url']
+
+        pfp_dict = {img['size']: img['#text'] for img in user_result['image'] if img['#text']}
+        pfpsm = pfp_dict.get('small')
+        pfpmed = pfp_dict.get('medium')
+        pfplg = pfp_dict.get('large')
+        pfpxl = pfp_dict.get('extralarge')
+
+        connection = get_db_connection_isolation_none()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            "UPDATE User " \
+            "SET LastFmProfileUrl = ?, " \
+            "    PfpSmall = ?, " \
+            "    PfpMedium = ?, " \
+            "    PfpLarge = ?, " \
+            "    PfpExtraLarge = ? " \
+            "WHERE UserID = ?",
+            (profile_url, pfpsm, pfpmed, pfplg, pfpxl, user_id))
+
+        cursor.close()
+        connection.close()
+
+        print(f"Last.fm profile data stored for user: {username}")
+    else:
+        print(f"Could not locate Last.fm profile data for user: {username}")
+
+def store_all_users_last_fm_info():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT LastFmProfileName 
+        FROM User 
+        ORDER BY LastFmProfileName
+    """)
+    data = cursor.fetchall()
+
+    for _, user in enumerate(data):
+        username = user["LastFmProfileName"]
+        store_user_last_fm_info(username)
+        time.sleep(0.05)
+
+    cursor.close()
+    connection.close()
+
 def delete_user(username):
     """
     Deletes the user with the given Last.fm profile name.

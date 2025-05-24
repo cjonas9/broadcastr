@@ -39,6 +39,10 @@ def get_track_playcount(username, track_name, artist_name, period, api_key=key):
 			return int(track["playcount"])
 	return 0
 
+def get_user_info(username, api_key=key):
+	url = f"http://ws.audioscrobbler.com/2.0/?method=user.getinfo&user={username}&api_key={api_key}&format=json"
+	return requests.get(url).json()
+
 def get_top_artist_plays(username, period):
 	top_artists_data = get_top_artists(username, period)["topartists"]["artist"]
 	top_artists = []
@@ -78,6 +82,10 @@ def get_artist_tag_counts(artistname):
 		artist_tags.append(artist_tags_data[i]["name"])
 		artist_tags_count.append(artist_tags_data[i]["count"])
 	return pp.pformat(list(zip(artist_tags, artist_tags_count)))
+
+def get_user_info_data(username):
+	user_info_data = get_user_info(username)["user"]
+	return pp.pformat(zip(user_info_data))
 
 # if __name__ == "__main__":
 	# print(get_top_artist_plays("cjonas41"))

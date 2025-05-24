@@ -89,5 +89,22 @@ def query_top_tracks():
     result = sql_query.query_top_tracks(user_input, period)
     return jsonify({'output': result})
 
+@app.route('/get_user_info', methods=['POST'])
+def get_user_info():
+    user_input = request.json.get('input')
+    result = db_query.get_user_info_data(user_input)
+    return jsonify({'output': result})
+
+@app.route('/store_last_fm_user_info', methods=['POST'])
+def store_user_last_fm_info():
+    user_input = request.json.get('input')
+    sql_query.store_user_last_fm_info(user_input)
+    return jsonify({'output': 'success'})
+
+@app.route('/store_last_fm_all_user_info', methods=['POST'])
+def store_all_users_last_fm_info():
+    sql_query.store_all_users_last_fm_info()
+    return jsonify({'output': 'success'})
+
 if __name__ == '__main__':
     app.run(debug=True)
