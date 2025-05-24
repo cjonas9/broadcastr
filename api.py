@@ -93,6 +93,47 @@ def api_top_listeners():
         "topListeners": top_listeners
     })
 
+@app.route("/api/user/followers")
+def api_user_followers():
+    """
+    GET /api/user/followers?user=<LastFmProfileName>&limit=<n>
+    Returns JSON:
+      {
+        "followers": [
+          { "follower": str, "followingsince": str },
+          …
+        ]
+      }
+    """
+    user = request.args.get("user", "")
+    limit = int(request.args.get("limit", -1))
+
+    user_id = sql_query.query_user_id(user)
+
+    if user_id == 0:
+        return jsonify({"error": "Missing or invalid user"}), 400
+
+    sql = """
+        SELECT Follower.LastFmProfileName as follower, Following.FollowingSince AS followingsince
+        FROM Following
+        INNER JOIN User AS Follower ON Following.FollowerID = Follower.UserID
+        WHERE Following.FolloweeID = ?
+        LIMIT ?
+    """
+    conn = get_db_connection()
+    rows = conn.execute(sql, (user_id, limit)).fetchall()
+    conn.close()
+
+    followers = [
+        {
+          "follower":       row["follower"],
+          "followingsince": row["followingsince"]
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "followers": followers })
+
 @app.route("/api/user/conversations")
 def api_user_conversations():
     """
@@ -224,7 +265,7 @@ def api_send_direct_message():
     recipient_id = sql_query.query_user_id(recipient)
 
     if sender_id == 0:
-        return jsonify({"error": "Missing or invalid user"}), 400
+        return jsonify({"error": "Missing or invalid sender"}), 400
     if recipient_id == 0:
         return jsonify({"error": "Missing or invalid recipient"}), 400
     if not message.strip():
