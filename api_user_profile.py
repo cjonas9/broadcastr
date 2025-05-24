@@ -163,3 +163,64 @@ def api_user_login():
     connection.close()
 
     return jsonify({"success": "login successful"}), 200
+
+@user_profile_bp.route("/api/user/reset-password", methods=['POST'])
+def api_user_reset_password():
+    """
+    Resets a user's password.
+    Example:
+        POST /api/user/reset-password?user=LastFmProfileName&oldpassword=oldpw&newpassword=newpw
+    Raises:
+        400 Bad Request: If the user's profile could not be found.
+        400 Bad Request: If the user's old password was invalid.
+        400 Bad Request: If the user's new password is not provided.
+        400 Bad Request: If database integrity issues are detected.
+    Returns:
+        200 Success: The password reset was successful.
+    """
+    user = request.args.get("user", "")
+    old_password = request.args.get("oldpassword", "")
+    new_password = request.args.get("newpassword", "")
+
+    user_id = sql_query.query_user_id(user)
+
+    if user_id == 0:
+        return jsonify({"error": "Missing or invalid user"}), 400
+
+    # Handle case where user currently does not have a password stored
+    if old_password == "":
+        user_id_pw = sql_query.query_user_id_by_password(user, "")
+    else:
+        salt = sql_query.query_user_salt(user)
+        encoded_password = old_password.encode()
+        hashed_password = bcrypt.hashpw(encoded_password, salt)
+
+        user_id_pw = sql_query.query_user_id_by_password(user, hashed_password)
+
+    if not new_password.strip():
+        return jsonify({"error": "new password is required"}), 400
+
+    if user_id_pw == 0:
+        return jsonify({"error": "Invalid password"}), 400
+
+    # This should never happen, but indicates a severe problem with database integrity if it does.
+    if user_id != user_id_pw:
+        return jsonify({"error": "Data integrity issue"}), 400
+
+    password_bytes = new_password.encode()
+    salt = bcrypt.gensalt()  # 16-byte salt by default
+    hashed_password = bcrypt.hashpw(password_bytes, salt)
+
+    connection = sql_query.get_db_connection_isolation_none()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "UPDATE User " \
+        "SET Salt = ?, Password = ? " \
+        "WHERE UserID = ?",
+        (salt, hashed_password, user_id))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"success": "password successfully updated"}), 200
