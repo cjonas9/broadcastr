@@ -98,7 +98,7 @@ def api_user_follow():
     """
     Creates a following relationship between two users
     Example:
-        POST /api/user-follow?follower=<LastFmProfileName>&followee=<LastFmProfileName>
+        POST /api/user/follow?follower=<LastFmProfileName>&followee=<LastFmProfileName>
     Raises:
         400 Bad Request: If the follower or followee is not provided or invalid.
         400 Bad Request: If a following record already exists for this follower/followee
@@ -134,6 +134,48 @@ def api_user_follow():
     connection.close()
 
     return jsonify({"success": cursor.lastrowid}), 201
+
+@app.route("/api/user/unfollow", methods=['POST'])
+def api_user_unfollow():
+    """
+    Removes a following relationship between two users
+    Example:
+        POST /api/user/unfollow?follower=<LastFmProfileName>&followee=<LastFmProfileName>
+    Raises:
+        400 Bad Request: If the follower or followee is not provided or invalid.
+        400 Bad Request: If a following record does not exist for this follower/followee
+                         combination.
+    Returns:
+        200 Success: Indicates the following record was successfully removed.
+    """
+    follower = request.args.get("follower", "")
+    followee = request.args.get("followee", "")
+
+    follower_id = sql_query.query_user_id(follower)
+    followee_id = sql_query.query_user_id(followee)
+
+    if follower_id == 0:
+        return jsonify({"error": "Missing or invalid follower"}), 400
+    if followee_id == 0:
+        return jsonify({"error": "Missing or invalid followee"}), 400
+
+    following_id = sql_query.query_following_id(follower_id, followee_id)
+
+    if following_id == 0:
+        return jsonify({"error": "Could not locate a following between the specified users."}), 400
+
+    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "DELETE FROM Following " \
+        "WHERE FollowingID = ?",
+        (following_id,))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"success": f"Following {following_id} successfully removed."}), 200
 
 @app.route("/api/user/followers")
 def api_user_followers():
@@ -376,7 +418,8 @@ def api_mark_messages_read():
     Raises:
         400 Bad Request: If the user or recipient is not provided or invalid.
     Returns:
-        200 Success: Indicates all direct messages for this sender/recipient combo have been marked as read.
+        200 Success: Indicates all direct messages for this sender/recipient combo have 
+                     been marked as read.
     """
     user = request.args.get("user", "")
     recipient = request.args.get("recipient", "")
