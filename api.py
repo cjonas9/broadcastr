@@ -5,12 +5,14 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from api_direct_messages import direct_messages_bp
 from api_following import following_bp
+from api_user_profile import user_profile_bp
 import sql_query
 
 app = Flask(__name__)
 
-app.register_blueprint(following_bp, url_prefix='/')
 app.register_blueprint(direct_messages_bp, url_prefix='/')
+app.register_blueprint(following_bp, url_prefix='/')
+app.register_blueprint(user_profile_bp, url_prefix='/')
 
 CORS(app)
 

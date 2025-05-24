@@ -50,6 +50,38 @@ def query_user_id(username):
     """
     return query_id("UserID", "User", [["LastFmProfileName", username]])
 
+def query_user_id_by_email(email):
+    """
+    Queries the database for the numeric id of a user.
+    Args:
+        email: The user's email address
+    Returns:
+        numeric user id
+    """
+    return query_id("UserID", "User", [["EmailAddress", email]])
+
+def query_user_salt(username):
+    """
+    Queries the database for a user's salt.  Used for password validation.
+    Args:
+        username: The user's last.fm profile name
+    Returns:
+        salt for this user profile
+    """
+    return query_id("Salt", "User", [["LastFmProfileName", username]])
+
+def query_user_id_by_password(username, hashed_password):
+    """
+    Queries the database for the numeric id of a user based on profile name and hashed password.
+    Args:
+        username: The user's last.fm profile name
+        hashed_password: The user's hashed password for validation
+    Returns:
+        numeric user id
+    """
+    return query_id("UserID", "User",
+                    [["LastFmProfileName", username], ["Password", hashed_password]])
+
 def query_artist_id(artistname):
     """
     Queries the database for the numeric id of an artist.
