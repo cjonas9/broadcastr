@@ -28,7 +28,9 @@ CREATE TABLE IF NOT EXISTS "DirectMessage" (
 	"DirectMessageID"	INTEGER NOT NULL UNIQUE,
 	"SenderID"	INTEGER NOT NULL,
 	"RecipientID"	INTEGER NOT NULL,
-	"TimeSent"	INTEGER NOT NULL,
+	"MessageBody"	TEXT NOT NULL,
+	"TimeSent"	TEXT NOT NULL,
+	"Read"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("DirectMessageID" AUTOINCREMENT),
 	FOREIGN KEY("RecipientID") REFERENCES "User"("UserID"),
 	FOREIGN KEY("SenderID") REFERENCES "User"("UserID")
@@ -106,10 +108,16 @@ CREATE TABLE IF NOT EXISTS "User" (
 	"FirstName"	TEXT,
 	"LastName"	TEXT,
 	"EmailAddress"	TEXT UNIQUE,
-	"ProfileURL"	TEXT,
+	"LastFmProfileUrl"	TEXT,
 	"Password"	TEXT,
-	"Salt"	INTEGER,
-	"BootstrappedUser"	INTEGER DEFAULT 0,
+	"Salt"	TEXT,
+	"BootstrappedUser"	INTEGER NOT NULL DEFAULT 0,
+	"Admin"	INTEGER NOT NULL DEFAULT 0,
+	"LastLogin"	TEXT,
+	"PfpSmall"	TEXT,
+	"PfpMedium"	TEXT,
+	"PfpLarge"	TEXT,
+	"PfpExtraLarge"	TEXT,
 	PRIMARY KEY("UserID" AUTOINCREMENT)
 );
 INSERT INTO "Album" VALUES (1,'Pressure Machine (Deluxe)',3,'');
@@ -1499,6 +1507,14 @@ INSERT INTO "Artist" VALUES (1288,'Sam Cooke','6c8fd0be-d961-454c-aee0-4366a6dbc
 INSERT INTO "Artist" VALUES (1289,'Shred Flintstone','');
 INSERT INTO "Artist" VALUES (1290,'Slaughter Beach, Dog','9969f247-ce03-4b25-927f-c00c51ecedbe');
 INSERT INTO "Artist" VALUES (1291,'Spongebob Squarepants','0eb58fc2-a70b-4e02-a503-115e42da9b4e');
+INSERT INTO "DirectMessage" VALUES (1,2,23,'Hey, what''s up','2025-05-23 23:15:19',1);
+INSERT INTO "DirectMessage" VALUES (2,23,2,'Not much, how about you?','2025-05-23 23:16:15',1);
+INSERT INTO "DirectMessage" VALUES (3,2,23,'Funny thing... you didn''t even send me these messages.  This is just test data I am injecting into the database.','2025-05-23 23:17:54',0);
+INSERT INTO "DirectMessage" VALUES (4,23,2,'That''s weird','2025-05-23 23:24:14',0);
+INSERT INTO "DirectMessage" VALUES (5,2,24,'Hey Asher, let''s listen to some Outkast','2025-05-24 00:04:00',1);
+INSERT INTO "DirectMessage" VALUES (6,24,2,'Sure man, let''s do it!','2025-05-23 00:04:36',1);
+INSERT INTO "Following" VALUES (1,2,23,'2025-05-24 02:22:38');
+INSERT INTO "Following" VALUES (2,2,3,'2025-05-23 02:23:59');
 INSERT INTO "Period" VALUES (1,'7day');
 INSERT INTO "Period" VALUES (2,'1month');
 INSERT INTO "Period" VALUES (3,'12month');
@@ -14696,30 +14712,32 @@ INSERT INTO "Track" VALUES (2878,'Acolyte',1290,'3d888b16-6e35-4508-b12d-0d75682
 INSERT INTO "Track" VALUES (2879,'Gary''s Song',1291,'84f7aa65-0773-38f7-85fc-4ae3c62f20e4');
 INSERT INTO "Track" VALUES (2880,'In My Life - Remastered 2009',780,'');
 INSERT INTO "Track" VALUES (2881,'Rock Salt and Nails (Live)',139,'');
-INSERT INTO "User" VALUES (2,'lmscott17','Lucas','Scott','lmscott@stanford.edu',NULL,NULL,NULL,0);
-INSERT INTO "User" VALUES (3,'madisonfby','Madison','Fan','madifan@stanford.edu',NULL,NULL,NULL,0);
-INSERT INTO "User" VALUES (5,'silverth201','Matias','Benitez',NULL,NULL,NULL,NULL,0);
-INSERT INTO "User" VALUES (8,'VanillaM1lk','randoFirst0','randoLast0','randoemail0@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (9,'Redport2','randoFirst1','randoLast1','randoemail1@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (10,'auganz','randoFirst2','randoLast2','randoemail2@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (11,'gianna333','randoFirst3','randoLast3','randoemail3@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (12,'nscott356','randoFirst4','randoLast4','randoemail4@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (13,'inawordaverage','randoFirst5','randoLast5','randoemail5@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (14,'Meto_martinez55','randoFirst6','randoLast6','randoemail6@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (15,'Gstv0_','randoFirst7','randoLast7','randoemail7@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (16,'tiez1901','randoFirst8','randoLast8','randoemail8@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (17,'thereseannec','randoFirst9','randoLast9','randoemail9@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (18,'Lapanenn','randoFirst10','randoLast10','randoemail10@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (19,'hayleyukulele','randoFirst11','randoLast11','randoemail11@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (20,'FadelShoughari','randoFirst12','randoLast12','randoemail12@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (21,'PedroDark','randoFirst13','randoLast13','randoemail13@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (22,'rowkn','randoFirst14','randoLast14','randoemail14@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (23,'cjonas41','Christian','Jonas','cajon@stanford.edu',NULL,NULL,NULL,0);
-INSERT INTO "User" VALUES (24,'zugzug104','Asher','Hensley','asher104@stanford.edu',NULL,NULL,NULL,0);
-INSERT INTO "User" VALUES (25,'ericktheonlyone','randoFirst15','randoLast15','randoemail15@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (26,'JCG_ahhhh','randoFirst16','randoLast16','randoemail16@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (27,'mrirveing','randoFirst17','randoLast17','randoemail17@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (28,'yenuu1','randoFirst18','randoLast18','randoemail18@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (29,'dporterfield18','randoFirst19','randoLast19','randoemail19@stanford.edu',NULL,NULL,NULL,1);
-INSERT INTO "User" VALUES (30,'llauren_th','Lauren','Garcia','llauren_th@stanford.edu',NULL,NULL,NULL,0);
+INSERT INTO "User" VALUES (2,'lmscott17','Lucas','Scott','lmscott@stanford.edu','https://www.last.fm/user/lmscott17',X'24326224313224686a4d41756e344f567363444f59694b5a475467786566316d4463345958333456766b615051644a564e775449436635723830794b',X'24326224313224686a4d41756e344f567363444f59694b5a4754677865',0,1,'2025-05-24 17:44:06','https://lastfm.freetls.fastly.net/i/u/34s/24f96124dae039df2d9a820b68418c57.png','https://lastfm.freetls.fastly.net/i/u/64s/24f96124dae039df2d9a820b68418c57.png','https://lastfm.freetls.fastly.net/i/u/174s/24f96124dae039df2d9a820b68418c57.png','https://lastfm.freetls.fastly.net/i/u/300x300/24f96124dae039df2d9a820b68418c57.png');
+INSERT INTO "User" VALUES (3,'madisonfby','Madison','Fan','madifan@stanford.edu','https://www.last.fm/user/Madisonfby','',NULL,0,1,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (5,'silverth201','Matias','Benitez',NULL,'https://www.last.fm/user/silverth201','',NULL,0,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (8,'VanillaM1lk','randoFirst0','randoLast0','randoemail0@stanford.edu','https://www.last.fm/user/VanillaM1lk','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (9,'Redport2','randoFirst1','randoLast1','randoemail1@stanford.edu','https://www.last.fm/user/Redport2','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/d7b55418df297c5e52c3b6b91f47a4ad.png','https://lastfm.freetls.fastly.net/i/u/64s/d7b55418df297c5e52c3b6b91f47a4ad.png','https://lastfm.freetls.fastly.net/i/u/174s/d7b55418df297c5e52c3b6b91f47a4ad.png','https://lastfm.freetls.fastly.net/i/u/300x300/d7b55418df297c5e52c3b6b91f47a4ad.png');
+INSERT INTO "User" VALUES (10,'auganz','randoFirst2','randoLast2','randoemail2@stanford.edu','https://www.last.fm/user/auganz','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (11,'gianna333','randoFirst3','randoLast3','randoemail3@stanford.edu','https://www.last.fm/user/gianna333','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (12,'nscott356','randoFirst4','randoLast4','randoemail4@stanford.edu','https://www.last.fm/user/nscott356','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (13,'inawordaverage','randoFirst5','randoLast5','randoemail5@stanford.edu','https://www.last.fm/user/inawordaverage','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/926db26fb4b65197d4611d77b0c6c971.png','https://lastfm.freetls.fastly.net/i/u/64s/926db26fb4b65197d4611d77b0c6c971.png','https://lastfm.freetls.fastly.net/i/u/174s/926db26fb4b65197d4611d77b0c6c971.png','https://lastfm.freetls.fastly.net/i/u/300x300/926db26fb4b65197d4611d77b0c6c971.png');
+INSERT INTO "User" VALUES (14,'Meto_martinez55','randoFirst6','randoLast6','randoemail6@stanford.edu','https://www.last.fm/user/Meto_martinez55','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (15,'Gstv0_','randoFirst7','randoLast7','randoemail7@stanford.edu','https://www.last.fm/user/Gstv0_','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/a99765f881047ccb8b96086a365655a7.png','https://lastfm.freetls.fastly.net/i/u/64s/a99765f881047ccb8b96086a365655a7.png','https://lastfm.freetls.fastly.net/i/u/174s/a99765f881047ccb8b96086a365655a7.png','https://lastfm.freetls.fastly.net/i/u/300x300/a99765f881047ccb8b96086a365655a7.png');
+INSERT INTO "User" VALUES (16,'tiez1901','randoFirst8','randoLast8','randoemail8@stanford.edu','https://www.last.fm/user/tiez1901','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (17,'thereseannec','randoFirst9','randoLast9','randoemail9@stanford.edu','https://www.last.fm/user/thereseannec','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (18,'Lapanenn','randoFirst10','randoLast10','randoemail10@stanford.edu','https://www.last.fm/user/Lapanenn','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/b0594f7d2ca1436fc3064906bf648679.png','https://lastfm.freetls.fastly.net/i/u/64s/b0594f7d2ca1436fc3064906bf648679.png','https://lastfm.freetls.fastly.net/i/u/174s/b0594f7d2ca1436fc3064906bf648679.png','https://lastfm.freetls.fastly.net/i/u/300x300/b0594f7d2ca1436fc3064906bf648679.png');
+INSERT INTO "User" VALUES (19,'hayleyukulele','randoFirst11','randoLast11','randoemail11@stanford.edu','https://www.last.fm/user/hayleyukulele','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/06cb0a2124fc4484c45a7b6c04267873.png','https://lastfm.freetls.fastly.net/i/u/64s/06cb0a2124fc4484c45a7b6c04267873.png','https://lastfm.freetls.fastly.net/i/u/174s/06cb0a2124fc4484c45a7b6c04267873.png','https://lastfm.freetls.fastly.net/i/u/300x300/06cb0a2124fc4484c45a7b6c04267873.png');
+INSERT INTO "User" VALUES (20,'FadelShoughari','randoFirst12','randoLast12','randoemail12@stanford.edu','https://www.last.fm/user/FadelShoughari','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (21,'PedroDark','randoFirst13','randoLast13','randoemail13@stanford.edu','https://www.last.fm/user/PedroDark','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/7991c6f09ded76477bea2c4b78236778.png','https://lastfm.freetls.fastly.net/i/u/64s/7991c6f09ded76477bea2c4b78236778.png','https://lastfm.freetls.fastly.net/i/u/174s/7991c6f09ded76477bea2c4b78236778.png','https://lastfm.freetls.fastly.net/i/u/300x300/7991c6f09ded76477bea2c4b78236778.png');
+INSERT INTO "User" VALUES (22,'rowkn','randoFirst14','randoLast14','randoemail14@stanford.edu','https://www.last.fm/user/rowkn','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/b24e95e05a0e782c395a495d0fe7f14d.png','https://lastfm.freetls.fastly.net/i/u/64s/b24e95e05a0e782c395a495d0fe7f14d.png','https://lastfm.freetls.fastly.net/i/u/174s/b24e95e05a0e782c395a495d0fe7f14d.png','https://lastfm.freetls.fastly.net/i/u/300x300/b24e95e05a0e782c395a495d0fe7f14d.png');
+INSERT INTO "User" VALUES (23,'cjonas41','Christian','Jonas','cajon@stanford.edu','https://www.last.fm/user/cjonas41','',NULL,0,1,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (24,'zugzug104','Asher','Hensley','asher104@stanford.edu','https://www.last.fm/user/zugzug104','',NULL,0,1,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (25,'ericktheonlyone','randoFirst15','randoLast15','randoemail15@stanford.edu','https://www.last.fm/user/ericktheonlyone','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (26,'JCG_ahhhh','randoFirst16','randoLast16','randoemail16@stanford.edu','https://www.last.fm/user/JCG_ahhhh','',NULL,1,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/28964c5096eab405cf13b75bcaa89955.png','https://lastfm.freetls.fastly.net/i/u/64s/28964c5096eab405cf13b75bcaa89955.png','https://lastfm.freetls.fastly.net/i/u/174s/28964c5096eab405cf13b75bcaa89955.png','https://lastfm.freetls.fastly.net/i/u/300x300/28964c5096eab405cf13b75bcaa89955.png');
+INSERT INTO "User" VALUES (27,'mrirveing','randoFirst17','randoLast17','randoemail17@stanford.edu','https://www.last.fm/user/mrirveing','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (28,'yenuu1','randoFirst18','randoLast18','randoemail18@stanford.edu','https://www.last.fm/user/yenuu1','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (29,'dporterfield18','randoFirst19','randoLast19','randoemail19@stanford.edu','https://www.last.fm/user/dporterfield18','',NULL,1,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (30,'llauren_th','Lauren','Garcia','llauren_th@stanford.edu','https://www.last.fm/user/llauren_th','',NULL,0,0,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (35,'NewTestProfile5','Testy','Tester','Testy.tester5@testingness.com',NULL,X'24326224313224695149786e55466b375870794a717168773968322e65387a5067464e436d305738365a7178733979734b7979567174434652357071',X'24326224313224695149786e55466b375870794a717168773968322e65',0,0,'2025-05-24 17:26:55',NULL,NULL,NULL,NULL);
+INSERT INTO "User" VALUES (36,'sy1vi3','sy1vi3','sy1vi3','sy1vi3@last.fm.com','https://www.last.fm/user/sy1vi3',X'243262243132246e6251656862516131714845453476454f653271732e437262774669742e736252675850655138453744384670336a2e636277792e',X'243262243132246e6251656862516131714845453476454f653271732e',0,0,NULL,'https://lastfm.freetls.fastly.net/i/u/34s/fccb1b5102150981511edf8572ff9232.png','https://lastfm.freetls.fastly.net/i/u/64s/fccb1b5102150981511edf8572ff9232.png','https://lastfm.freetls.fastly.net/i/u/174s/fccb1b5102150981511edf8572ff9232.png','https://lastfm.freetls.fastly.net/i/u/300x300/fccb1b5102150981511edf8572ff9232.png');
 COMMIT;
