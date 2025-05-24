@@ -180,7 +180,9 @@ def api_user_unfollow():
 @app.route("/api/user/followers")
 def api_user_followers():
     """
-    GET /api/user/followers?user=<LastFmProfileName>&limit=<n>
+    Retrieves records for who is following a user.
+    Example:
+        GET /api/user/followers?user=<LastFmProfileName>&limit=<n>
     Returns JSON:
       {
         "followers": [
@@ -264,7 +266,9 @@ def api_user_following():
 @app.route("/api/user/conversations")
 def api_user_conversations():
     """
-    GET /api/user/conversations?user=<LastFmProfileName>&limit=<n>
+    Retrives a conversations for a user.
+    Example:
+        GET /api/user/conversations?user=<LastFmProfileName>&limit=<n>
     Returns JSON:
       {
         "conversations": [
@@ -316,7 +320,9 @@ def api_user_conversations():
 @app.route("/api/user/direct-messages")
 def api_user_direct_messages():
     """
-    GET /api/user/direct-messages?user=<LastFmProfileName>&conversant=<LastFmProfileName>&limit=<n>
+    Retrieves direct messages between a user and another user (conversant).
+    Example:
+        GET /api/user/direct-messages?user=<LastFmProfileName>&conversant=<LastFmProfileName>&limit=<n>
     Returns JSON:
       {
         "directMessages": [
@@ -378,7 +384,9 @@ def api_user_direct_messages():
 @app.route("/api/send-direct-message", methods=['POST'])
 def api_send_direct_message():
     """
-    POST /api/send-direct-message?user=<LastFmProfileName>&recipient=<LastFmProfileName>&message=<str>
+    Sends a direct message from one user to another.
+    Example:
+        POST /api/send-direct-message?user=<LastFmProfileName>&recipient=<LastFmProfileName>&message=<str>
     Raises:
         400 Bad Request: If the user, recipient, or message is not provided or invalid.
     Returns:
@@ -414,7 +422,9 @@ def api_send_direct_message():
 @app.route("/api/mark-messages-read", methods=['POST'])
 def api_mark_messages_read():
     """
-    POST /api/mark-messages-read?sender=<LastFmProfileName>&recipient=<LastFmProfileName>
+    Marks all messages as read for a conversation between two users.
+    Example:
+        POST /api/mark-messages-read?sender=<LastFmProfileName>&recipient=<LastFmProfileName>
     Raises:
         400 Bad Request: If the user or recipient is not provided or invalid.
     Returns:
@@ -449,7 +459,9 @@ def api_mark_messages_read():
 @app.route("/api/user/top-artists")
 def api_user_top_artists():
     """
-    GET /api/user/top-artists?user=<LastFmProfileName>&period=<PeriodName>&limit=<n>
+    Gets top artists and number of scrobbles (listens) for a user.
+    Example:
+        GET /api/user/top-artists?user=<LastFmProfileName>&period=<PeriodName>&limit=<n>
     Returns JSON:
       {
         "topArtists": [
