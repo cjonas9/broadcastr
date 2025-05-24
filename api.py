@@ -92,6 +92,58 @@ def api_top_listeners():
         "topListeners": top_listeners
     })
 
+@app.route("/api/user/conversations")
+def api_user_conversations():
+    """
+    GET /api/user/conversations?user=<LastFmProfileName>&limit=<n>
+    Returns JSON:
+      {
+        "conversations": [
+          { "conversant": str, "messagecount": int, "unreadcount": int, "lastconversation": str },
+          …
+        ]
+      }
+    """
+    user = request.args.get("user", "")
+    limit = int(request.args.get("limit", 50))
+
+    sql = """
+        SELECT conversant, COUNT(id) AS messagecount, SUM(unread) AS unreadcount, MAX(timestamp) AS lastconversation
+        FROM (
+            SELECT Sender.LastFmProfileName AS conversant, MessageReceived.DirectMessageID as id,
+                   CASE WHEN MessageReceived.Read = 1 THEN 0 ELSE 1 END AS Unread, MessageReceived.TimeSent AS timestamp
+            FROM DirectMessage AS MessageReceived
+            INNER JOIN User AS Sender ON MessageReceived.SenderID = Sender.UserID
+            INNER JOIN User AS Recipient ON MessageReceived.RecipientID = Recipient.UserID
+            WHERE Recipient.LastFmProfileName = ?
+            UNION ALL
+            SELECT Recipient.LastFmProfileName AS conversant, MessageSent.DirectMessageID AS id,
+                   0 AS Unread, MessageSent.TimeSent as timestamp
+            FROM DirectMessage AS MessageSent
+            INNER JOIN User AS Sender ON MessageSent.SenderID = Sender.UserID
+            INNER JOIN User AS Recipient ON MessageSent.RecipientID = Recipient.UserID
+            WHERE Sender.LastFmProfileName = ?
+        ) AS data
+        GROUP BY conversant
+        ORDER BY lastconversation DESC
+        LIMIT ?
+    """
+    conn = get_db_connection()
+    rows = conn.execute(sql, (user, user, limit)).fetchall()
+    conn.close()
+
+    conversations = [
+        {
+          "conversant":         row["conversant"],
+          "messagecount":       row["messagecount"],
+          "unreadcount":        row["unreadcount"],
+          "lastconversation":   row["lastconversation"]
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "conversations": conversations })
+
 @app.route("/api/user/direct-messages")
 def api_user_direct_messages():
     """
@@ -120,7 +172,7 @@ def api_user_direct_messages():
                 INNER JOIN User AS Recipient ON MessageReceived.RecipientID = Recipient.UserID
                 INNER JOIN User AS Sender ON MessageReceived.SenderID = Sender.UserID
                 WHERE Recipient.LastFmProfileName = ?
-                AND Sender.LastFmProfileName = ?
+                   AND Sender.LastFmProfileName = ?
                 UNION ALL
                 SELECT 'Outgoing' As type, MessageSent.DirectMessageID as id, Sender.LastFmProfileName AS sender,
                     Recipient.LastFmProfileName AS recipient, MessageSent.MessageBody AS message,
@@ -129,7 +181,7 @@ def api_user_direct_messages():
                 INNER JOIN User AS Recipient ON MessageSent.RecipientID = Recipient.UserID
                 INNER JOIN User AS Sender on MessageSent.SenderID = Sender.UserID
                 WHERE Sender.LastFmProfileName = ?
-                AND Recipient.LastFmProfileName = ?
+                   AND Recipient.LastFmProfileName = ?
             ) AS innerData /* Inner data ensures we get the most recent messages when limiting */
             ORDER BY innerData.timestamp DESC
             LIMIT ?
@@ -147,7 +199,7 @@ def api_user_direct_messages():
           "sender":     row["sender"],
           "recipient":  row["recipient"],
           "message":    row["message"],
-          "timestamp":  row["timestamp"],
+          "timestamp":  row["timestamp"]
         }
         for row in rows
     ]
