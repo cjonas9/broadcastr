@@ -1,7 +1,10 @@
-from flask import Flask, jsonify, request
-import sql_query
+"""
+This module provides API routes for interacting with the broadcastr backend/database.
+"""
 import sqlite3
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+import sql_query
 
 app = Flask(__name__)
 CORS(app)
@@ -98,7 +101,7 @@ def api_user_follow():
     """
     Creates a following relationship between two users
     Example:
-        POST /api/user/follow?follower=<LastFmProfileName>&followee=<LastFmProfileName>
+        POST /api/user/follow?follower=LastFmProfileName&followee=LastFmProfileName
     Raises:
         400 Bad Request: If the follower or followee is not provided or invalid.
         400 Bad Request: If a following record already exists for this follower/followee
@@ -140,7 +143,7 @@ def api_user_unfollow():
     """
     Removes a following relationship between two users
     Example:
-        POST /api/user/unfollow?follower=<LastFmProfileName>&followee=<LastFmProfileName>
+        POST /api/user/unfollow?follower=LastFmProfileName&followee=LastFmProfileName
     Raises:
         400 Bad Request: If the follower or followee is not provided or invalid.
         400 Bad Request: If a following record does not exist for this follower/followee
@@ -182,7 +185,7 @@ def api_user_followers():
     """
     Retrieves records for who is following a user.
     Example:
-        GET /api/user/followers?user=<LastFmProfileName>&limit=<n>
+        GET /api/user/followers?user=LastFmProfileName&limit=n
     Returns JSON:
       {
         "followers": [
@@ -225,7 +228,7 @@ def api_user_following():
     """
     Retrieves records for who a user is following.
     Example:
-        GET /api/user/following?user=<LastFmProfileName>&limit=<n>
+        GET /api/user/following?user=LastFmProfileName&limit=n
     Returns JSON:
       {
         "following": [
@@ -268,7 +271,7 @@ def api_user_conversations():
     """
     Retrives a conversations for a user.
     Example:
-        GET /api/user/conversations?user=<LastFmProfileName>&limit=<n>
+        GET /api/user/conversations?user=LastFmProfileName&limit=n
     Returns JSON:
       {
         "conversations": [
@@ -322,11 +325,12 @@ def api_user_direct_messages():
     """
     Retrieves direct messages between a user and another user (conversant).
     Example:
-        GET /api/user/direct-messages?user=<LastFmProfileName>&conversant=<LastFmProfileName>&limit=<n>
+        GET /api/user/direct-messages?user=LastFmProfileName&conversant=LastFmProfileName&limit=n
     Returns JSON:
       {
         "directMessages": [
-          { "id": int, "type": str, "sender": str, "recipient": str, "message": str, "timestamp": str },
+          { "id": int, "type": str, "sender": str, "recipient": str,
+          "message": str, "timestamp": str },
           …
         ]
       }
@@ -386,7 +390,7 @@ def api_send_direct_message():
     """
     Sends a direct message from one user to another.
     Example:
-        POST /api/send-direct-message?user=<LastFmProfileName>&recipient=<LastFmProfileName>&message=<str>
+        POST /api/send-direct-message?user=LastFmProfileName&recipient=LastFmProfileName&message=str
     Raises:
         400 Bad Request: If the user, recipient, or message is not provided or invalid.
     Returns:
@@ -424,7 +428,7 @@ def api_mark_messages_read():
     """
     Marks all messages as read for a conversation between two users.
     Example:
-        POST /api/mark-messages-read?sender=<LastFmProfileName>&recipient=<LastFmProfileName>
+        POST /api/mark-messages-read?sender=LastFmProfileName&recipient=LastFmProfileName
     Raises:
         400 Bad Request: If the user or recipient is not provided or invalid.
     Returns:
@@ -461,7 +465,7 @@ def api_user_top_artists():
     """
     Gets top artists and number of scrobbles (listens) for a user.
     Example:
-        GET /api/user/top-artists?user=<LastFmProfileName>&period=<PeriodName>&limit=<n>
+        GET /api/user/top-artists?user=LastFmProfileName&period=PeriodName&limit=n
     Returns JSON:
       {
         "topArtists": [
@@ -532,4 +536,3 @@ def get_artist_by_id():
 if __name__ == "__main__":
     print("Backend is running on port 8000...")
     app.run(host='127.0.0.1', port=8000, debug=True)
-

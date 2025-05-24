@@ -4,9 +4,6 @@ data in the broadCastr SQLite database.
 """
 import json
 import sqlite3
-import requests
-from bs4 import BeautifulSoup
-from typing import List
 import time
 
 import db_query
@@ -579,9 +576,6 @@ def store_top_track(userid, trackid, periodid, playcount):
 def store_user(username, firstname, lastname, email):
 	connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
 	cursor = connection.cursor()
-
-	# print(f"storing top track data")
-	id = cursor.lastrowid
 
 	cursor.execute(
 		"INSERT INTO User (LastFmProfileName,FirstName,LastName,EmailAddress) " \
