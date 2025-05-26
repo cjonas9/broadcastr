@@ -61,7 +61,7 @@ export default function SignUp() {
             value={lastfm}
             onChange={e => setLastfm(e.target.value)}
           />
-		  <label className="block text-gray-300 mb-1">Last.FM User ID</label>
+		  <label className="block text-gray-300 mb-1">Email</label>
           <input
             className="w-full bg-gray-800 rounded-md px-4 py-3 text-gray-200 placeholder-gray-500 outline-none mb-4"
             placeholder="email"
