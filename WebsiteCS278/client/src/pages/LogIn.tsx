@@ -12,7 +12,7 @@ export default function LogIn() {
 
   const handleLogin = async () => {
 	try {
-	  const res = await fetch(`/api/user/login?user=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`, {
+	  const res = await fetch(`/api/user/login?user=${encodeURIComponent(lastfm)}&password=${encodeURIComponent(password)}`, {
 		method: "POST"
 	  });
   
@@ -24,7 +24,7 @@ export default function LogIn() {
   
 	  // If successful, update auth context and redirect
 	  setIsLoggedIn(true);
-	  setUsername(email); // or parse/display name from backend if available
+	  setUsername(lastfm); // or parse/display name from backend if available
 	  setLocation("/");
 	} catch (err) {
 	  console.error("Login error:", err);
@@ -52,7 +52,7 @@ export default function LogIn() {
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
-        <button
+        <ButtonWrapper
           className="w-full bg-[#6C4ED9] text-white font-bold py-4 rounded-full mb-4 text-lg"
           onClick={() => {handleLogin}}
         >
