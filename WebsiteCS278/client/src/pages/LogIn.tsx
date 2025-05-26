@@ -55,7 +55,7 @@ export default function LogIn() {
         />
         <ButtonWrapper
           className="w-full bg-[#6C4ED9] text-white font-bold py-4 rounded-full mb-4 text-lg"
-          onClick={() => {handleLogin}}
+          onClick={() => handleLogin()}
         >
           Log In
         </ButtonWrapper>
