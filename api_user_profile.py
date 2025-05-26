@@ -152,7 +152,7 @@ def api_user_login():
     user_id = sql_query.query_user_id(user)
 
     if user_id == 0:
-        return jsonify({"error": "Missing or invalid user"}), 400
+        return jsonify({"success": False, "error": "Missing or invalid user"}), 400
     # if not password.strip():
     #     return jsonify({"error": "password is required"}), 400
 
@@ -166,11 +166,11 @@ def api_user_login():
     user_id_pw = sql_query.query_user_id_by_password(user, hashed_password)
 
     if user_id_pw == 0:
-        return jsonify({"error": "Invalid password"}), 400
+        return jsonify({"success": False, "error": "Invalid password"}), 400
 
     # This should never happen, but indicates a severe problem with database integrity if it does.
     if user_id != user_id_pw:
-        return jsonify({"error": "Data integrity issue"}), 400
+        return jsonify({"success": False, "error": "Data integrity issue"}), 400
 
     connection = sql_query.get_db_connection_isolation_none()
     cursor = connection.cursor()
@@ -184,7 +184,7 @@ def api_user_login():
     cursor.close()
     connection.close()
 
-    return jsonify({"success": "login successful"}), 200
+    return jsonify({"success": True, "error": ""}), 200
 
 @user_profile_bp.route("/api/user/reset-password", methods=['POST'])
 def api_user_reset_password():

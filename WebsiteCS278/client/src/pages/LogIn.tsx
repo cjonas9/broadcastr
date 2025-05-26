@@ -22,11 +22,16 @@ export default function LogIn() {
 		alert(error.error || "Login failed");
 		return;
 	  }
-  
-	  // If successful, update auth context and redirect
-	  setIsLoggedIn(true);
-	  setUsername(lastfm); 
-	  setLocation("/");
+	  
+	  const data = await res.json();
+	  
+	  if (data.success) {
+		setIsLoggedIn(true);
+		setUsername(lastfm);
+		setLocation("/");
+	  } else {
+		alert("Login failed");
+	  }
 	} catch (err) {
 	  console.error("Login error:", err);
 	  alert("An error occurred while logging in.");
