@@ -20,7 +20,7 @@ def api_user_profile():
           { "id": int, "profile": str, "firstname": str, "lastname": str,
           "email": str, "profileurl": str, "bootstrapped": int, "admin: int",
           "lastlogin": str, "pfpsm": str, "pfpmed": str, "pfplg": str,
-           "pfpxl": str },
+           "pfpxl": str, "swag": int },
           …
         ]
       }
@@ -36,7 +36,7 @@ def api_user_profile():
                User.LastName AS lastname, User.EmailAddress AS email, LastFmProfileUrl AS profileurl,
                User.BootstrappedUser AS bootstrapped, User.Admin AS admin, User.LastLogin AS lastlogin,
                User.Pfpsmall AS pfpsm, User.PfpMedium as pfpmed, User.PfpLarge AS pfplg,
-               User.PfpExtraLarge AS pfpxl
+               User.PfpExtraLarge AS pfpxl, User.Swag AS swag
         FROM User
         WHERE UserID = ?
     """
@@ -58,7 +58,8 @@ def api_user_profile():
           "pfpsm":          row["pfpsm"],
           "pfpmed":         row["pfpmed"],
           "pfplg":          row["pfplg"],
-          "pfpxl":          row["pfpxl"]
+          "pfpxl":          row["pfpxl"],
+          "swag":           row["swag"]
         }
         for row in rows
     ]
@@ -122,12 +123,11 @@ def api_user_create_profile():
     # Store user data from last.fm such as profile pictures and profile url
     sql_query.store_user_last_fm_info(user)
 
-
     periods = ["overall", "7day", "1month", "12month", "6month", "3month"]
     for period in periods:
-        sql_query.store_top_artists(username, period)
+        sql_query.store_top_artists(user, period)
         time.sleep(0.05)
-        sql_query.store_top_tracks(username, period)
+        sql_query.store_top_tracks(user, period)
         time.sleep(0.05)
 
     return jsonify({"success": cursor.lastrowid}), 201
@@ -246,3 +246,39 @@ def api_user_reset_password():
     connection.close()
 
     return jsonify({"success": "password successfully updated"}), 200
+
+@user_profile_bp.route("/api/user/add-swag", methods=['POST'])
+def api_user_add_swag():
+    """
+    Adds swag to a user.
+    Example:
+        POST /api/user/add-swag?user=LastFmProfileName&swag=n
+    Raises:
+        400 Bad Request: If the user's profile could not be found.
+    Returns:
+        200 Success: Updated swag balance for this user.
+    """
+    user = request.args.get("user", "")
+    swag = request.args.get("swag", "0")
+
+    user_id = sql_query.query_user_id(user)
+
+    if user_id == 0:
+        return jsonify({"error": "Missing or invalid user"}), 400
+
+    current_swag = sql_query.query_swag(user)
+    new_swag = current_swag + int(swag)
+
+    connection = sql_query.get_db_connection_isolation_none()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "UPDATE User " \
+        "SET Swag = ? " \
+        "WHERE UserID = ?",
+        (new_swag, user_id))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"updated swag balance": new_swag}), 200

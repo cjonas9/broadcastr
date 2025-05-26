@@ -79,6 +79,16 @@ def query_user_id(username):
     """
     return query_id("UserID", "User", [["LastFmProfileName", username]])
 
+def query_swag(username):
+    """
+    Queries the database for current swag of a user.
+    Args:
+        username: The user's last.fm profile name
+    Returns:
+        numeric swag amount
+    """
+    return query_id("Swag", "User", [["LastFmProfileName", username]])
+
 def query_user_id_by_email(email):
     """
     Queries the database for the numeric id of a user.
@@ -393,9 +403,34 @@ def query_broadcasts():
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    sql = ""
+    base_query = """
+    """
+    sql = """
+        SELECT *
+        FROM (
+            SELECT Broadcast.BroadcastID AS id, User.LastFmProfileName AS user,
+                Broadcast.Title AS title, Broadcast.Body AS body,
+                Broadcast.Timestamp AS timestamp, RelatedType.Description AS type,
+                '' AS relatedto
+            FROM Broadcast
+            INNER JOIN User ON Broadcast.UserID = User.UserID
+            INNER JOIN RelatedType ON RelatedType.RelatedTypeID = BroadCast.RelatedTypeID
+                AND RelatedType.RelatedTypeID = 1
+            UNION
+            SELECT Broadcast.BroadcastID AS id, User.LastFmProfileName AS user,
+                Broadcast.Title AS title, Broadcast.Body AS body,
+                Broadcast.Timestamp AS timestamp, RelatedType.Description AS type,
+                Artist.ArtistName AS relatedto
+            FROM Broadcast
+            INNER JOIN User ON Broadcast.UserID = User.UserID
+            INNER JOIN RelatedType ON RelatedType.RelatedTypeID = BroadCast.RelatedTypeID
+                AND RelatedType.RelatedTypeID = 3
+            LEFT JOIN Artist ON Broadcast.RelatedID = Artist.ArtistID
+        ) AS broadcasts
+        ORDER BY Timestamp DESC
+    """
 
-    cursor.execute("SELECT * FROM User")
+    cursor.execute(sql)
     data = cursor.fetchall()
 
     cursor.close()
