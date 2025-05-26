@@ -29,7 +29,7 @@ export default function TrackSwap() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-xl mx-auto">
+      <div className="max-w-md mx-auto">
         {/* Header */}
         <h1 className="text-3xl font-bold text-center mb-2 mt-12">Track Swap Battle</h1>
         <p className="text-center text-gray-300 mb-8">
