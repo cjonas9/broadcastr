@@ -19,12 +19,16 @@ import DirectMessage from "./pages/DirectMessage";
 import Feed from "./pages/Feed";
 import Profile from "@/pages/Profile";
 import BroadcastTrack from "./pages/BroadcastTrack";
+import LogIn from "@/pages/LogIn";
+import SignUp from "@/pages/SignUp";
 
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Feed} />
+      <Route path="/login" component={LogIn} />
+      <Route path="/signup" component={SignUp} />
       <Route path="/artist/:id" component={ArtistDetail} />
       <Route path="/exploration/:id" component={ExplorationDetail} />
       <Route path="/friends" component={Friends} />
