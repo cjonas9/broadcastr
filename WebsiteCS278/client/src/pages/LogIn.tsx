@@ -17,21 +17,16 @@ export default function LogIn() {
 		method: "POST"
 	  });
   
-	//   if (!res.ok) {
-	// 	const error = await res.json();
-	// 	alert(error.error || "Login failed");
-	// 	return;
-	//   }
-	  
-	  const data = await res.json();
-	  
-	  if (data.success) {
-		setIsLoggedIn(true);
-		setUsername(lastfm);
-		setLocation("/");
-	  } else {
-		alert("Login failed");
+	  if (!res.ok) {
+		const error = await res.json();
+		alert(error.error || "Login failed");
+		return;
 	  }
+	  console.log(res);
+	  // If successful, update auth context and redirect
+	  setIsLoggedIn(true);
+	  setUsername(lastfm); 
+	  setLocation("/");
 	} catch (err) {
 	  console.error("Login error:", err);
 	  alert("An error occurred while logging in.");
