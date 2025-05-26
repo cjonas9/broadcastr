@@ -3,6 +3,7 @@
 import { useLocation } from "wouter";
 import { ChevronRightIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/AuthContext";
 
 const VITE_API_URL="https://broadcastr.onrender.com"
 
@@ -17,13 +18,16 @@ export default function TopArtists() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading]   = useState(true);
   const [, navigate] = useLocation();
+  const { isLoggedIn, username } = useAuth();
 
   useEffect(() => {
+	if (!isLoggedIn || !username) return;
+
     async function load() {
 		// NOTE: THIS PART CAN FETCH WITH SESSION DATA INSTEAD
       try {
         const res = await fetch(
-          VITE_API_URL + `/api/user/top-artists?user=cjonas41&period=overall&limit=10`
+          VITE_API_URL + `/api/user/top-artists?user=${encodeURIComponent(username)}&period=overall&limit=10`
         );
         const { topArtists } = await res.json();
         setArtists(topArtists);
@@ -34,7 +38,11 @@ export default function TopArtists() {
       }
     }
     load();
-  }, []);
+  }, [isLoggedIn, username]);
+
+  if (!isLoggedIn) {
+    return <p className="text-center text-gray-400">Please log in to view your top artists.</p>;
+  }
 
   if (loading) {
     return <p className="text-center text-gray-400">Loading top artists…</p>;
