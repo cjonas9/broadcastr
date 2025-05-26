@@ -17,11 +17,11 @@ export default function LogIn() {
 		method: "POST"
 	  });
   
-	  if (!res.ok) {
-		const error = await res.json();
-		alert(error.error || "Login failed");
-		return;
-	  }
+	//   if (!res.ok) {
+	// 	const error = await res.json();
+	// 	alert(error.error || "Login failed");
+	// 	return;
+	//   }
 	  
 	  const data = await res.json();
 	  
