@@ -11,6 +11,7 @@ export default function LogIn() {
   const {setIsLoggedIn, setUsername} = useAuth();
 
   const handleLogin = async () => {
+	console.log("called method!!");
 	try {
 	  const res = await fetch(`/api/user/login?user=${encodeURIComponent(lastfm)}&password=${encodeURIComponent(password)}`, {
 		method: "POST"
@@ -24,7 +25,7 @@ export default function LogIn() {
   
 	  // If successful, update auth context and redirect
 	  setIsLoggedIn(true);
-	  setUsername(lastfm); // or parse/display name from backend if available
+	  setUsername(lastfm); 
 	  setLocation("/");
 	} catch (err) {
 	  console.error("Login error:", err);
