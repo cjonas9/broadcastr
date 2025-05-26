@@ -10,6 +10,36 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
 
+  const handleSignup = async () => {
+    if (!email || !lastfm || !password || !password2) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    if (password !== password2) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const url = `/api/user/create-profile?user=${encodeURIComponent(lastfm)}&firstname=${encodeURIComponent(lastfm)}&lastname=${encodeURIComponent(lastfm)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+      const res = await fetch(url, { method: "POST" });
+
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Sign up failed.");
+        return;
+      }
+
+      alert("Account created! Redirecting to login...");
+      setLocation("/login");
+    } catch (err) {
+      console.error("Signup error:", err);
+      alert("An error occurred while signing up.");
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col justify-center items-center px-4">
       <div className="w-full max-w-md">
@@ -50,7 +80,7 @@ export default function SignUp() {
           <ButtonWrapper  
             width="full"
             className="mb-4"
-            onClick={() => {/*TODO LINK LOG IN FLOW*/}}
+            onClick={() => handleSignup()}
             >  
             Sign Up
           </ButtonWrapper>
