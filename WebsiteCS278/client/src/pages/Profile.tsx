@@ -34,15 +34,15 @@ export default function Profile() {
             Tracks you broadcasted that were most liked by other broadcastrs
           </p>
           <TopTrackPost
-  track={{
-    id: musicData.mockSongs[0].id,
-    title: musicData.mockSongs[0].name,
-    artist: musicData.mockSongs[0].artist.name,
-    albumArt: musicData.mockSongs[0].artist.image,
-    trackLink: musicData.mockSongs[0].spotifyUrl,
-  }}
-  likes={16}
-/>
+            track={{
+              id: musicData.mockSongs[0].id,
+              title: musicData.mockSongs[0].title,
+              artist: musicData.mockSongs[0].artist,
+              albumArt: musicData.mockSongs[0].albumArt,
+              trackLink: musicData.mockSongs[0].trackLink
+            }}
+            likes={16}
+          />
 
           <div className="mt-4">
             <button className="w-full bg-purple-600 text-white py-2 rounded-md text-center text-sm font-semibold">
