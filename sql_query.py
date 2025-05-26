@@ -105,6 +105,16 @@ def query_album_id(albumname, artistid):
     # Simply doing a name lookup for now, but MBID might be better with name as a fallback
     return query_id("AlbumID", "Album", [["AlbumName", albumname], ["ArtistID", artistid]])
 
+def query_related_type_id(relatedtype):
+    """
+    Queries the database for the numeric id of a related type.
+    Args:
+        relatedtype: The related type description
+    Returns:
+        numeric related type id
+    """
+    return query_id("RelatedTypeID", "RelatedType", [["Description", relatedtype]])
+
 def query_track_id(trackname, artistid):
     """
     Queries the database for the numeric id of a track.
@@ -391,6 +401,39 @@ def store_album(albumname, artistid, mbid):
     connection.close()
 
     print(f"New record ID: {cursor.lastrowid}")
+
+    return cursor.lastrowid
+
+def store_broadcast(broadcast_id, user_id, title, body, related_type_id, related_id, system_broadcast=0):
+    """
+    Stores a broadcast record.
+    Args:
+        broadcast_id: ID of the broadcast to store (0 if new)
+        user_id: ID of the user creating the broadcast
+        title: title of the broadcast
+        body: body of the broadcast
+        related_type_id: type id that this broadcast relates to
+        related_id: record id that this broadcast relates to
+        system_broadcast: boolean indicating whether or not this is a system broadcast
+    Returns:
+        numeric id of the inserted record
+    """
+    connection = get_db_connection_isolation_none()
+    cursor = connection.cursor()
+
+    if broadcast_id == 0:
+        cursor.execute(
+            """
+            INSERT INTO Broadcast(UserID, Title, Body, RelatedTypeID,
+                                  RelatedID, Timestamp, SystemBroadcast)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+            """,
+            (user_id, title, body, related_type_id, related_id, system_broadcast))
+    # else:
+        # TODO Update
+
+    cursor.close()
+    connection.close()
 
     return cursor.lastrowid
 
