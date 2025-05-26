@@ -29,7 +29,7 @@ def query_users():
     Returns:
         json results for users in the database
     """
-    connection = sqlite3.connect(BROADCASTR_DB)
+    connection = get_db_connection()
     cursor = connection.cursor()
 
     cursor.execute("SELECT * FROM User")
@@ -39,6 +39,35 @@ def query_users():
     connection.close()
 
     return json.dumps(data)
+
+def query_related_type_tables():
+    """
+    Queries the database for all related type database table records.
+    Returns:
+        json results related type database tables
+    """
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT RelatedTypeID, Description, DbTable
+        FROM RelatedType
+        ORDER BY RelatedTypeID
+        """
+    )
+
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    # Convert list of tuples to list of dicts
+    result = [
+        {"RelatedTypeID": row[0], "Description": row[1], "DbTable": row[2]}
+        for row in rows
+    ]
+
+    return json.dumps(result)
 
 def query_user_id(username):
     """
@@ -159,7 +188,7 @@ def query_id(idfield, table, lookup_pairs):
     Returns:
         numeric record id
     """
-    connection = sqlite3.connect(BROADCASTR_DB)
+    connection = get_db_connection()
     cursor = connection.cursor()
 
     namefield = lookup_pairs[0][0]
@@ -200,7 +229,7 @@ def query_top_artists(username, period):
     Returns:
         json results for user's top artist data
     """
-    connection = sqlite3.connect(BROADCASTR_DB)
+    connection = get_db_connection()
     cursor = connection.cursor()
 
     # Get the user's database id
@@ -235,7 +264,7 @@ def query_top_albums(username, period):
     Returns:
         json results for user's top album data
     """
-    connection = sqlite3.connect(BROADCASTR_DB)
+    connection = get_db_connection()
     cursor = connection.cursor()
 
     # Get the user's database id
@@ -272,7 +301,7 @@ def query_top_tracks(username, period):
     Returns:
         json results for user's top track data
     """
-    connection = sqlite3.connect(BROADCASTR_DB)
+    connection = get_db_connection()
     cursor = connection.cursor()
 
     # Get the user's database id
@@ -317,7 +346,7 @@ def query_listens_for_artist(username, artistname, periodname):
     LIMIT 1
     """
 
-    conn = sqlite3.connect(BROADCASTR_DB)
+    conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(sql, (username, artistname, periodname))
     row = cur.fetchone()
@@ -345,7 +374,7 @@ def query_top_listeners_for_artist(artistname, periodname, limit: int = 10):
      LIMIT ?
     """
 
-    conn = sqlite3.connect(BROADCASTR_DB)
+    conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(sql, (artistname, periodname, limit))
     results = cur.fetchall()
@@ -354,6 +383,26 @@ def query_top_listeners_for_artist(artistname, periodname, limit: int = 10):
 
     # results is List[(username:str, playcount:int)]
     return results
+
+def query_broadcasts():
+    """
+    Queries the database for broadcast records.
+    Returns:
+        json results for broadcasts in the database
+    """
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    sql = ""
+
+    cursor.execute("SELECT * FROM User")
+    data = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return json.dumps(data)
+
 
 def store_artist(artistname, mbid):
     """
@@ -364,7 +413,7 @@ def store_artist(artistname, mbid):
     Returns:
         numeric id of the inserted record
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     print(f"storing artist {artistname}, {mbid}")
@@ -387,7 +436,7 @@ def store_album(albumname, artistid, mbid):
     Returns:
         numeric id of the inserted record
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     print(f"storing album {albumname}, {mbid}")
@@ -446,7 +495,7 @@ def store_track(trackname, artistid, mbid):
     Returns:
         numeric id of the inserted record
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     print(f"storing track {trackname}, {mbid}")
@@ -508,7 +557,7 @@ def store_top_artist(userid, artistid, periodid, playcount):
     Returns:
         numeric id of the inserted record
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     # print(f"storing top artist data")
@@ -575,7 +624,7 @@ def store_top_album(userid, albumid, periodid, playcount):
     Returns:
         numeric id of the inserted record
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     # print(f"storing top album data")
@@ -642,7 +691,7 @@ def store_top_track(userid, trackid, periodid, playcount):
     Returns:
         numeric id of the inserted record
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     # print(f"storing top track data")
@@ -660,7 +709,7 @@ def store_top_track(userid, trackid, periodid, playcount):
     return cursor.lastrowid
 
 def store_user(username, firstname, lastname, email):
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     cursor.execute(
@@ -742,7 +791,7 @@ def delete_user(username):
     """
     Deletes the user with the given Last.fm profile name.
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     cursor.execute(
@@ -765,7 +814,7 @@ def delete_top_artists(userid, periodid):
         userid: The numeric user id data should be deleted for
         periodid: The period data should be deleted for
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     cursor.execute("DELETE FROM TopArtist WHERE UserID = ? AND PeriodID = ?", (userid, periodid))
@@ -780,7 +829,7 @@ def delete_top_albums(userid, periodid):
         userid: The numeric user id data should be deleted for
         periodid: The period data should be deleted for
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     cursor.execute("DELETE FROM TopAlbum WHERE UserID = ? AND PeriodID = ?", (userid, periodid))
@@ -795,7 +844,7 @@ def delete_top_tracks(userid, periodid):
         userid: The numeric user id data should be deleted for
         periodid: The period data should be deleted for
     """
-    connection = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
+    connection = get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     cursor.execute("DELETE FROM TopTrack WHERE UserID = ? AND PeriodID = ?", (userid, periodid))
