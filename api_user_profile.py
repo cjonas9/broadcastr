@@ -153,12 +153,15 @@ def api_user_login():
 
     if user_id == 0:
         return jsonify({"error": "Missing or invalid user"}), 400
-    if not password.strip():
-        return jsonify({"error": "password is required"}), 400
+    # if not password.strip():
+    #     return jsonify({"error": "password is required"}), 400
 
-    salt = sql_query.query_user_salt(user)
-    encoded_password = password.encode()
-    hashed_password = bcrypt.hashpw(encoded_password, salt)
+    if password.strip():
+        salt = sql_query.query_user_salt(user)
+        encoded_password = password.encode()
+        hashed_password = bcrypt.hashpw(encoded_password, salt)
+    else:
+        hashed_password = ""
 
     user_id_pw = sql_query.query_user_id_by_password(user, hashed_password)
 
