@@ -21,6 +21,7 @@ import Profile from "@/pages/Profile";
 import BroadcastTrack from "./pages/BroadcastTrack";
 import LogIn from "@/pages/LogIn";
 import SignUp from "@/pages/SignUp";
+import { AuthProvider } from "./AuthContext";
 
 
 function Router() {
@@ -51,7 +52,9 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <SwapProvider>
-          <Router />
+			<AuthProvider>
+          		<Router />
+			</AuthProvider>
         </SwapProvider>
       </TooltipProvider>
     </QueryClientProvider>
