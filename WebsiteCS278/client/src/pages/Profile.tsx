@@ -4,7 +4,7 @@ import TopArtists from "@/components/TopArtists";
 import { BottomToolbar } from "@/components/BottomToolbar";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { useLocation } from "wouter";
-import { FeedPost } from "@/components/FeedPost";
+import TopTrackPost from "@/components/TopTrackPost";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
@@ -33,12 +33,14 @@ export default function Profile() {
           <p className="text-sm text-gray-400 mb-4">
             Tracks you broadcasted that were most liked by other broadcastrs
           </p>
-          <FeedPost
-            user={musicData.friends[0]}
-            timeAgo="1 hr ago"
-            content="My new jam of the week"
-            type="track"
-            track={musicData.mockSongs[0]}
+          <TopTrackPost
+            track={{
+              id: musicData.mockSongs[0].id,
+              title: musicData.mockSongs[0].name,
+              artist: musicData.mockSongs[0].artist.name,
+              albumArt: musicData.mockSongs[0].artist.image,
+              trackLink: musicData.mockSongs[0].spotifyUrl,
+            }}
             likes={16}
           />
           <div className="mt-4">
