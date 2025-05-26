@@ -147,6 +147,54 @@ def api_user_top_artists():
 
     return jsonify({ "topArtists": top_artists })
 
+@app.route("/api/user/top-tracks")
+def api_user_top_tracks():
+    """
+    Gets top tracks and number of scrobbles (listens) for a user.
+    Example:
+        GET /api/user/top-tracks?user=LastFmProfileName&period=PeriodName&limit=n
+    Returns JSON:
+      {
+        "topTracks": [
+          { "id": int, "track": str, "artist": str, "playcount": int },
+          …
+        ]
+      }
+    """
+    user   = request.args.get("user", "")
+    period = request.args.get("period", "")
+    limit  = int(request.args.get("limit", "10"))
+
+    sql = """
+        SELECT Track.TrackID AS id, Track.TrackName AS track,
+               Artist.ArtistName AS artist, TopTrack.Playcount AS playcount
+        FROM TopTrack
+        INNER JOIN Track ON TopTrack.TrackID = Track.TrackID
+        INNER JOIN Artist ON Track.ArtistID = Artist.ArtistID
+        INNER JOIN User ON TopTrack.UserID = User.UserID
+        INNER JOIN Period ON TopTrack.PeriodID = Period.PeriodID
+        WHERE User.LastFmProfileName = ?
+            AND Period.PeriodName = ?
+        ORDER BY TopTrack.Playcount DESC
+        LIMIT ?
+    """
+
+    conn = sql_query.get_db_connection()
+    rows = conn.execute(sql, (user, period, limit)).fetchall()
+    conn.close()
+
+    top_tracks = [
+        {
+          "id":         row["id"],
+          "track":      row["track"],
+          "artist":     row["artist"],
+          "playcount":  row["playcount"],
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "topTracks": top_tracks })
+
 @app.route("/api/artist/by-id")
 @app.route("/artist/by-id")
 def get_artist_by_id():
