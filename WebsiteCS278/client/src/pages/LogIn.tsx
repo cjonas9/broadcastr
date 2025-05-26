@@ -1,10 +1,11 @@
+import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { Heading } from "@/components/Heading";
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 
 export default function LogIn() {
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("");
+  const [lastfm, setLastfm] = useState("");
   const [password, setPassword] = useState("");
 
   return (
@@ -15,30 +16,32 @@ export default function LogIn() {
       <div className="w-full max-w-md">
         <input
             className="w-full bg-gray-800 rounded-md px-4 py-3 mb-4 text-gray-200 placeholder-gray-500 outline-none"
-            placeholder="Your Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            placeholder="Last.FM username"
+            value={lastfm}
+            onChange={e => setLastfm(e.target.value)}
           />
           
         <input
-          className="w-full bg-gray-800 rounded-md px-4 py-3 text-gray-200 mb-4 placeholder-gray-500 outline-none"
+          className="w-full bg-gray-800 rounded-md px-4 py-3 text-gray-200 mb-8 placeholder-gray-500 outline-none"
           placeholder="Website password"
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
-        <button
-          className="w-full bg-[#6C4ED9] text-white font-bold py-4 rounded-full mb-4 text-lg"
-          onClick={() => {/* No-op for now */}}
-        >
+        <ButtonWrapper  
+          width="full"
+          onClick={() => {/*TODO LINK LOG IN FLOW*/}}
+          className="mb-4"
+          >  
           Log In
-        </button>
-        <button
-          className="w-full bg-[#232226] text-white font-bold py-4 rounded-full text-lg"
+        </ButtonWrapper>
+        <ButtonWrapper  
+          width="full"
+          variant="secondary"
           onClick={() => setLocation("/signup")}
-        >
-          Create Account
-        </button>
+          >  
+          Sign Up
+        </ButtonWrapper>
       </div>
     </div>
   );
