@@ -15,7 +15,7 @@ export default function LogIn() {
   const handleLogin = async () => {
 	console.log("called method!!");
 	try {
-	  const res = await fetch(VITE_API_URL + `http://localhost:8000/api/user/login?user=cjonas41&password=`, {
+	  const res = await fetch(VITE_API_URL + `/api/user/login?user=cjonas41&password=`, {
 		method: "POST"
 	  });
   
