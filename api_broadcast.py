@@ -8,7 +8,7 @@ import validation
 broadcast_bp = Blueprint('broadcast', __name__)
 
 @broadcast_bp.route("/api/create-broadcast", methods=['POST'])
-def api_send_direct_message():
+def api_create_broadcast():
     """
     Creates a broadcast.
     Example:
@@ -36,3 +36,96 @@ def api_send_direct_message():
     new_record_id = sql_query.store_broadcast(0, user_id, title, body, related_type_id, related_id)
 
     return jsonify({"success": new_record_id}), 201
+
+@broadcast_bp.route("/api/get-broadcasts")
+def api_get_broadcasts():
+    """
+    Retrieves broadcasts.  User and Type are optional.
+    Example:
+        GET /api/get-broadcasts?user=LastFmProfileName&type=type&limit=n
+    Returns JSON:
+      {
+        "broadcasts": [
+          { "id": int, "user": str, "title": str, "body": str,
+          "timestamp": str, "type": str, "relatedto": str, "relatedid: int" },
+          …
+        ]
+      }
+    """
+    user = request.args.get("user", "")
+    related_type = request.args.get("type", "")
+    limit = int(request.args.get("limit", "50"))
+    user_id = sql_query.query_user_id(user)
+
+    sql = """
+        SELECT *
+        FROM (
+    """
+
+    first = 1
+    related_types = sql_query.query_related_type_tables()
+    for row in related_types:
+        if related_type == "" or related_type == row['Description']:
+            if first == 1:
+                first = 0
+            else:
+                sql += """
+                    UNION
+                """
+            sql += """
+                SELECT Broadcast.BroadcastID AS id, UserTable.LastFmProfileName AS user,
+                    Broadcast.Title AS title, Broadcast.Body AS body,
+                    Broadcast.Timestamp AS timestamp, RelatedType.Description AS type,
+                    Broadcast.RelatedID,
+            """
+            if row['DbIdField'] is not None:
+                sql += f"{row['DbTable']}.{row['DbNameField']} AS relatedto"
+            else:
+                sql += "'' AS relatedto"
+            sql += """
+                FROM Broadcast
+                INNER JOIN User AS UserTable ON Broadcast.UserID = UserTable.UserID
+            """
+            if (user_id != 0):
+                sql += f"AND UserTable.UserID = {user_id}"
+            sql += f"""
+                INNER JOIN RelatedType ON RelatedType.RelatedTypeID = BroadCast.RelatedTypeID
+                    AND RelatedType.RelatedTypeID = {row['RelatedTypeID']}
+            """
+            if row['DbIdField'] is not None:
+                sql += f"""
+                LEFT JOIN {row['DbTable']} ON Broadcast.RelatedID = {row['DbTable']}.{row['DbIdField']}
+            """
+
+    sql += """
+        ) AS broadcasts
+        ORDER BY Timestamp DESC
+        LIMIT ?
+    """
+
+    print(f"Broadcasts query: {sql}")
+
+    connection = sql_query.get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(sql, (limit,))
+    rows = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    broadcasts = [
+        {
+          "id":         row["id"],
+          "user":       row["user"],
+          "title":      row["title"],
+          "body":       row["body"],
+          "timestamp":  row["timestamp"],
+          "type":       row["type"],
+          "relatedto":  row["relatedto"],
+          "relatedid":  row["relatedid"]
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "broadcasts": broadcasts })

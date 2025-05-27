@@ -51,7 +51,7 @@ def query_related_type_tables():
 
     cursor.execute(
         """
-        SELECT RelatedTypeID, Description, DbTable
+        SELECT RelatedTypeID, Description, DbTable, DbIdField, DbNameField
         FROM RelatedType
         ORDER BY RelatedTypeID
         """
@@ -62,12 +62,18 @@ def query_related_type_tables():
     connection.close()
 
     # Convert list of tuples to list of dicts
-    result = [
-        {"RelatedTypeID": row[0], "Description": row[1], "DbTable": row[2]}
+    result = [{
+        "RelatedTypeID": row[0],
+        "Description": row[1],
+        "DbTable": row[2],
+        "DbIdField": row[3],
+        "DbNameField": row[4]
+        }
         for row in rows
     ]
 
-    return json.dumps(result)
+    # return json.dumps(result)
+    return result
 
 def query_user_id(username):
     """
@@ -393,51 +399,6 @@ def query_top_listeners_for_artist(artistname, periodname, limit: int = 10):
 
     # results is List[(username:str, playcount:int)]
     return results
-
-def query_broadcasts():
-    """
-    Queries the database for broadcast records.
-    Returns:
-        json results for broadcasts in the database
-    """
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    base_query = """
-    """
-    sql = """
-        SELECT *
-        FROM (
-            SELECT Broadcast.BroadcastID AS id, User.LastFmProfileName AS user,
-                Broadcast.Title AS title, Broadcast.Body AS body,
-                Broadcast.Timestamp AS timestamp, RelatedType.Description AS type,
-                '' AS relatedto
-            FROM Broadcast
-            INNER JOIN User ON Broadcast.UserID = User.UserID
-            INNER JOIN RelatedType ON RelatedType.RelatedTypeID = BroadCast.RelatedTypeID
-                AND RelatedType.RelatedTypeID = 1
-            UNION
-            SELECT Broadcast.BroadcastID AS id, User.LastFmProfileName AS user,
-                Broadcast.Title AS title, Broadcast.Body AS body,
-                Broadcast.Timestamp AS timestamp, RelatedType.Description AS type,
-                Artist.ArtistName AS relatedto
-            FROM Broadcast
-            INNER JOIN User ON Broadcast.UserID = User.UserID
-            INNER JOIN RelatedType ON RelatedType.RelatedTypeID = BroadCast.RelatedTypeID
-                AND RelatedType.RelatedTypeID = 3
-            LEFT JOIN Artist ON Broadcast.RelatedID = Artist.ArtistID
-        ) AS broadcasts
-        ORDER BY Timestamp DESC
-    """
-
-    cursor.execute(sql)
-    data = cursor.fetchall()
-
-    cursor.close()
-    connection.close()
-
-    return json.dumps(data)
-
 
 def store_artist(artistname, mbid):
     """
