@@ -184,7 +184,7 @@ def api_user_login():
     cursor.close()
     connection.close()
 
-    return jsonify({"success": True, "error": ""}), 200
+    return jsonify({"success": True, "error": ""}), 201
 
 @user_profile_bp.route("/api/user/reset-password", methods=['POST'])
 def api_user_reset_password():
