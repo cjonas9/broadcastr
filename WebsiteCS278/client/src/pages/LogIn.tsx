@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/AuthContext";
 
+const VITE_API_URL="https://broadcastr.onrender.com"
+
 export default function LogIn() {
   const [, setLocation] = useLocation();
   const [lastfm, setLastfm] = useState("");
@@ -13,7 +15,7 @@ export default function LogIn() {
   const handleLogin = async () => {
 	console.log("called method!!");
 	try {
-	  const res = await fetch(`/api/user/login?user=${encodeURIComponent(lastfm)}&password=${encodeURIComponent(password)}`, {
+	  const res = await fetch(VITE_API_URL + `http://localhost:8000/api/user/login?user=cjonas41&password=`, {
 		method: "POST"
 	  });
   

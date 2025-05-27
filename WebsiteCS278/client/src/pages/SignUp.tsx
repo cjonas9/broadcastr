@@ -3,6 +3,8 @@ import { useLocation } from "wouter";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { Heading } from "@/components/Heading";
 
+const VITE_API_URL="https://broadcastr.onrender.com"
+
 export default function SignUp() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -22,7 +24,7 @@ export default function SignUp() {
     }
 
     try {
-      const url = `/api/user/create-profile?user=${encodeURIComponent(lastfm)}&firstname=${encodeURIComponent(lastfm)}&lastname=${encodeURIComponent(lastfm)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+      const url = VITE_API_URL + `/api/user/create-profile?user=${encodeURIComponent(lastfm)}&firstname=${encodeURIComponent(lastfm)}&lastname=${encodeURIComponent(lastfm)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
       const res = await fetch(url, { method: "POST" });
 
       if (!res.ok) {
