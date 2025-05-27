@@ -1,16 +1,17 @@
 // The page for a specific artist's top listens leaderboard
+// TODO: Make sure the swag only updates when the leaderboard is refreshed
 import { useRoute, useLocation } from "wouter";
 import { ArrowLeft, ChevronRightIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import SwagTag from "@/components/SwagTag";
+import { fetchSwag, awardSwag } from "@/utils/swag";
 
 const BACKEND_API_URL="https://broadcastr.onrender.com"
 
 // API call to fetch artist by ID
 export async function getArtistById(id: number) {
   try {
-	//console.log("yea")
     const res = await fetch(BACKEND_API_URL + `/api/artist/by-id?id=${id}`);
-	//console.log("hi")
     if (!res.ok) return null;
 	console.log("hello")
     const data = await res.json();
@@ -26,6 +27,49 @@ interface Listener {
   username: string;
   playcount: number;
   profileImage?: string;
+  swag?: number;
+}
+
+// Helper that determines the swag bonus for top 3 users
+const swagBonuses = [15, 10, 5];
+function getSwagBonus(index: number) {
+  return swagBonuses[index] || 0;
+}
+
+// Award swag to top 3 users and fetch their updated swag
+async function awardSwagToTopListeners(listeners: Listener[], setUpdatedSwag: (swag: { [username: string]: number }) => void) {
+  const swagUpdates: { [username: string]: number } = {};
+  for (let i = 0; i < 3 && i < listeners.length; i++) {
+    const result = await awardSwag(listeners[i].username, getSwagBonus(i));
+    if (result) {
+      swagUpdates[listeners[i].username] = result.new_swag;
+    }
+  }
+  setUpdatedSwag(prev => ({ ...prev, ...swagUpdates }));
+}
+
+// Helper that fetches initial swag values for top 3 users and current user if not in top 3
+async function fetchInitialSwag(listeners: Listener[], currentUser: { username: string }): Promise<{ [username: string]: number }> {
+  const swagUpdates: { [username: string]: number } = {};
+  // Fetch for top 3
+  for (let i = 0; i < 3 && i < listeners.length; i++) {
+    const swag = await fetchSwag(listeners[i].username);
+    if (swag !== null) {
+      swagUpdates[listeners[i].username] = swag;
+    }
+  }
+  // Also fetch for current user if not in top 3
+  const inTop3 = listeners.slice(0, 3).some(l => l.username === currentUser.username);
+  if (!inTop3) {
+    const you = listeners.find(l => l.username === currentUser.username);
+    if (you) {
+      const swag = await fetchSwag(you.username);
+      if (swag !== null) {
+        swagUpdates[you.username] = swag;
+      }
+    }
+  }
+  return swagUpdates;
 }
 
 export default function ArtistDetail() {
@@ -37,6 +81,9 @@ export default function ArtistDetail() {
   const [topListeners, setTopListeners] = useState<Listener[]>([]);
   const [userScrobbles, setUserScrobbles] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [updatedSwag, setUpdatedSwag] = useState<{ [username: string]: number }>({});
+  const swagAwardedRef = useRef(false);
+  const [userRanking, setUserRanking] = useState<string>("—");
 
   const currentUser = {
     username: "cjonas41",
@@ -44,10 +91,11 @@ export default function ArtistDetail() {
   };
 
   useEffect(() => {
-    if (!artistId) return;
+    if (artistId === null) return;
 
     let isActive = true;
     async function fetchArtist() {
+      if (artistId === null) return;
       const result = await getArtistById(artistId);
       if (isActive) {
         setArtist(result);
@@ -67,15 +115,20 @@ export default function ArtistDetail() {
     async function fetchData() {
       setLoading(true);
       try {
+        if (!artist) return;
         const tlRes = await fetch(
-        	BACKEND_API_URL + `/api/artist/top-listeners?artist=${encodeURIComponent(
+          BACKEND_API_URL + `/api/artist/top-listeners?artist=${encodeURIComponent(
             artist.name
           )}&period=overall&limit=50`
         );
         const { topListeners: fetchedTL } = await tlRes.json();
 
+        // Fetch initial swag values for top 3 and current user
+        const initialSwag = await fetchInitialSwag(fetchedTL, currentUser);
+        if (isActive) setUpdatedSwag(initialSwag);
+
         const pRes = await fetch(
-			BACKEND_API_URL + `/api/artist/listens?user=${encodeURIComponent(
+          BACKEND_API_URL + `/api/artist/listens?user=${encodeURIComponent(
             currentUser.username.replace(/^@/, "")
           )}&artist=${encodeURIComponent(artist.name)}&period=overall`
         );
@@ -96,6 +149,22 @@ export default function ArtistDetail() {
       isActive = false;
     };
   }, [artist, currentUser.username]);
+
+  useEffect(() => {
+    if (!loading) {
+      const sorted = [...topListeners].sort((a, b) => b.playcount - a.playcount);
+      const idx = sorted.findIndex((l) => l.username === currentUser.username);
+      setUserRanking(idx >= 0 ? `#${idx + 1}` : "—");
+    }
+  }, [topListeners, loading, currentUser.username]);
+
+  // Only call this function when the leaderboard is officially refreshed!
+  // For now, you can add a button to test it:
+  async function handleAwardSwag() {
+    if (topListeners.length > 0) {
+      await awardSwagToTopListeners(topListeners, setUpdatedSwag);
+    }
+  }
 
   if (!artist) {
     return (
@@ -157,12 +226,20 @@ export default function ArtistDetail() {
           </div>
 
           <div className="bg-gray-800 rounded-xl p-6 flex flex-col items-center">
-            <p className="text-gray-400 mb-2">Percentile</p>
+            <p className="text-gray-400 mb-2">Your Ranking</p>
             <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-              {percentile}%
+              {userRanking}
             </p>
           </div>
         </div>
+
+        {/* TEMPORARY: Button to manually award swag for testing, update later with leaderboard refreshing */}
+        <button
+          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-full mb-4"
+          onClick={handleAwardSwag}
+        >
+          Award Swag to Top 3 (for testing)
+        </button>
 
         <div className="bg-gray-800 rounded-xl overflow-hidden">
           <div className="p-4 border-b border-gray-700">
@@ -181,7 +258,18 @@ export default function ArtistDetail() {
                 );
               }
 
+              // Determine swag bonus for top 3
+              const swagBonus = getSwagBonus(index);
+              
+              // Determine user display ranking
               const isYou = listener.username === currentUser.username;
+              let displayRank;
+              if (isYou) {
+                displayRank = userRanking.replace('#', '');
+              } else {
+                displayRank = index + 1;
+              }
+
               return (
                 <div
                   key={listener.id}
@@ -192,7 +280,7 @@ export default function ArtistDetail() {
                   } ${isYou ? "bg-sky-700/50" : ""}`}
                 >
                   <div className="flex items-center w-8">
-                    <span className="font-bold text-white">{index + 1}</span>
+                    <span className="font-bold text-white">{displayRank}</span>
                   </div>
                   <div className="flex-1 flex items-center">
                     {listener.profileImage && (
@@ -209,6 +297,20 @@ export default function ArtistDetail() {
                       <div className="text-gray-400 text-sm">
                         {listener.playcount.toLocaleString()} scrobbles
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {swagBonus > 0 && (
+                        <div className="bg-gray-700 text-white rounded px-2 py-1 text-xs font-semibold">
+                          +{swagBonus} bonus
+                        </div>
+                      )}
+                      {(index < 3 || isYou) && (
+                        <SwagTag text={
+                          updatedSwag[listener.username] !== undefined
+                            ? `${updatedSwag[listener.username]}`
+                            : "..."
+                        } />
+                      )}
                     </div>
                     <button
                       className="text-gray-400 hover:text-white"
