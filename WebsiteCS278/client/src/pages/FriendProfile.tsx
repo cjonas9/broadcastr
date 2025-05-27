@@ -5,9 +5,8 @@ import ProfileHeader from "@/components/ProfileHeader";
 import TopArtists from "@/components/TopArtists";
 import ExplorationZones from "@/components/ExplorationZones"; // optional
 import DropDownMenu from "@/components/DropDownMenu";
+import TopTrackPost from "@/components/TopTrackPost";
 import { useState } from "react";
-
-
 
 export default function FriendProfile() {
   const [, params] = useRoute<{ id: string }>("/profile/:id");
@@ -53,6 +52,24 @@ export default function FriendProfile() {
         onMessageClick={() => setLocation(`/dm/${friend.id}`)}
       />
       <main className="max-w-md mx-auto px-4 pb-16">
+        {/* Top Broadcasted Tracks Section */}
+        <section className="mt-8 mb-8">
+          <h2 className="text-2xl font-bold text-white mb-2">Top Broadcasted Tracks</h2>
+          <p className="text-sm text-gray-400 mb-4">
+            Tracks broadcasted that were most liked by other broadcastrs
+          </p>
+          <TopTrackPost
+            track={{
+              id: musicData.mockSongs[0].id,
+              title: musicData.mockSongs[0].title,
+              artist: musicData.mockSongs[0].artist,
+              albumArt: musicData.mockSongs[0].albumArt,
+              trackLink: musicData.mockSongs[0].trackLink
+            }}
+            likes={16}
+          />
+        </section>
+
         <TopArtists artists={friend.topArtists} />
         <ExplorationZones artists={friend.topArtists} />
       </main>
