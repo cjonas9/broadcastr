@@ -14,11 +14,21 @@ key = "68237ca563ba0ac6a5915f31452b32d1"
 shared_secret = "08921d66963667bccb9f00fe9b35d6e9"
 
 def get_db_connection():
+    """
+    Gets the connection to the broadcastr database.
+    Returns:
+        connection to the broadcastr database
+    """
     conn = sqlite3.connect(BROADCASTR_DB)
     conn.row_factory = sqlite3.Row
     return conn
 
 def get_db_connection_isolation_none():
+    """
+    Gets the connection to the broadcastr database w/ isolation level = none.
+    Returns:
+        connection to the broadcastr database
+    """
     conn = sqlite3.connect(BROADCASTR_DB, isolation_level=None)
     conn.row_factory = sqlite3.Row
     return conn
@@ -449,7 +459,7 @@ def store_album(albumname, artistid, mbid):
 
     return cursor.lastrowid
 
-def store_broadcast(broadcast_id, user_id, title, body, related_type_id, related_id, system_broadcast=0):
+def store_broadcast(broadcast_id, user_id, title, body, related_type_id, related_id):
     """
     Stores a broadcast record.
     Args:
@@ -459,7 +469,6 @@ def store_broadcast(broadcast_id, user_id, title, body, related_type_id, related
         body: body of the broadcast
         related_type_id: type id that this broadcast relates to
         related_id: record id that this broadcast relates to
-        system_broadcast: boolean indicating whether or not this is a system broadcast
     Returns:
         numeric id of the inserted record
     """
@@ -470,12 +479,10 @@ def store_broadcast(broadcast_id, user_id, title, body, related_type_id, related
         cursor.execute(
             """
             INSERT INTO Broadcast(UserID, Title, Body, RelatedTypeID,
-                                  RelatedID, Timestamp, SystemBroadcast)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                                  RelatedID, Timestamp)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """,
-            (user_id, title, body, related_type_id, related_id, system_broadcast))
-    # else:
-        # TODO Update
+            (user_id, title, body, related_type_id, related_id))
 
     cursor.close()
     connection.close()

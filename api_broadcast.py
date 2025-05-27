@@ -86,7 +86,7 @@ def api_get_broadcasts():
                 FROM Broadcast
                 INNER JOIN User AS UserTable ON Broadcast.UserID = UserTable.UserID
             """
-            if (user_id != 0):
+            if user_id != 0:
                 sql += f"AND UserTable.UserID = {user_id}"
             sql += f"""
                 INNER JOIN RelatedType ON RelatedType.RelatedTypeID = BroadCast.RelatedTypeID
@@ -94,7 +94,8 @@ def api_get_broadcasts():
             """
             if row['DbIdField'] is not None:
                 sql += f"""
-                LEFT JOIN {row['DbTable']} ON Broadcast.RelatedID = {row['DbTable']}.{row['DbIdField']}
+                LEFT JOIN {row['DbTable']} ON Broadcast.RelatedID
+                        = {row['DbTable']}.{row['DbIdField']}
             """
 
     sql += """
