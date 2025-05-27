@@ -15,16 +15,17 @@ export default function LogIn() {
   const handleLogin = async () => {
 	console.log("called method!!");
 	try {
-	  const res = await fetch(VITE_API_URL + `/api/user/login?user=cjonas41&password=`, {
+	  const res = await fetch(VITE_API_URL + `/api/user/login?user=${encodeURIComponent(lastfm)}&password=${encodeURIComponent(password)}`, {
 		method: "POST"
 	  });
   
-	  if (!res.ok) {
+	  if (!res.ok || res.status != 201) {
 		const error = await res.json();
 		alert(error.error || "Login failed");
 		return;
 	  }
 	  console.log(res);
+
 	  // If successful, update auth context and redirect
 	  setIsLoggedIn(true);
 	  setUsername(lastfm); 
