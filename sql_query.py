@@ -489,6 +489,31 @@ def store_broadcast(broadcast_id, user_id, title, body, related_type_id, related
 
     return cursor.lastrowid
 
+def store_like(user_id, related_type_id, related_id):
+    """
+    Stores a liike record.
+    Args:
+        user_id: ID of the user creating the broadcast
+        related_type_id: type id that this broadcast relates to
+        related_id: record id that this broadcast relates to
+    Returns:
+        numeric id of the inserted record
+    """
+    connection = get_db_connection_isolation_none()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO Like(UserID, RelatedTypeID, RelatedID, Timestamp)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        """,
+        (user_id, related_type_id, related_id))
+
+    cursor.close()
+    connection.close()
+
+    return cursor.lastrowid
+
 def store_track(trackname, artistid, mbid):
     """
     Stores a track record.

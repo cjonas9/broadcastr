@@ -12,3 +12,13 @@ def validate_broadcast(user_id, title, body, related_type_id):
     if related_type_id == 0:
         return "Missing or invalid related type id"
     return ""
+
+def validate_like(user_id, related_type_id):
+    """
+    Validates a like.
+    """
+    if user_id == 0:
+        return "Missing or invalid user"
+    if related_type_id == 0:
+        return "Missing or invalid related type id"
+    return ""
