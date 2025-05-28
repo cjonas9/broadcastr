@@ -2,6 +2,7 @@
 This module provides supporting functions for API routes pertaining to broadcasts.
 """
 from flask import Blueprint, jsonify, request
+import related_type_enum
 import sql_query
 import validation
 
@@ -47,7 +48,8 @@ def api_get_broadcasts():
       {
         "broadcasts": [
           { "id": int, "user": str, "title": str, "body": str,
-          "timestamp": str, "type": str, "relatedto": str, "relatedid: int" },
+            "timestamp": str, "type": str, "relatedto": str, "relatedid: int",
+            "likes": int },
           …
         ]
       }
@@ -58,7 +60,9 @@ def api_get_broadcasts():
     user_id = sql_query.query_user_id(user)
 
     sql = """
-        SELECT *
+        SELECT broadcasts.id, broadcasts.user, broadcasts.title, broadcasts.body,
+               broadcasts.timestamp, broadcasts.type, broadcasts.relatedid, broadcasts.relatedto,
+               COUNT(Like.LikeID) AS likes
         FROM (
     """
 
@@ -76,7 +80,7 @@ def api_get_broadcasts():
                 SELECT Broadcast.BroadcastID AS id, UserTable.LastFmProfileName AS user,
                     Broadcast.Title AS title, Broadcast.Body AS body,
                     Broadcast.Timestamp AS timestamp, RelatedType.Description AS type,
-                    Broadcast.RelatedID,
+                    Broadcast.RelatedID AS relatedid,
             """
             if row['DbIdField'] is not None:
                 sql += f"{row['DbTable']}.{row['DbNameField']} AS relatedto"
@@ -98,13 +102,17 @@ def api_get_broadcasts():
                         = {row['DbTable']}.{row['DbIdField']}
             """
 
-    sql += """
+    sql += f"""
         ) AS broadcasts
-        ORDER BY Timestamp DESC
+        LEFT JOIN Like ON broadcasts.id = Like.RelatedID
+			AND Like.RelatedTypeID = {related_type_enum.RelatedType.BROADCAST.value}
+		GROUP BY broadcasts.id, broadcasts.user, broadcasts.title, broadcasts.body,
+				 broadcasts.timestamp, broadcasts.type, broadcasts.RelatedID, broadcasts.relatedto
+        ORDER BY broadcasts.Timestamp DESC
         LIMIT ?
     """
 
-    print(f"Broadcasts query: {sql}")
+    # print(f"Broadcasts query: {sql}")
 
     connection = sql_query.get_db_connection()
     cursor = connection.cursor()
@@ -124,7 +132,8 @@ def api_get_broadcasts():
           "timestamp":  row["timestamp"],
           "type":       row["type"],
           "relatedto":  row["relatedto"],
-          "relatedid":  row["relatedid"]
+          "relatedid":  row["relatedid"],
+          "likes":      row["likes"]
         }
         for row in rows
     ]
