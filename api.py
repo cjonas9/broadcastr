@@ -7,6 +7,7 @@ from api_broadcast import broadcast_bp
 from api_direct_messages import direct_messages_bp
 from api_following import following_bp
 from api_like import like_bp
+from api_song_swap import song_swap_bp
 from api_user_profile import user_profile_bp
 import sql_query
 
@@ -16,6 +17,7 @@ app.register_blueprint(broadcast_bp, url_prefix='/')
 app.register_blueprint(direct_messages_bp, url_prefix='/')
 app.register_blueprint(following_bp, url_prefix='/')
 app.register_blueprint(like_bp, url_prefix='/')
+app.register_blueprint(song_swap_bp, url_prefix='/')
 app.register_blueprint(user_profile_bp, url_prefix='/')
 
 CORS(app)

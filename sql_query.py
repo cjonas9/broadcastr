@@ -85,6 +85,39 @@ def query_related_type_tables():
     # return json.dumps(result)
     return result
 
+def query_matched_user_for_song_swap(exclude_user_id):
+    """
+    Queries the database for a matched user for a song swap.
+    Returns:
+        Matched user id
+    """
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT UserID
+        FROM User
+        WHERE UserID <> ?
+            AND LastLogin > DATE(CURRENT_TIMESTAMP, '-7 days')
+        ORDER BY RANDOM()
+        LIMIT 1
+        """,
+        (exclude_user_id,)
+    )
+
+    row = cursor.fetchone()
+
+    if row:
+        matched_user_id = row[0] # Access the first element of the tuple
+    else:
+        matched_user_id = 0
+
+    cursor.close()
+    connection.close()
+
+    return matched_user_id
+
 def query_user_id(username):
     """
     Queries the database for the numeric id of a user.

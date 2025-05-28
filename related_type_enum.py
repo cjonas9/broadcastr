@@ -16,6 +16,7 @@ class RelatedType(Enum):
     FOLLOWING = 5
     TRACK = 6
     USER = 7
-    TOPALBUM = 8
-    TOPARTIST = 9
-    TOPTRACK = 10
+    TOP_ALBUM = 8
+    TOP_ARTIST = 9
+    TOP_TRACK = 10
+    SONG_SWAP = 11

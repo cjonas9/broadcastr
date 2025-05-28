@@ -22,3 +22,11 @@ def validate_like(user_id, related_type_id):
     if related_type_id == 0:
         return "Missing or invalid related type id"
     return ""
+
+def validate_song_swap(user_id):
+    """
+    Validates a song swap.
+    """
+    if user_id == 0:
+        return "Missing or invalid user"
+    return ""
