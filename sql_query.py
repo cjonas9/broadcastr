@@ -118,6 +118,43 @@ def query_matched_user_for_song_swap(exclude_user_id):
 
     return matched_user_id
 
+def query_inferred_type_for_song_swap(song_swap_id, user_id):
+    """
+    Determines based on user id whether or not the user is initiating or matched in
+    the song swap.
+    Returns:
+        Type of song swap user (initiating or matched)
+    """
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT CASE
+                WHEN SongSwap.InitiatingUserID = ?
+                THEN 'initiating'
+                WHEN SongSwap.MatchedUserID = ?
+                THEN 'matched'
+                ELSE ''
+            END AS type
+        FROM SongSwap
+        WHERE SongSwap.SongSwapID = ?
+        """,
+        (user_id, user_id, song_swap_id)
+    )
+
+    row = cursor.fetchone()
+
+    if row:
+        user_type = row[0] # Access the first element of the tuple
+    else:
+        user_type = "error"
+
+    cursor.close()
+    connection.close()
+
+    return user_type
+
 def query_user_id(username):
     """
     Queries the database for the numeric id of a user.
