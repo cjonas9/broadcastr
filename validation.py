@@ -41,6 +41,18 @@ def validate_add_song_swap_track(user_id, song_swap_id, track_id, user_type):
         return "Missing or invalid song swap id"
     if track_id == 0:
         return "Missing or invalid track id"
-    if user_type not in ("initiating", "matched"):
+    if user_type not in ("initiated", "matched"):
+        return "Could not infer user type for song swap track update"
+    return ""
+
+def validate_add_song_swap_reaction(user_id, song_swap_id, user_type):
+    """
+    Validates adding a track to a song swap.
+    """
+    if user_id == 0:
+        return "Missing or invalid user"
+    if song_swap_id == 0:
+        return "Missing or invalid song swap id"
+    if user_type not in ("initiated", "matched"):
         return "Could not infer user type for song swap track update"
     return ""

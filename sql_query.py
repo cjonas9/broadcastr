@@ -120,10 +120,10 @@ def query_matched_user_for_song_swap(exclude_user_id):
 
 def query_inferred_type_for_song_swap(song_swap_id, user_id):
     """
-    Determines based on user id whether or not the user is initiating or matched in
+    Determines based on user id whether or not the user is initiated or matched in
     the song swap.
     Returns:
-        Type of song swap user (initiating or matched)
+        Type of song swap user (initiated or matched)
     """
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -131,8 +131,8 @@ def query_inferred_type_for_song_swap(song_swap_id, user_id):
     cursor.execute(
         """
         SELECT CASE
-                WHEN SongSwap.InitiatingUserID = ?
-                THEN 'initiating'
+                WHEN SongSwap.InitiatedUserID = ?
+                THEN 'initiated'
                 WHEN SongSwap.MatchedUserID = ?
                 THEN 'matched'
                 ELSE ''

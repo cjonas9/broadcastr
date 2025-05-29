@@ -42,7 +42,7 @@ def api_initiate_song_swap():
 
     cursor.execute(
             """
-            INSERT INTO SongSwap(InitiatingUserID, MatchedUserID, InitiatedTimestamp)
+            INSERT INTO SongSwap(InitiatedUserID, MatchedUserID, SwapInitiatedTimestamp)
             VALUES (?, ?, CURRENT_TIMESTAMP)
             """,
             (user_id, matched_user_id))
@@ -55,9 +55,9 @@ def api_initiate_song_swap():
                     "matched_user_id": matched_user_id}), 201
 
 @song_swap_bp.route("/api/add-song-swap-track", methods=['POST'])
-def api_mark_messages_read():
+def api_add_song_swap_track():
     """
-    Adds a track to a song swap. The user type (initiating or matched) will be 
+    Adds a track to a song swap. The user type (initiated or matched) will be 
     inferred based on user id and song swap id.
     Example:
         POST /api/add-song-swap-track?user=LastFmProfileName&songswapid=n&trackid=n
@@ -72,12 +72,12 @@ def api_mark_messages_read():
     user = request.args.get("user", "")
     song_swap_id = int(request.args.get("songswapid", "0"))
     track_id = int(request.args.get("trackid", "0"))
-    user_type = request.args.get("usertype", "")
 
     user_id = sql_query.query_user_id(user)
     user_type = sql_query.query_inferred_type_for_song_swap(song_swap_id, user_id)
 
-    error_string = validation.validate_add_song_swap_track(user_id, song_swap_id, track_id, user_type)
+    error_string = validation.validate_add_song_swap_track(user_id, song_swap_id,
+                                                           track_id, user_type)
     if error_string != "":
         return jsonify({"error": error_string}), 400
 
@@ -85,22 +85,77 @@ def api_mark_messages_read():
     cursor = connection.cursor()
 
     sql = ""
-    if user_type == "initiating":
+    if user_type == "initiated":
         sql = """
         Update SongSwap
-        SET InitiatingTrackID = ?
-        WHERE InitiatingUserID = ?
+        SET InitiatedTrackID = ?,
+            InitiatedTrackTimestamp = CURRENT_TIMESTAMP
+        WHERE InitiatedUserID = ?
             AND SongSwapID = ?
         """
     elif user_type == "matched":
         sql = """
         Update SongSwap
-        SET MatchedTrackID = ?
+        SET MatchedTrackID = ?,
+            MatchedTrackTimestamp = CURRENT_TIMESTAMP
         WHERE MatchedUserID = ?
             AND SongSwapID = ?
         """
 
     cursor.execute(sql, (track_id, user_id, song_swap_id))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"success": True}), 200
+
+@song_swap_bp.route("/api/add-song-swap-reaction", methods=['POST'])
+def api_add_song_swap_reaction():
+    """
+    Adds a reaction to a song swap. The user type (initiated or matched) will be 
+    inferred based on user id and song swap id.
+    Example:
+        POST /api/add-song-swap-reaction?user=LastFmProfileName&songswapid=n&reaction=n
+    Raises:
+        400 Bad Request: If the user or recipient is not provided or invalid.
+        400 Bad Request: If the song swap id is not provided or invalid.
+        400 Bad Request: If the user type could not be inferred.
+    Returns:
+        200 Success: Indicates the reaction has been added to the song swap.
+    """
+    user = request.args.get("user", "")
+    song_swap_id = int(request.args.get("songswapid", "0"))
+    reaction = int(request.args.get("reaction", "0"))
+
+    user_id = sql_query.query_user_id(user)
+    user_type = sql_query.query_inferred_type_for_song_swap(song_swap_id, user_id)
+
+    error_string = validation.validate_add_song_swap_reaction(user_id, song_swap_id, user_type)
+    if error_string != "":
+        return jsonify({"error": error_string}), 400
+
+    connection = sql_query.get_db_connection_isolation_none()
+    cursor = connection.cursor()
+
+    sql = ""
+    if user_type == "initiated":
+        sql = """
+        Update SongSwap
+        SET InitiatedReaction = ?,
+            InitiatedReactionTimestamp = CURRENT_TIMESTAMP
+        WHERE InitiatedUserID = ?
+            AND SongSwapID = ?
+        """
+    elif user_type == "matched":
+        sql = """
+        Update SongSwap
+        SET MatchedReaction = ?,
+            MatchedReactionTimestamp = CURRENT_TIMESTAMP
+        WHERE MatchedUserID = ?
+            AND SongSwapID = ?
+        """
+
+    cursor.execute(sql, (reaction, user_id, song_swap_id))
 
     cursor.close()
     connection.close()
