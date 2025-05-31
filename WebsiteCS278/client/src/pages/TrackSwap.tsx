@@ -7,10 +7,11 @@ import { useState } from "react";
 import MatchProfileCard from "@/components/MatchProfileCard";
 import SongCard, { Song } from "../components/SongCard";
 import SearchBar from "../components/SearchBar";
-import TrackSelectDrawer from "../components/TrackSelectDrawer";
 import React from "react";
 import { useSwap, MatchUser } from "../context/SwapContext";
 import { BottomToolbar } from "@/components/BottomToolbar";
+import { ButtonWrapper } from "@/components/ButtonWrapper";
+import TrackSelector from "@/components/TrackSelector";
 
 export default function TrackSwap() {
   const [, setLocation] = useLocation();
@@ -19,8 +20,6 @@ export default function TrackSwap() {
   // Use topArtists as mock tracks
   const tracks = musicData.topArtists;
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [search, setSearch] = useState("");
 
   // Use mockSongs from musicData
   const mockSongs: Song[] = musicData.mockSongs;
@@ -48,46 +47,12 @@ export default function TrackSwap() {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-center mb-2">Choose a Track to Swap!</h2>
-          {selectedTrack ? (
-            <>
-              <SongCard song={selectedTrack} selected />
-              <div className="flex justify-center w-full">
-                <TrackSelectDrawer
-                  open={drawerOpen}
-                  onOpenChange={setDrawerOpen}
-                  songs={mockSongs}
-                  onSelect={setSelectedTrack}
-                  search={search}
-                  setSearch={setSearch}
-                  trigger={
-                    <Button className="max-w-xs mt-2 bg-green-600 hover:bg-green-600 text-white font-semibold text-base py-3 rounded-lg">
-                      Reselect Track
-                    </Button>
-                  }
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <h3 className="text-gray-400 text-center mb-2 flex justify-center">You have not selected your track</h3>
-              <div className="flex justify-center w-full">
-                <TrackSelectDrawer
-                  open={drawerOpen}
-                  onOpenChange={setDrawerOpen}
-                  songs={mockSongs}
-                  onSelect={setSelectedTrack}
-                  search={search}
-                  setSearch={setSearch}
-                  trigger={
-                    <Button className="bg-green-600 hover:bg-green-600 text-white font-semibold text-base py-3 rounded-lg">
-                      Choose from Spotify
-                    </Button>
-                  }
-                />
-              </div>
-            </>
-          )}
+          <TrackSelector
+            selectedTrack={selectedTrack}
+            onTrackSelect={setSelectedTrack}
+            songs={mockSongs}
+            label="Choose a Track to Swap!"
+          />
         </div>
 
         <Button

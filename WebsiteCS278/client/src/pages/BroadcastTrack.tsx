@@ -1,15 +1,12 @@
 import React, { useState } from "react";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
-import SongCard from "@/components/SongCard";
 import { BottomToolbar } from "@/components/BottomToolbar";
-import TrackSelectDrawer from "@/components/TrackSelectDrawer";
 import { musicData } from "@/data/musicData";
+import TrackSelector from "@/components/TrackSelector";
 
 export default function BroadcastTrackPage() {
   const [caption, setCaption] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [search, setSearch] = useState("");
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-between p-6">
@@ -28,52 +25,12 @@ export default function BroadcastTrackPage() {
             onChange={e => setCaption(e.target.value)}
           />
         </div>
-        <div className="mb-6">
-          <label className="block mb-2 text-gray-300 text-center">Choose your track</label>
-          {!selectedTrack ? (
-            <div>
-              <div className="w-full rounded-lg border border-dashed border-gray-600 bg-gray-800 text-gray-400 px-4 py-6 mb-4 text-center">
-                You have not selected your track
-              </div>
-              <TrackSelectDrawer
-                open={drawerOpen}
-                onOpenChange={setDrawerOpen}
-                songs={musicData.mockSongs}
-                onSelect={track => {
-                  setSelectedTrack(track);
-                  setDrawerOpen(false);
-                }}
-                search={search}
-                setSearch={setSearch}
-                trigger={
-                  <ButtonWrapper width="full" variant="secondary">
-                    Select Track
-                  </ButtonWrapper>
-                }
-              />
-            </div>
-          ) : (
-            <div>
-              <SongCard song={selectedTrack} selected className="mb-4" />
-              <TrackSelectDrawer
-                open={drawerOpen}
-                onOpenChange={setDrawerOpen}
-                songs={musicData.mockSongs}
-                onSelect={track => {
-                  setSelectedTrack(track);
-                  setDrawerOpen(false);
-                }}
-                search={search}
-                setSearch={setSearch}
-                trigger={
-                  <ButtonWrapper width="full" variant="secondary">
-                    Reselect Track
-                  </ButtonWrapper>
-                }
-              />
-            </div>
-          )}
-        </div>
+        <TrackSelector
+          selectedTrack={selectedTrack}
+          onTrackSelect={setSelectedTrack}
+          songs={musicData.mockSongs}
+          className="mb-6"
+        />
         <ButtonWrapper width="full" className="mt-8" disabled={!selectedTrack}>
           + Post Track
         </ButtonWrapper>
