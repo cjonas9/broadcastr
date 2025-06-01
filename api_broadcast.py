@@ -38,6 +38,36 @@ def api_create_broadcast():
 
     return jsonify({"success": new_record_id}), 201
 
+@broadcast_bp.route("/api/delete-broadcast", methods=['POST'])
+def api_delete_broadcast():
+    """
+    Marks a broadcast record as deleted.
+    Example:
+        POST /api/delete-broadcast?id=n
+    Returns:
+        200 Success: Deleted broadcast.
+    """
+    broadcast_id = int(request.args.get("id", "0"))
+
+    if broadcast_id == 0:
+        return jsonify({"error": "Missing or invalid broadcast id"}), 400
+
+    connection = sql_query.get_db_connection_isolation_none()
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+            UPDATE Broadcast
+            SET Deleted = 1
+            WHERE BroadcastID = ?
+        """,
+        (broadcast_id,))
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({"success": True}), 200
+
 @broadcast_bp.route("/api/get-broadcasts")
 def api_get_broadcasts():
     """
@@ -83,10 +113,11 @@ def api_get_broadcasts():
                     Broadcast.RelatedID AS relatedid,
             """
             if row['DbIdField'] is not None:
-                sql += f"{row['DbTable']}.{row['DbNameField']} AS relatedto"
+                sql += f"{row['DbTable']}.{row['DbNameField']} AS relatedto,"
             else:
-                sql += "'' AS relatedto"
+                sql += "'' AS relatedto,"
             sql += """
+                    Broadcast.Deleted AS deleted
                 FROM Broadcast
                 INNER JOIN User AS UserTable ON Broadcast.UserID = UserTable.UserID
             """
@@ -106,6 +137,7 @@ def api_get_broadcasts():
         ) AS broadcasts
         LEFT JOIN Like ON broadcasts.id = Like.RelatedID
 			AND Like.RelatedTypeID = {related_type_enum.RelatedType.BROADCAST.value}
+        WHERE deleted = 0
 		GROUP BY broadcasts.id, broadcasts.user, broadcasts.title, broadcasts.body,
 				 broadcasts.timestamp, broadcasts.type, broadcasts.RelatedID, broadcasts.relatedto
         ORDER BY broadcasts.Timestamp DESC
