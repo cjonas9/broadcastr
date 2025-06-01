@@ -173,6 +173,10 @@ def api_user_login():
     cursor.close()
     connection.close()
 
+    # If the user data has not been refreshed in the last day, refresh it.
+    if sql_query.user_refresh_due(user_id):
+        sql_query.refresh_user_data(user)
+
     return jsonify({"success": True, "error": ""}), 201
 
 @user_profile_bp.route("/api/user/reset-password", methods=['POST'])

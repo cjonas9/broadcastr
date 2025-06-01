@@ -12,6 +12,15 @@ BROADCASTR_DB = "./data/broadcastr.db"
 
 DEFAULT_PFP = "https://w7.pngwing.com/pngs/135/630/png-transparent-falling-in-love-woman-anxiety-student-others-angle-woman-ecchi-thumbnail.png"
 
+# User data will be refreshed on login after this many days
+REFRESH_DAYS = "1"
+
+# Time, in seconds, the system will wait after/between calls to the last.fm API
+LAST_FM_API_CALL_SLEEP_TIME = 0.05
+
+# Periods use when refreshing top artist/track data
+REFRESH_PERIODS = ["overall", "7day", "1month", "12month"]
+
 key = "68237ca563ba0ac6a5915f31452b32d1"
 shared_secret = "08921d66963667bccb9f00fe9b35d6e9"
 
@@ -292,7 +301,7 @@ def query_id(idfield, table, lookup_pairs):
 	namefield = lookup_pairs[0][0]
 	namelookup = lookup_pairs[0][1]
 
-	print(f"Looking up id for {namelookup}")
+	# print(f"Looking up id for {namelookup}")
 
 	query = f"SELECT {idfield} FROM {table} WHERE {namefield} = ?"
 	params = []
@@ -308,7 +317,7 @@ def query_id(idfield, table, lookup_pairs):
 	row = cursor.fetchone()
 	if row:
 		resultid = row[0] # Access the first element of the tuple
-		print(f"ID with name {namelookup } is: {resultid}")
+		# print(f"ID with name {namelookup } is: {resultid}")
 	else:
 		resultid = 0
 		print(f"No ID with name {namelookup} was found")
@@ -491,17 +500,16 @@ def store_artist(artistname, mbid):
 	Returns:
 		numeric id of the inserted record
 	"""
+	print(f"storing new artist: {artistname}")
 	connection = get_db_connection_isolation_none()
 	cursor = connection.cursor()
-
-	print(f"storing artist {artistname}, {mbid}")
 
 	cursor.execute("INSERT INTO Artist (ArtistName, LastFmMbid) VALUES (?, ?)", (artistname, mbid))
 
 	cursor.close()
 	connection.close()
 
-	print(f"New record ID: {cursor.lastrowid}")
+	# print(f"New artist record ID: {cursor.lastrowid}")
 
 	return cursor.lastrowid
 
@@ -514,10 +522,9 @@ def store_album(albumname, artistid, mbid):
 	Returns:
 		numeric id of the inserted record
 	"""
+	print(f"storing new album: {albumname}")
 	connection = get_db_connection_isolation_none()
 	cursor = connection.cursor()
-
-	print(f"storing album {albumname}, {mbid}")
 
 	cursor.execute(
 		"INSERT INTO Album (AlbumName, ArtistID, MBID) " \
@@ -527,7 +534,7 @@ def store_album(albumname, artistid, mbid):
 	cursor.close()
 	connection.close()
 
-	print(f"New record ID: {cursor.lastrowid}")
+	# print(f"New album record ID: {cursor.lastrowid}")
 
 	return cursor.lastrowid
 
@@ -601,9 +608,8 @@ def store_track(trackid, trackname, artistid, mbid, trackurl):
 	connection = get_db_connection_isolation_none()
 	cursor = connection.cursor()
 
-	print(f"storing track {trackname}, {mbid}")
-
 	if trackid == 0:
+		print(f"storing new track {trackname}, {mbid}")
 		cursor.execute(
 			"INSERT INTO Track (TrackName, ArtistID, MBID, LastFmTrackUrl) " \
 			"VALUES (?, ?, ?, ?)",
@@ -625,9 +631,9 @@ def store_track(trackid, trackname, artistid, mbid, trackurl):
 	cursor.close()
 	connection.close()
 
-	print(f"Track Updated ID: {return_id}")
+	# print(f"Track Updated ID: {return_id}")
 
-	return cursor.lastrowid
+	return return_id
 
 def store_top_artists(username, period):
 	"""
@@ -687,7 +693,7 @@ def store_top_artist(userid, artistid, periodid, playcount):
 	cursor.close()
 	connection.close()
 
-	print(f"New record ID: {cursor.lastrowid}")
+	# print(f"New top artist record ID: {cursor.lastrowid}")
 
 	return cursor.lastrowid
 
@@ -754,7 +760,7 @@ def store_top_album(userid, albumid, periodid, playcount):
 	cursor.close()
 	connection.close()
 
-	print(f"New record ID: {cursor.lastrowid}")
+	# print(f"New top album record ID: {cursor.lastrowid}")
 
 	return cursor.lastrowid
 
@@ -821,11 +827,12 @@ def store_top_track(userid, trackid, periodid, playcount):
 	cursor.close()
 	connection.close()
 
-	print(f"New record ID: {cursor.lastrowid}")
+	# print(f"New top track record ID: {cursor.lastrowid}")
 
 	return cursor.lastrowid
 
 def store_user(user, first_name, last_name, email, salt, hashed_password):
+	print(f"storing new user: {user}")
 	connection = get_db_connection_isolation_none()
 	cursor = connection.cursor()
 
@@ -849,7 +856,7 @@ def store_user_last_fm_info(username):
 	user_id = query_user_id(username)
 
 	result = db_query.get_user_info(username)
-	print(result)
+
 	if "user" in result:
 		user_result = result["user"]
 		profile_url = user_result['url']
@@ -902,24 +909,76 @@ def store_all_users_last_fm_info():
 	for _, user in enumerate(data):
 		username = user["LastFmProfileName"]
 		store_user_last_fm_info(username)
-		time.sleep(0.05)
+		time.sleep(LAST_FM_API_CALL_SLEEP_TIME)
 
 	cursor.close()
 	connection.close()
 
+def user_refresh_due(user_id):
+	"""
+	Queries the database to determine if a user's top data
+	is due for a refresh.
+	Returns:
+		Boolean indicating whether or not the refresh is due.
+	"""
+	connection = get_db_connection()
+	cursor = connection.cursor()
+
+	cursor.execute(
+		f"""
+		SELECT MaxLastUpdated
+		FROM (
+			SELECT MAX(LastUpdatedData.LastUpdated) AS MaxLastUpdated
+			FROM (
+				SELECT TopArtist.LastUpdated
+				FROM User
+				LEFT JOIN TopArtist ON User.UserID = TopArtist.UserID
+				WHERE User.UserID = ?
+				UNION
+				SELECT TopAlbum.LastUpdated
+				FROM User
+				LEFT JOIN TopAlbum ON User.UserID = TopAlbum.UserID
+				WHERE User.UserID = ?
+				UNION
+				SELECT TopTrack.LastUpdated
+				FROM User
+				LEFT JOIN TopTrack ON User.UserID = TopTrack.UserID
+				WHERE User.UserID = ?
+			) AS LastUpdatedData
+		) AS MaxLastUpdatedData
+		WHERE MaxLastUpdated > DATE(CURRENT_TIMESTAMP, '-{REFRESH_DAYS} days')
+		""",
+		(user_id, user_id, user_id)
+	)
+
+	row = cursor.fetchone()
+
+	if row:
+		print("user data does not need to be refreshed")
+		return_val = False
+	else:
+		print("user data needs to be refreshed")
+		return_val = True
+
+	cursor.close()
+	connection.close()
+
+	return return_val
+
 def refresh_user_data(username):
+
+    print(f"Refreshing user data for {username}")
 
 	# Store user data from last.fm such as profile pictures and profile url
     store_user_last_fm_info(username)
 
 	# Store last.fm top artist and track data for this user for all periods
     # periods = ["overall", "7day", "1month", "12month", "6month", "3month"]
-    periods = ["overall", "7day", "1month", "12month"]
-    for period in periods:
+    for period in REFRESH_PERIODS:
         store_top_artists(username, period)
-        time.sleep(0.05)
+        time.sleep(LAST_FM_API_CALL_SLEEP_TIME)
         store_top_tracks(username, period)
-        time.sleep(0.05)
+        time.sleep(LAST_FM_API_CALL_SLEEP_TIME)
 
 def delete_user(username):
 	"""
