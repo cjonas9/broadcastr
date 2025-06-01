@@ -11,7 +11,7 @@ EXAMPLE USAGE:
 </ButtonWrapper>
 */
 
-import React from "react";
+import React, { forwardRef } from "react";
 import clsx from "clsx";
 
 type ButtonVariant = "primary" | "secondary" | "disabled" | "tertiary";
@@ -32,7 +32,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   disabled: "bg-gray-800 text-gray-600 cursor-not-allowed", 
 };
 
-export const ButtonWrapper: React.FC<ButtonProps> = ({
+export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(({
   variant = "primary",
   icon,
   width = "hug",
@@ -41,10 +41,11 @@ export const ButtonWrapper: React.FC<ButtonProps> = ({
   className,
   disabled,
   ...props
-}) => {
+}, ref) => {
   const isDisabled = variant === "disabled" || disabled;
   return (
     <button
+      ref={ref}
       className={clsx(
         "inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium transition-colors",
         variantClasses[variant],
@@ -59,4 +60,4 @@ export const ButtonWrapper: React.FC<ButtonProps> = ({
       {children}
     </button>
   );
-};
+});
