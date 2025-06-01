@@ -4,7 +4,6 @@ This module provides supporting functions for API routes pertaining to user prof
 from flask import Blueprint, jsonify, request
 import bcrypt
 import sql_query
-import time
 
 user_profile_bp = Blueprint('user-profile', __name__)
 
@@ -112,25 +111,15 @@ def api_user_create_profile():
     connection = sql_query.get_db_connection_isolation_none()
     cursor = connection.cursor()
 
-    cursor.execute(
-        "INSERT INTO User(LastFmProfileName, FirstName, LastName, EmailAddress, Salt, Password) " \
-        "VALUES (?, ?, ?, ?, ?, ?)",
-        (user, first_name, last_name, email, salt, hashed_password))
+    user_id = sql_query.store_user(user, first_name, last_name, email, salt, hashed_password)
 
     cursor.close()
     connection.close()
 
-    # Store user data from last.fm such as profile pictures and profile url
-    sql_query.store_user_last_fm_info(user)
+    # Refresh/store all last.fm data for this user
+    sql_query.refresh_user_data(user)
 
-    periods = ["overall", "7day", "1month", "12month", "6month", "3month"]
-    for period in periods:
-        sql_query.store_top_artists(user, period)
-        time.sleep(0.05)
-        sql_query.store_top_tracks(user, period)
-        time.sleep(0.05)
-
-    return jsonify({"success": cursor.lastrowid}), 201
+    return jsonify({"success": user_id}), 201
 
 @user_profile_bp.route("/api/user/login", methods=['POST'])
 def api_user_login():

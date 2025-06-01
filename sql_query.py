@@ -10,6 +10,8 @@ import db_query
 
 BROADCASTR_DB = "./data/broadcastr.db"
 
+DEFAULT_PFP = "https://w7.pngwing.com/pngs/135/630/png-transparent-falling-in-love-woman-anxiety-student-others-angle-woman-ecchi-thumbnail.png"
+
 key = "68237ca563ba0ac6a5915f31452b32d1"
 shared_secret = "08921d66963667bccb9f00fe9b35d6e9"
 
@@ -584,12 +586,15 @@ def store_like(user_id, related_type_id, related_id):
 
 	return cursor.lastrowid
 
-def store_track(trackname, artistid, mbid):
+def store_track(trackid, trackname, artistid, mbid, trackurl):
 	"""
 	Stores a track record.
 	Args:
+		trackid: database id for this track
 		trackname: The name of the track to store
+		artistid: database id for the artist of this track
 		mbid: The track's last.fm mbid (sometimes blank) (mb stands for musicbrainz)
+		trackurl: last.fm url for this track
 	Returns:
 		numeric id of the inserted record
 	"""
@@ -598,15 +603,29 @@ def store_track(trackname, artistid, mbid):
 
 	print(f"storing track {trackname}, {mbid}")
 
-	cursor.execute(
-		"INSERT INTO Track (TrackName, ArtistID, MBID) " \
-		"VALUES (?, ?, ?)",
-		(trackname, artistid, mbid))
+	if trackid == 0:
+		cursor.execute(
+			"INSERT INTO Track (TrackName, ArtistID, MBID, LastFmTrackUrl) " \
+			"VALUES (?, ?, ?, ?)",
+			(trackname, artistid, mbid, trackurl))
+		return_id = cursor.lastrowid
+	else:
+		cursor.execute(
+			"""
+				UPDATE Track
+				SET TrackName = ?,
+			    	ArtistID = ?,
+			    	MBID = ?,
+			    	LastFmTrackUrl = ?
+				WHERE TrackID = ?
+			""",
+			(trackname, artistid, mbid, trackurl, trackid))
+		return_id = trackid
 
 	cursor.close()
 	connection.close()
 
-	print(f"New record ID: {cursor.lastrowid}")
+	print(f"Track Updated ID: {return_id}")
 
 	return cursor.lastrowid
 
@@ -770,9 +789,9 @@ def store_top_tracks(username, period):
 		if artistid == 0:
 			artistid = store_artist(artistname, artistmbid)
 		trackmbid = top_track["mbid"]
+		trackurl = top_track["url"]
 		trackid = query_track_id(trackname, artistid)
-		if trackid == 0:
-			trackid = store_track(trackname, artistid, trackmbid)
+		trackid = store_track(trackid, trackname, artistid, trackmbid, trackurl)
 
 		store_top_track(userid, trackid, periodid, top_track["playcount"])
 
@@ -806,22 +825,20 @@ def store_top_track(userid, trackid, periodid, playcount):
 
 	return cursor.lastrowid
 
-def store_user(username, firstname, lastname, email):
+def store_user(user, first_name, last_name, email, salt, hashed_password):
 	connection = get_db_connection_isolation_none()
 	cursor = connection.cursor()
 
 	cursor.execute(
-		"INSERT INTO User (LastFmProfileName,FirstName,LastName,EmailAddress) " \
-			"VALUES (?, ?, ?, ?)", 
-			(username, firstname, lastname, email))
+        "INSERT INTO User(LastFmProfileName, FirstName, LastName, EmailAddress, Salt, Password) " \
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (user, first_name, last_name, email, salt, hashed_password))
 
 	cursor.close()
 	connection.close()
 
-	# Store user data from last.fm such as profile pictures and profile url
-	store_user_last_fm_info(username)
-
 	print(f"New user stored with id: {cursor.lastrowid}")
+	return cursor.lastrowid
 
 def store_user_last_fm_info(username):
 	"""
@@ -843,10 +860,10 @@ def store_user_last_fm_info(username):
 		pfpmed = pfp_dict.get('medium')
 		pfplg = pfp_dict.get('large')
 		pfpxl = pfp_dict.get('extralarge')
-		
+
 		if all(x is None for x in (pfpsm, pfpmed, pfplg, pfpxl)):
 			# this is a random pfp png i found online
-			pfpsm = pfpmed = pfplg = pfpxl = "https://w7.pngwing.com/pngs/135/630/png-transparent-falling-in-love-woman-anxiety-student-others-angle-woman-ecchi-thumbnail.png"
+			pfpsm = pfpmed = pfplg = pfpxl = DEFAULT_PFP
 
 		connection = get_db_connection_isolation_none()
 		cursor = connection.cursor()
@@ -889,6 +906,20 @@ def store_all_users_last_fm_info():
 
 	cursor.close()
 	connection.close()
+
+def refresh_user_data(username):
+
+	# Store user data from last.fm such as profile pictures and profile url
+    store_user_last_fm_info(username)
+
+	# Store last.fm top artist and track data for this user for all periods
+    # periods = ["overall", "7day", "1month", "12month", "6month", "3month"]
+    periods = ["overall", "7day", "1month", "12month"]
+    for period in periods:
+        store_top_artists(username, period)
+        time.sleep(0.05)
+        store_top_tracks(username, period)
+        time.sleep(0.05)
 
 def delete_user(username):
 	"""
@@ -955,48 +986,43 @@ def delete_top_tracks(userid, periodid):
 	cursor.close()
 	connection.close()
 
-# This is a very rudimentary function that just takes a userid and chugs through
-# storing all of their top tracks and artists. I'm honestly just calling it by
-# putting one line at the end of this file and running the file itself. Super
-# hacky but makes the commitments to the DB that we want
-#
-# We can totally build this up for our needs as we go along
-def init_user(username, firstname, lastname, email):
-	store_user(username, firstname, lastname, email)
-
-	periods = ["overall", "7day", "1month", "12month", "6month", "3month"]
-	for period in periods:
-		store_top_artists(username, period)
-		time.sleep(0.05)
-		store_top_tracks(username, period)
-		time.sleep(0.05)
-
-
-
 #################################################
 #                                                #
-#                DEAD CODE BELOW                    #
+#                DEAD CODE BELOW                 #
 #                USED FOR DB STUFFING            #
 #                                                #
 #################################################
 
-"""
-# this list is 5 randomly selected NEIGHBORS of Christian, Lucas, and Madison, and Asher.
-rando_users = ["VanillaM1lk", "Redport2", "auganz", "gianna333", "rowkn", "nscott356", "inawordaverage", "Meto_martinez55", "Gstv0_", "tiez1901", "thereseannec", "Lapanenn", "hayleyukulele", "FadelShoughari", "PedroDark", "ericktheonlyone", "JCG_ahhhh", "mrirveing", "yenuu1", "dporterfield18"]
-for user in rando_users:
-	continue
-	init_user(user)
-# NOTE: If you choose to use this again, you will need to replace 0 with whatever the last "randoUser" index was
-for i, user in enumerate(rando_users, 0):
-	continue
-	init_user(user, "randoFirst" + str(i), "randoLast" + str(i), "randoemail" + str(i) + "@stanford.edu")
-for user in rando_users:
-	continue
-	print("USER")
-	print(query_top_artists(user, "overall"))
-	print("")
+# # This is a very rudimentary function that just takes a userid and chugs through
+# # storing all of their top tracks and artists. I'm honestly just calling it by
+# # putting one line at the end of this file and running the file itself. Super
+# # hacky but makes the commitments to the DB that we want
+# #
+# # We can totally build this up for our needs as we go along
+# def init_user(username, firstname, lastname, email):
+# 	store_user(username, firstname, lastname, email, "", "")
 
-# init_user("zugzug104", "Asher", "Hensley", "asher104@stanford.edu")
-print(get_top_listeners_for_artist("Larry June", "overall"))
+# 	periods = ["overall", "7day", "1month", "12month", "6month", "3month"]
+# 	for period in periods:
+# 		store_top_artists(username, period)
+# 		time.sleep(0.05)
+# 		store_top_tracks(username, period)
+# 		time.sleep(0.05)
 
-"""
+# # this list is 5 randomly selected NEIGHBORS of Christian, Lucas, and Madison, and Asher.
+# rando_users = ["VanillaM1lk", "Redport2", "auganz", "gianna333", "rowkn", "nscott356", "inawordaverage", "Meto_martinez55", "Gstv0_", "tiez1901", "thereseannec", "Lapanenn", "hayleyukulele", "FadelShoughari", "PedroDark", "ericktheonlyone", "JCG_ahhhh", "mrirveing", "yenuu1", "dporterfield18"]
+# for user in rando_users:
+# 	continue
+# 	init_user(user)
+# # NOTE: If you choose to use this again, you will need to replace 0 with whatever the last "randoUser" index was
+# for i, user in enumerate(rando_users, 0):
+# 	continue
+# 	init_user(user, "randoFirst" + str(i), "randoLast" + str(i), "randoemail" + str(i) + "@stanford.edu")
+# for user in rando_users:
+# 	continue
+# 	print("USER")
+# 	print(query_top_artists(user, "overall"))
+# 	print("")
+
+# # init_user("zugzug104", "Asher", "Hensley", "asher104@stanford.edu")
+# print(get_top_listeners_for_artist("Larry June", "overall"))
