@@ -160,7 +160,13 @@ def api_user_top_tracks():
     Returns JSON:
       {
         "topTracks": [
-          { "id": int, "track": str, "artist": str, "playcount": int },
+          { 
+            "id": int,
+            "track": str,
+            "artist": str,
+            "playcount": int,
+            "lastfmtrackurl": str
+          },
           …
         ]
       }
@@ -171,7 +177,8 @@ def api_user_top_tracks():
 
     sql = """
         SELECT Track.TrackID AS id, Track.TrackName AS track,
-               Artist.ArtistName AS artist, TopTrack.Playcount AS playcount
+               Artist.ArtistName AS artist, TopTrack.Playcount AS playcount,
+               Track.LastFmTrackUrl AS lastfmtrackurl
         FROM TopTrack
         INNER JOIN Track ON TopTrack.TrackID = Track.TrackID
         INNER JOIN Artist ON Track.ArtistID = Artist.ArtistID
@@ -189,10 +196,11 @@ def api_user_top_tracks():
 
     top_tracks = [
         {
-          "id":         row["id"],
-          "track":      row["track"],
-          "artist":     row["artist"],
-          "playcount":  row["playcount"],
+          "id":             row["id"],
+          "track":          row["track"],
+          "artist":         row["artist"],
+          "playcount":      row["playcount"],
+          "lastfmtrackurl": row["lastfmtrackurl"]
         }
         for row in rows
     ]
