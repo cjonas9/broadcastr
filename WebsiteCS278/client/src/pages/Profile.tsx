@@ -58,7 +58,7 @@ export default function Profile() {
 
       {user ? (
         <ProfileHeader
-          username={user.profile}
+          username={'@' + user.profile}
           profileImage={user.pfpmed || user.pfpsm || user.pfpxl}
           swag={user.swag}
         />
