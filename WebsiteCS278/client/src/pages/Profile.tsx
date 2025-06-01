@@ -5,19 +5,47 @@ import { BottomToolbar } from "@/components/BottomToolbar";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { useLocation } from "wouter";
 import TopTrackPost from "@/components/TopTrackPost";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/AuthContext";
+
+const { username } = useAuth();
+const [user, setUser] = useState(null);
+
+const VITE_API_URL="https://broadcastr.onrender.com"
+
+useEffect(() => {
+	async function fetchUserProfile() {
+	  if (!username) return;
+	  try {
+		const res = await fetch(VITE_API_URL + `/api/user/profile?user=${encodeURIComponent(username)}`);
+		if (!res.ok) throw new Error("Failed to fetch user profile");
+  
+		const data = await res.json();
+		setUser(data.userProfile[0]); // assuming there's only one profile
+	  } catch (err) {
+		console.error("Error fetching profile:", err);
+	  }
+	}
+	fetchUserProfile();
+  }, [username]);
+  
 
 export default function Profile() {
   const [, setLocation] = useLocation();
-  const user = musicData.user;
 
   return (
     <div className="bg-gray-900 min-h-screen">
       <BottomToolbar />
-      <ProfileHeader 
-        username={user.username}
-        profileImage={user.profileImage}
-        swag={user.swag}
-      />
+	  {user ? (
+		<ProfileHeader 
+			username={user.profile}
+			profileImage={user.pfpmed || user.pfpsm || user.pfpxl}
+			swag={user.swag}
+		/>
+		) : (
+		<p className="text-white text-center pt-4">Loading profile...</p>
+		)}
+
       <main className="max-w-md mx-auto px-4 pb-16">
         <ButtonWrapper  
           width="full"
