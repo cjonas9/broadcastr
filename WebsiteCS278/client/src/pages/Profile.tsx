@@ -29,13 +29,14 @@ export default function Profile() {
 		/>
 
 		<div className="flex justify-center my-4">
-		  <ButtonWrapper
-			width="full"
-			className="bg-red-600 text-white"
-			onClick={() => logout()}
-		  >
+		<ButtonWrapper
+			width="hug"               // only hug to the content, not full width
+			variant="secondary"       // start with your normal “secondary” styling
+			className="!hover:bg-red-600 text-white" 
+			onClick={logout}
+			>
 			Sign Out
-		  </ButtonWrapper>
+			</ButtonWrapper>
 		</div>
 	  </>
       ) : (
