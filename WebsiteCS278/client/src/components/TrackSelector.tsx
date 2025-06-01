@@ -2,24 +2,40 @@ import React from "react";
 import SongCard, { Song } from "./SongCard";
 import TrackSelectDrawer from "./TrackSelectDrawer";
 import { ButtonWrapper } from "./ButtonWrapper";
+import { useTopTracks } from "@/hooks/useTopTracks";
 
 interface TrackSelectorProps {
   selectedTrack: Song | null;
   onTrackSelect: (track: Song) => void;
-  songs: Song[];
+  username: string;
   label?: string;
   className?: string;
+  period?: string;
+  limit?: number;
 }
 
 export default function TrackSelector({
   selectedTrack,
   onTrackSelect,
-  songs,
+  username,
   label = "Choose your track",
   className = "",
+  period = "1month",
+  limit = 100,
 }: TrackSelectorProps) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
+  const { tracks, loading, error } = useTopTracks(username, period, limit);
+
+  const filteredTracks = React.useMemo(() => {
+    if (!search) return tracks;
+    const searchLower = search.toLowerCase();
+    return tracks.filter(
+      track =>
+        track.name.toLowerCase().includes(searchLower) ||
+        track.artist.toLowerCase().includes(searchLower)
+    );
+  }, [tracks, search]);
 
   return (
     <div className={className}>
@@ -32,13 +48,15 @@ export default function TrackSelector({
           <TrackSelectDrawer
             open={drawerOpen}
             onOpenChange={setDrawerOpen}
-            songs={songs}
+            songs={filteredTracks}
             onSelect={track => {
               onTrackSelect(track);
               setDrawerOpen(false);
             }}
             search={search}
             setSearch={setSearch}
+            loading={loading}
+            error={error}
             trigger={
               <ButtonWrapper width="full" variant="secondary">
                 Select Track
@@ -52,13 +70,15 @@ export default function TrackSelector({
           <TrackSelectDrawer
             open={drawerOpen}
             onOpenChange={setDrawerOpen}
-            songs={songs}
+            songs={filteredTracks}
             onSelect={track => {
               onTrackSelect(track);
               setDrawerOpen(false);
             }}
             search={search}
             setSearch={setSearch}
+            loading={loading}
+            error={error}
             trigger={
               <ButtonWrapper width="full" variant="secondary">
                 Reselect Track
