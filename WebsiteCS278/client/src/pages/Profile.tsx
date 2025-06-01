@@ -8,43 +8,63 @@ import TopTrackPost from "@/components/TopTrackPost";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/AuthContext";
 
-const { username } = useAuth();
-const [user, setUser] = useState(null);
+type UserProfile = {
+	id: number;
+	profile: string;
+	firstname: string;
+	lastname: string;
+	email: string;
+	profileurl: string;
+	bootstrapped: number;
+	admin: number;
+	lastlogin: string;
+	pfpsm: string;
+	pfpmed: string;
+	pfplg: string;
+	pfpxl: string;
+	swag: number;
+  };
 
 const VITE_API_URL="https://broadcastr.onrender.com"
 
-useEffect(() => {
-	async function fetchUserProfile() {
-	  if (!username) return;
-	  try {
-		const res = await fetch(VITE_API_URL + `/api/user/profile?user=${encodeURIComponent(username)}`);
-		if (!res.ok) throw new Error("Failed to fetch user profile");
-  
-		const data = await res.json();
-		setUser(data.userProfile[0]); // assuming there's only one profile
-	  } catch (err) {
-		console.error("Error fetching profile:", err);
-	  }
-	}
-	fetchUserProfile();
-  }, [username]);
-  
-
 export default function Profile() {
   const [, setLocation] = useLocation();
+  const { username } = useAuth();
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!username) return;
+
+      try {
+        const res = await fetch(
+          `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(username)}`
+        );
+        if (!res.ok) throw new Error("Failed to fetch user profile");
+
+        const data = await res.json();
+        setUser(data.userProfile[0]);            // assuming exactly one item
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    }
+
+    fetchUserProfile();
+  }, [username]);
 
   return (
     <div className="bg-gray-900 min-h-screen">
       <BottomToolbar />
-	  {user ? (
-		<ProfileHeader 
-			username={user.profile}
-			profileImage={user.pfpmed || user.pfpsm || user.pfpxl}
-			swag={user.swag}
-		/>
-		) : (
-		<p className="text-white text-center pt-4">Loading profile...</p>
-		)}
+
+      {user ? (
+        <ProfileHeader
+          username={user.profile}
+          profileImage={user.pfpmed || user.pfpsm || user.pfpxl}
+          swag={user.swag}
+        />
+      ) : (
+        <p className="text-white text-center pt-4">Loading profile...</p>
+      )}
 
       <main className="max-w-md mx-auto px-4 pb-16">
         <ButtonWrapper  
