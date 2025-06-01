@@ -6,25 +6,40 @@ import { musicData } from "../data/musicData";
 import { useState } from "react";
 import MatchProfileCard from "@/components/MatchProfileCard";
 import SongCard, { Song } from "../components/SongCard";
-import SearchBar from "../components/SearchBar";
 import React from "react";
 import { useSwap, MatchUser } from "../context/SwapContext";
 import { BottomToolbar } from "@/components/BottomToolbar";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import TrackSelector from "@/components/TrackSelector";
+import { useAuth } from "@/AuthContext";
+import { Heading } from "@/components/Heading";
 
 export default function TrackSwap() {
   const [, setLocation] = useLocation();
+  const { userDetails } = useAuth();
   // Mock: use the first friend as the match of the day
   const match = musicData.friends[0];
-  // Use topArtists as mock tracks
-  const tracks = musicData.topArtists;
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
 
-  // Use mockSongs from musicData
-  const mockSongs: Song[] = musicData.mockSongs;
-
   const { setSelectedSong, setMatchUser } = useSwap();
+
+  // Error handling for unauthenticated users
+  // TODO: remove when log in flow is complete
+  if (!userDetails) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
+        <div className="text-center">
+        <Heading level={3} serif={false} className="mb-4 font-semibold">Please log in to continue</Heading>
+          <ButtonWrapper
+            width="hug"
+            onClick={() => setLocation('/login')}
+            >  
+            Go to Login
+          </ButtonWrapper>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -50,7 +65,7 @@ export default function TrackSwap() {
           <TrackSelector
             selectedTrack={selectedTrack}
             onTrackSelect={setSelectedTrack}
-            songs={mockSongs}
+            username={userDetails.profile}
             label="Choose a Track to Swap!"
           />
         </div>
