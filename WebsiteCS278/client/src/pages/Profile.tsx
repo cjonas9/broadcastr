@@ -30,8 +30,8 @@ export default function Profile() {
 
 		<div className="flex justify-center my-4">
 		<ButtonWrapper
-			width="hug"               // only hug to the content, not full width
-			variant="secondary"       // start with your normal “secondary” styling
+			width="hug"
+			variant="secondary"  
 			className="!hover:bg-red-600 text-white" 
 			onClick={logout}
 			>
