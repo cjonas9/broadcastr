@@ -29,7 +29,12 @@ export default function SearchPage() {
       setError(null);
 
       // Fetch all users
-      const response = await fetch(`${VITE_API_URL}/api/query_users`);
+      const response = await fetch(`${VITE_API_URL}/api/query_users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (!response.ok) {
         throw new Error("Failed to search users");
