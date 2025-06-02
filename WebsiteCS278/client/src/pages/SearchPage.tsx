@@ -28,44 +28,37 @@ export default function SearchPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch all users
-      const response = await fetch(`${VITE_API_URL}/api/query_users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      // Try to fetch the exact user profile
+      const response = await fetch(
+        `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(searchQuery.trim())}`
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to search users");
+        if (response.status === 400) {
+          setUsers([]);
+          setError("User not found");
+        } else {
+          throw new Error("Failed to search user");
+        }
+        return;
       }
 
       const data = await response.json();
-      const allUsers = JSON.parse(data.output);
-      
-      // Filter users based on search query (case insensitive)
-      const searchTerm = searchQuery.trim().toLowerCase();
-      const filteredUsers = allUsers
-        .filter((user: any) => 
-          user.LastFmProfileName.toLowerCase().includes(searchTerm)
-        )
-        .map((user: any) => ({
-          username: user.LastFmProfileName,
-          profileImage: user.PfpMedium || user.PfpSmall || user.PfpExtraLarge || "",
-          swag: user.Swag || 0
-        }))
-        .slice(0, 10); // Limit to 10 results
-
-      if (filteredUsers.length > 0) {
-        setUsers(filteredUsers);
+      if (data.userProfile && data.userProfile.length > 0) {
+        const profile = data.userProfile[0];
+        setUsers([{
+          username: profile.profile,
+          profileImage: profile.pfpmed || profile.pfpsm || profile.pfpxl || "",
+          swag: profile.swag
+        }]);
         setError(null);
       } else {
         setUsers([]);
-        setError("No users found matching your search");
+        setError("User not found");
       }
     } catch (err) {
-      console.error("Error searching users:", err);
-      setError("Failed to search users");
+      console.error("Error searching user:", err);
+      setError("Failed to search user");
       setUsers([]);
     } finally {
       setLoading(false);
@@ -89,7 +82,7 @@ export default function SearchPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Search for users..."
+            placeholder="Enter exact username..."
             className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-purple-500"
           />
           <ButtonWrapper
@@ -148,14 +141,14 @@ export default function SearchPage() {
           </div>
         ) : searchQuery ? (
           <div className="text-center text-gray-400">
-            <p className="mb-2">No users found matching "{searchQuery}"</p>
-            <p className="text-sm">Try a different search term</p>
+            <p className="mb-2">No user found with that exact username</p>
+            <p className="text-sm">Try entering the complete username</p>
           </div>
         ) : (
           <div className="text-center text-gray-400">
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Enter a username to find profiles</p>
-            <p className="text-sm mt-2">Search will match partial usernames</p>
+            <p>Enter a username to find their profile</p>
+            <p className="text-sm mt-2">Note: Username must be exact</p>
           </div>
         )}
       </div>

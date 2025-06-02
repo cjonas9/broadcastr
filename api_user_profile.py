@@ -13,7 +13,7 @@ def api_user_profile():
     """
     Retrieves a user's profile information.
     Example:
-        GET /api/user/profile?user=LastFmProfileName
+        GET /api/user/profile?user=LastFmProfileName&partial=true
     Returns JSON:
       {
         "userProfile": [
@@ -26,10 +26,10 @@ def api_user_profile():
       }
     """
     user = request.args.get("user", "")
-    user_id = sql_query.query_user_id(user)
+    partial = request.args.get("partial", "false").lower() == "true"
 
-    if user_id == 0:
-        return jsonify({"error": "Missing or invalid user"}), 400
+    if not user.strip():
+        return jsonify({"error": "Missing user parameter"}), 400
 
     sql = """
         SELECT User.UserID AS id, User.LastFmProfileName AS profile, User.FirstName AS firstname,
@@ -38,11 +38,17 @@ def api_user_profile():
                User.Pfpsmall AS pfpsm, User.PfpMedium as pfpmed, User.PfpLarge AS pfplg,
                User.PfpExtraLarge AS pfpxl, User.Swag AS swag
         FROM User
-        WHERE UserID = ?
+        WHERE LastFmProfileName LIKE ?
+        ORDER BY LastFmProfileName
+        LIMIT 10
     """
     conn = sql_query.get_db_connection()
-    rows = conn.execute(sql, (user_id,)).fetchall()
+    search_term = f"%{user}%" if partial else user
+    rows = conn.execute(sql, (search_term,)).fetchall()
     conn.close()
+
+    if not rows and not partial:
+        return jsonify({"error": "Missing or invalid user"}), 400
 
     user_profile = [
         {
