@@ -19,8 +19,8 @@ def api_initiate_song_swap():
         400 Bad Request: If the user is not provided or invalid.
         400 Bad Request: If a matched user could not be found.
     Returns:
-        201 Success: The database ID of the newly created song 
-                     swap record and the matched user id.
+        201 Success: The database ID of the newly created song swap record,
+                    the matched user id, and the matched user's Last.fm profile name.
     """
     user = request.args.get("user", "")
     matched_user = request.args.get("matched_user", "")
@@ -41,7 +41,7 @@ def api_initiate_song_swap():
     if matched_user_id == 0:
         return jsonify({"error": "Could not locate a matched user for song swap."}), 400
 
-    matched_user_name = sql_query.query_user_name(matched_user_id)
+    matched_user_profile = sql_query.query_user_name(matched_user_id)
 
     cursor.execute(
             """
@@ -56,13 +56,16 @@ def api_initiate_song_swap():
     sql_query.store_broadcast(0,
                               sql_query.SYSTEM_ACCOUNT_ID,
                               "New Song Swap",
-                              f"{user} has initiated a Song Swap with {matched_user_name}!",
+                              f"{user} has initiated a Song Swap with {matched_user_profile}!",
                               related_type_enum.RelatedType.SONG_SWAP.value,
                               cursor.lastrowid)
 
-    return jsonify({"success": True,
-                    "song_swap_id": cursor.lastrowid, 
-                    "matched_user_id": matched_user_id}), 201
+    return jsonify({
+        "success": True,
+        "song_swap_id": cursor.lastrowid, 
+        "matched_user_id": matched_user_id,
+        "matched_user_profile": matched_user_profile
+    }), 201
 
 @song_swap_bp.route("/api/add-song-swap-track", methods=['POST'])
 def api_add_song_swap_track():

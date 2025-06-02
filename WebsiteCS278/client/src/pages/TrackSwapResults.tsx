@@ -4,8 +4,9 @@ import { Button } from "../components/ui/button";
 import React from "react";
 import { useSwap } from "../context/SwapContext";
 import { useLocation } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import { Heading } from "@/components/Heading";
 import { musicData } from "../data/musicData";
+import { ButtonWrapper } from "@/components/ButtonWrapper";
 
 export default function TrackSwapResults() {
   const { matchUser } = useSwap();
@@ -28,48 +29,52 @@ export default function TrackSwapResults() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-between p-6">
-      {/* Back Button */}
-      <div
-          className="inline-flex items-center text-purple-400 hover:text-purple-300 mb-6 cursor-pointer"
-          onClick={() => setLocation("/track-swap-confirmation")}
-        >
-          <ArrowLeft className="mr-2 h-5 w-5" />
-          Edit Track Selection
-        </div>
-      <div className="flex-1 flex flex-col justify-center items-center">
-        <h1 className="text-3xl font-bold text-center mb-8 mt-12">
-          You have received a track from <span className="text-purple-400">{matchUser.username}</span>
-        </h1>
-        <div className="w-full max-w-xl flex flex-col items-center">
-          <h2 className="text-xl font-semibold text-center mb-4 mt-2">Your Match of the day</h2>
+      <div className="max-w-md mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-2 mt-12">Track Swap Results</h1>
+        <p className="text-center text-gray-300 mb-8">
+          Rate the track you received to give your match swag points!
+        </p>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-center mb-2">Your Match</h2>
           <MatchProfileCard
             username={matchUser.username}
             profileImage={matchUser.profileImage}
             swag={matchUser.swag}
+            onClick={() => setLocation(`/profile/${matchUser.username.replace(/^@/, "")}`)}
+          />
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-center mb-2">Received Track</h2>
+          <SongCard
+            song={receivedSong}
+            selected={true}
             onClick={() => {}}
           />
-          <h2 className="text-xl font-semibold text-center mb-2 mt-8">Received Track</h2>
-          <div className="flex flex-col items-center text-gray-500 mb-4 text-base w-full">
-            <div className="text-center">
-              If you save the track your match sent, you match will receive +5 swag
-            </div>
-            <div className="w-full mt-2 mb-4">
-              <SongCard song={receivedSong} selected />
-            </div>
-            <Button className="bg-green-600 hover:bg-green-600 text-white font-semibold text-base py-3 rounded-lg">
-              + Save Track on Spotify
-            </Button>
-          </div>
         </div>
-      </div>
-      <div className="flex flex-col items-center mb-8">
-        <div className="text-center text-gray-500 mb-4 text-sm">
-          Swap results revealing in:<br />
-          <span className="font-semibold text-white text-lg">{countdown}</span>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-center mb-2">Rate the Track</h2>
+          <p className="text-center text-gray-300 mb-4">
+            Your rating determines how many swag points your match receives:
+          </p>
+          <StarRating
+            rating={rating}
+            onRatingChange={setRating}
+          />
         </div>
-        <Button className="w-full max-w-xl text-lg py-6 mt-2 bg-purple-600 hover:bg-purple-700 text-white font-bold" onClick={() => setLocation("/swap-points-results")}>
-          View Swap Results
-        </Button>
+
+        <div className="fixed bottom-24 w-full max-w-md">
+          <ButtonWrapper
+            variant={rating === 0 ? "disabled" : "primary"}
+            width="full"
+            disabled={rating === 0 || isSubmitting}
+            onClick={handleSubmitRating}
+          >
+            View Swap Results
+          </ButtonWrapper>
+        </div>
       </div>
     </div>
   );

@@ -4,3 +4,4 @@ data/broadcastr.sqbpro
 node_modules/
 .DS_Store
 .pylintrc
+data/broadcastr.db
