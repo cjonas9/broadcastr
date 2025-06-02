@@ -11,6 +11,7 @@ import Friends from "./pages/Friends";
 import ProfilePage from "./pages/ProfilePage";
 import FriendProfile from "./pages/FriendProfile";
 import TrackSwap from "./pages/TrackSwap";
+import TrackSwapEntry from "./pages/TrackSwapEntry";
 import TrackSwapConfirmation from "./pages/TrackSwapConfirmation";
 import { SwapProvider } from "./context/SwapContext";
 import TrackSwapResults from "./pages/TrackSwapResults";
@@ -25,6 +26,8 @@ import { AuthProvider } from "./AuthContext";
 import FollowersPage from "./pages/FollowersPage";
 import FollowingPage from "./pages/FollowingPage";
 import SearchPage from "./pages/SearchPage";
+import TrackSwapHistory from "./pages/TrackSwapHistory";
+
 
 function Router() {
   return (
@@ -36,10 +39,12 @@ function Router() {
       <Route path="/exploration/:id" component={ExplorationDetail} />
       <Route path="/friends" component={Friends} />
       <Route path="/profile/:id" component={FriendProfile} />
+      <Route path="/track-swap-entry" component={TrackSwapEntry}/>
       <Route path="/track-swap" component={TrackSwap}/>
       <Route path="/track-swap-confirmation" component={TrackSwapConfirmation}/>
       <Route path="/track-swap-results" component={TrackSwapResults}/>
       <Route path="/swap-points-results" component={SwapPointsResults}/>
+      <Route path="/track-swap-history" component={TrackSwapHistory}/>
       <Route path="/dm/:id" component={DirectMessage}/>
       <Route path="/profile" component={Profile}/>
       <Route path="/broadcast-track" component={BroadcastTrack}/>
