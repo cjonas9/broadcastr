@@ -2,6 +2,7 @@
 This module provides supporting functions for API routes pertaining to song swaps.
 """
 from flask import Blueprint, jsonify, request
+import related_type_enum
 import sql_query
 import validation
 
@@ -40,6 +41,8 @@ def api_initiate_song_swap():
     if matched_user_id == 0:
         return jsonify({"error": "Could not locate a matched user for song swap."}), 400
 
+    matched_user_name = sql_query.query_user_name(matched_user_id)
+
     cursor.execute(
             """
             INSERT INTO SongSwap(InitiatedUserID, MatchedUserID, SwapInitiatedTimestamp)
@@ -49,6 +52,13 @@ def api_initiate_song_swap():
 
     cursor.close()
     connection.close()
+
+    sql_query.store_broadcast(0,
+                              sql_query.SYSTEM_ACCOUNT_ID,
+                              "New Song Swap",
+                              f"{user} has initiated a Song Swap with {matched_user_name}!",
+                              related_type_enum.RelatedType.SONG_SWAP.value,
+                              cursor.lastrowid)
 
     return jsonify({"success": True,
                     "song_swap_id": cursor.lastrowid, 
@@ -138,27 +148,64 @@ def api_add_song_swap_reaction():
     cursor = connection.cursor()
 
     sql = ""
+    track_sql = ""
     if user_type == "initiated":
         sql = """
-        Update SongSwap
-        SET InitiatedReaction = ?,
-            InitiatedReactionTimestamp = CURRENT_TIMESTAMP
-        WHERE InitiatedUserID = ?
-            AND SongSwapID = ?
+            UPDATE SongSwap
+            SET InitiatedReaction = ?,
+                InitiatedReactionTimestamp = CURRENT_TIMESTAMP
+            WHERE InitiatedUserID = ?
+                AND SongSwapID = ?
+        """
+        track_sql = """
+            SELECT Track.TrackName
+            FROM Track
+            INNER JOIN SongSwap ON Track.TrackID = SongSwap.InitiatedTrackID
+            WHERE SongSwap.SongSwapID = ?
         """
     elif user_type == "matched":
         sql = """
-        Update SongSwap
-        SET MatchedReaction = ?,
-            MatchedReactionTimestamp = CURRENT_TIMESTAMP
-        WHERE MatchedUserID = ?
-            AND SongSwapID = ?
+            UPDATE SongSwap
+            SET MatchedReaction = ?,
+                MatchedReactionTimestamp = CURRENT_TIMESTAMP
+            WHERE MatchedUserID = ?
+                AND SongSwapID = ?
+        """
+        track_sql = """
+            SELECT Track.TrackName
+            FROM Track
+            INNER JOIN SongSwap ON Track.TrackID = SongSwap.MatchedTrackID
+            WHERE SongSwap.SongSwapID = ?
         """
 
     cursor.execute(sql, (reaction, user_id, song_swap_id))
 
     cursor.close()
     connection.close()
+
+    # Get the name of the track
+    connection = sql_query.get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(track_sql, (song_swap_id,))
+    row = cursor.fetchone()
+    if row:
+        track_name = row[0]
+    else:
+        track_name = "unknown"
+
+    cursor.close()
+    connection.close()
+
+    title = sql_query.query_reaction_text_for_song_swap_reaction(reaction)
+
+    # These could theoretically link to the track, but opted to link them to the song swap for now.
+    sql_query.store_broadcast(0,
+                              sql_query.SYSTEM_ACCOUNT_ID,
+                              title,
+                              f"{user} has given their Song Swap track, {track_name}, a score of {reaction}!",
+                              related_type_enum.RelatedType.SONG_SWAP.value,
+                              song_swap_id)
 
     return jsonify({"success": True}), 200
 

@@ -3,6 +3,7 @@ This module provides supporting functions for API routes pertaining to user prof
 """
 from flask import Blueprint, jsonify, request
 import bcrypt
+import related_type_enum
 import sql_query
 
 user_profile_bp = Blueprint('user-profile', __name__)
@@ -71,7 +72,7 @@ def api_user_create_profile():
     Creates a user profile with provided data.
     Example:
         POST /api/user/create-profile?user=LastFmProfileName&firstname=fname
-            &lastname=lname&email=fname@domain.edu&password=pw
+            &lastname=lname&email=fname@domain.edu&password=pw&bootstrapped=n
     Raises:
         400 Bad Request: If the user already exists in the database (based on profile name).
         400 Bad Request: If the user already exists in the database (based on email address).
@@ -87,6 +88,8 @@ def api_user_create_profile():
     last_name = request.args.get("lastname", "")
     email = request.args.get("email", "")
     password = request.args.get("password", "")
+    bootstrapped = request.args.get("bootstrapped", "")
+    bootstrapped = 0 if bootstrapped == "" else int(bootstrapped)
 
     user_id = sql_query.query_user_id(user)
     user_id_by_email = sql_query.query_user_id_by_email(email)
@@ -111,13 +114,21 @@ def api_user_create_profile():
     connection = sql_query.get_db_connection_isolation_none()
     cursor = connection.cursor()
 
-    user_id = sql_query.store_user(user, first_name, last_name, email, salt, hashed_password)
+    user_id = sql_query.store_user(user, first_name, last_name,
+                                   email, salt, hashed_password, bootstrapped)
 
     cursor.close()
     connection.close()
 
     # Refresh/store all last.fm data for this user
     sql_query.refresh_user_data(user)
+
+    sql_query.store_broadcast(0,
+                              sql_query.SYSTEM_ACCOUNT_ID,
+                              "New Broadcastr",
+                              f"{user} has joined Broadcastr. Welcome {user}!",
+                              related_type_enum.RelatedType.USER.value,
+                              user_id)
 
     return jsonify({"success": user_id}), 201
 
@@ -140,7 +151,8 @@ def api_user_login():
 
     user_id = sql_query.query_user_id(user)
 
-    if user_id == 0:
+    # Prevent logging in as invalid or system account
+    if user_id in (0, sql_query.SYSTEM_ACCOUNT_ID):
         return jsonify({"success": False, "error": "Missing or invalid user"}), 400
     # if not password.strip():
     #     return jsonify({"error": "password is required"}), 400

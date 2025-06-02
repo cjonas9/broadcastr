@@ -21,6 +21,8 @@ LAST_FM_API_CALL_SLEEP_TIME = 0.05
 # Periods use when refreshing top artist/track data
 REFRESH_PERIODS = ["overall", "7day", "1month", "12month"]
 
+SYSTEM_ACCOUNT_ID = 1
+
 key = "68237ca563ba0ac6a5915f31452b32d1"
 shared_secret = "08921d66963667bccb9f00fe9b35d6e9"
 
@@ -129,6 +131,39 @@ def query_matched_user_for_song_swap(exclude_user_id):
 
 	return matched_user_id
 
+def query_reaction_text_for_song_swap_reaction(reaction_score):
+	"""
+	Queries the database for a random reaction to a song
+	swap reaction score (1-5, with 1 being bad and 5 good).
+	Returns:
+		Random selection from 10 strings (per tier) describing the reaction.
+	"""
+	connection = get_db_connection()
+	cursor = connection.cursor()
+
+	cursor.execute(
+		"""
+		SELECT Title
+		FROM SongSwapReaction
+		WHERE Reaction = ?
+		ORDER BY RANDOM()
+		LIMIT 1;
+		""",
+		(reaction_score,)
+	)
+
+	row = cursor.fetchone()
+
+	if row:
+		reaction = row[0]
+	else:
+		reaction = "That's nice, dear." # should never happen
+
+	cursor.close()
+	connection.close()
+
+	return reaction
+
 def query_inferred_type_for_song_swap(song_swap_id, user_id):
 	"""
 	Determines based on user id whether or not the user is initiated or matched in
@@ -175,6 +210,16 @@ def query_user_id(username):
 		numeric user id
 	"""
 	return query_id("UserID", "User", [["LastFmProfileName", username]])
+
+def query_user_name(user_id):
+	"""
+	Queries the database for the user name of a user id.
+	Args:
+		user_id: The user's database id
+	Returns:
+		The user's last.fm profile name
+	"""
+	return query_id("LastFmProfileName", "User", [["UserID", user_id]])
 
 def query_swag(username):
 	"""
@@ -831,15 +876,18 @@ def store_top_track(userid, trackid, periodid, playcount):
 
 	return cursor.lastrowid
 
-def store_user(user, first_name, last_name, email, salt, hashed_password):
+def store_user(user, first_name, last_name, email, salt, hashed_password, bootstrapped):
 	print(f"storing new user: {user}")
 	connection = get_db_connection_isolation_none()
 	cursor = connection.cursor()
 
 	cursor.execute(
-        "INSERT INTO User(LastFmProfileName, FirstName, LastName, EmailAddress, Salt, Password) " \
-        "VALUES (?, ?, ?, ?, ?, ?)",
-        (user, first_name, last_name, email, salt, hashed_password))
+		"""
+			INSERT INTO User(LastFmProfileName, FirstName, LastName,
+							 EmailAddress, Salt, Password, BootstrappedUser)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		""",
+        (user, first_name, last_name, email, salt, hashed_password, bootstrapped))
 
 	cursor.close()
 	connection.close()
