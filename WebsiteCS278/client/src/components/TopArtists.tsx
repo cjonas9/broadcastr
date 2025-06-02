@@ -4,6 +4,8 @@ import { useLocation } from "wouter";
 import { ChevronRightIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/AuthContext";
+import { ButtonWrapper } from "./ButtonWrapper";
+import { Heading } from "@/components/Heading";
 
 const VITE_API_URL="https://broadcastr.onrender.com"
 
@@ -14,38 +16,50 @@ type Artist = {
   imageUrl: string;
 };
 
-export default function TopArtists() {
+type TopArtistsProps = {
+	username: string;
+  };
+
+export default function TopArtists({ username }: TopArtistsProps) {
   const [artists, setArtists] = useState<Artist[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [, navigate] = useLocation();
-  const { isLoggedIn, username } = useAuth();
+  const { userDetails } = useAuth();
+
+  const isOwnProfile = userDetails?.profile === username;
 
   useEffect(() => {
-	if (!isLoggedIn || !username) return;
+    if (!username) return;
 
     async function load() {
-		// NOTE: THIS PART CAN FETCH WITH SESSION DATA INSTEAD
       try {
         const res = await fetch(
           VITE_API_URL + `/api/user/top-artists?user=${encodeURIComponent(username)}&period=overall&limit=10`
         );
+        if (!res.ok) throw new Error('Failed to fetch top artists');
         const { topArtists } = await res.json();
         setArtists(topArtists);
       } catch (err) {
         console.error("Failed to load top artists:", err);
+        setError(err instanceof Error ? err.message : 'Failed to load top artists');
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [isLoggedIn, username]);
-
-  if (!isLoggedIn) {
-    return <p className="text-center text-gray-400">Please log in to view your top artists.</p>;
-  }
+  }, [username]);
 
   if (loading) {
     return <p className="text-center text-gray-400">Loading top artists…</p>;
+  }
+
+  if (error) {
+    return <p className="text-center text-gray-400">Failed to load top artists</p>;
+  }
+
+  if (!artists.length) {
+    return <p className="text-center text-gray-400">No top artists found</p>;
   }
 
   return (
@@ -54,7 +68,9 @@ export default function TopArtists() {
         Top Artists
       </h2>
       <p className="text-center text-gray-400 text-sm mb-6">
-        Your most-played artists—the soundtrack to your life.
+        {isOwnProfile 
+          ? "Your most-played artists."
+          : `${username}'s most-played artists.`}
       </p>
 
       <div className="bg-gray-800 rounded-xl overflow-hidden">

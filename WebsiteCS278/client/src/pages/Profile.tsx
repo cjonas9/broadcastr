@@ -87,7 +87,7 @@ export default function Profile() {
           </div>
         </section>
 
-        <TopArtists />
+        {userDetails && <TopArtists username={userDetails.profile} />}
       </main>
     </div>
   );

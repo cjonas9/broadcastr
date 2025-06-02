@@ -99,7 +99,7 @@ export default function FriendProfile() {
           className="text-purple-400 hover:text-purple-300 cursor-pointer"
           onClick={() => setLocation("/friends")}
         >
-          ← Back to Friends
+          Back to Friends
         </div>
       </div>
     );
@@ -163,7 +163,7 @@ export default function FriendProfile() {
           </div>
         </section>
 
-        <TopArtists />
+        {friendProfile && <TopArtists username={friendProfile.profile} />}
       </main>
     </div>
   );
