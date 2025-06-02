@@ -119,25 +119,22 @@ export default function FriendProfile() {
           ""
         }
         swag={friendProfile.swag}
+        showActions={true}
+        onMessageClick={() => setLocation(`/dm/${friendProfile.profile}`)}
       />
 
       <div className="flex justify-center gap-4 my-4">
-        <ButtonWrapper
-          width="hug"
-          variant={isFollowing ? "secondary" : "primary"}
-          onClick={handleFollowClick}
-          className={isFollowing ? "!hover:bg-red-600" : ""}
-        >
-          {isFollowing ? "Unfollow" : "Follow"}
-        </ButtonWrapper>
-
-        <ButtonWrapper
-          width="hug"
-          variant="secondary"
-          onClick={() => setLocation(`/dm/${friendProfile.id}`)}
-        >
-          Message
-        </ButtonWrapper>
+        {userDetails && userDetails.profile !== friendProfile.profile && (
+          <ButtonWrapper
+            width="hug"
+            variant={isFollowing ? "secondary" : "primary"}
+            onClick={handleFollowClick}
+            className={isFollowing ? "!hover:bg-red-600" : ""}
+            disabled={followLoading}
+          >
+            {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
+          </ButtonWrapper>
+        )}
       </div>
 
       <main className="max-w-md mx-auto px-4 pb-16">
