@@ -6,72 +6,164 @@ import TopArtists from "@/components/TopArtists";
 import ExplorationZones from "@/components/ExplorationZones"; // optional
 import DropDownMenu from "@/components/DropDownMenu";
 import TopTrackPost from "@/components/TopTrackPost";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { BottomToolbar } from "@/components/BottomToolbar";
+import { ButtonWrapper } from "@/components/ButtonWrapper";
+import { useAuth } from "@/AuthContext";
+import { useFollow } from "@/hooks/useFollow";
+
+const VITE_API_URL = "https://broadcastr.onrender.com";
+
+interface UserProfile {
+  id: number;
+  profile: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  profileurl: string;
+  bootstrapped: number;
+  admin: number;
+  lastlogin: string;
+  pfpsm: string;
+  pfpmed: string;
+  pfplg: string;
+  pfpxl: string;
+  swag: number;
+}
 
 export default function FriendProfile() {
-  const [, params] = useRoute<{ id: string }>("/profile/:id");
+  const [, params] = useRoute<{ username: string }>("/profile/:username");
   const [, setLocation] = useLocation();
-  const friendId = params?.id ? parseInt(params.id) : null;
+  const { userDetails } = useAuth();
+  const [friendProfile, setFriendProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const friend = musicData.friends.find(f => f.id === friendId);
-  console.log("friend.topArtists", friend?.topArtists);
-  console.log("Friend ID from URL:", friendId);
+  const username = params?.username || "";
+  const { isFollowing, followUser, unfollowUser, loading: followLoading } = useFollow(username);
 
-  if (!friend) {
-	const [requestSent, setRequestSent] = useState(false);
-  
-	return (
-	  <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-		<p className="text-lg mb-4">Friend not found.</p>
-  
-		<button
-		  onClick={() => setRequestSent(true)}
-		  className="px-4 py-2 mb-4 bg-purple-700 text-white rounded-xl hover:bg-purple-600 transition-colors"
-		  disabled={requestSent}
-		>
-		  {requestSent ? "Friend Request Sent!" : "Send Friend Request?"}
-		</button>
-  
-		<div
-		  className="text-purple-400 hover:text-purple-300 cursor-pointer"
-		  onClick={() => setLocation("/friends")}
-		>
-		  ← Back to Friends
-		</div>
-	  </div>
-	);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!username) return;
+
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(username)}`
+        );
+        
+        if (!response.ok) throw new Error('Failed to fetch profile');
+        
+        const data = await response.json();
+        if (data.userProfile && data.userProfile.length > 0) {
+          setFriendProfile(data.userProfile[0]);
+        } else {
+          setError('User not found');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setError('Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [username]);
+
+  const handleFollowClick = async () => {
+    try {
+      if (isFollowing) {
+        await unfollowUser();
+      } else {
+        await followUser();
+      }
+    } catch (error) {
+      console.error('Error updating follow status:', error);
+    }
+  };
+
+  if (loading || followLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+        <p>Loading...</p>
+      </div>
+    );
   }
+
+  if (error || !friendProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+        <p className="text-lg mb-4">{error || 'User not found'}</p>
+        <div
+          className="text-purple-400 hover:text-purple-300 cursor-pointer"
+          onClick={() => setLocation("/friends")}
+        >
+          ← Back to Friends
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-900 min-h-screen">
-    <DropDownMenu />
+      <BottomToolbar />
+      
       <ProfileHeader
-        username={friend.username}
-        profileImage={friend.profileImage}
-        swag={friend.swag}
-        showActions={true}
-        onMessageClick={() => setLocation(`/dm/${friend.id}`)}
+        username={"@" + friendProfile.profile}
+        profileImage={
+          friendProfile.pfpmed ||
+          friendProfile.pfpsm ||
+          friendProfile.pfpxl ||
+          ""
+        }
+        swag={friendProfile.swag}
       />
+
+      <div className="flex justify-center gap-4 my-4">
+        <ButtonWrapper
+          width="hug"
+          variant={isFollowing ? "secondary" : "primary"}
+          onClick={handleFollowClick}
+          className={isFollowing ? "!hover:bg-red-600" : ""}
+        >
+          {isFollowing ? "Unfollow" : "Follow"}
+        </ButtonWrapper>
+
+        <ButtonWrapper
+          width="hug"
+          variant="secondary"
+          onClick={() => setLocation(`/dm/${friendProfile.id}`)}
+        >
+          Message
+        </ButtonWrapper>
+      </div>
+
       <main className="max-w-md mx-auto px-4 pb-16">
         {/* Top Broadcasted Tracks Section */}
-        <section className="mt-8 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Top Broadcasted Tracks</h2>
+        <section className="mt-8">
+          <h2 className="text-2xl font-bold text-white">Top Broadcasted Tracks</h2>
           <p className="text-sm text-gray-400 mb-4">
             Tracks broadcasted that were most liked by other broadcastrs
           </p>
           <TopTrackPost
             track={{
-              id: musicData.mockSongs[0].id,
-              title: musicData.mockSongs[0].title,
-              artist: musicData.mockSongs[0].artist,
-              albumArt: musicData.mockSongs[0].albumArt,
-              trackLink: musicData.mockSongs[0].trackLink
+              id: 1,
+              name: "Loading...",
+              artist: "Loading...",
+              playCount: 0
             }}
-            likes={16}
+            likes={0}
           />
+
+          <div className="mt-4">
+            <button className="w-full bg-purple-600 text-white py-2 rounded-md text-center text-sm font-semibold">
+              Explore All
+            </button>
+          </div>
         </section>
 
-        <TopArtists artists={friend.topArtists} />
-        <ExplorationZones artists={friend.topArtists} />
+        <TopArtists />
       </main>
     </div>
   );
