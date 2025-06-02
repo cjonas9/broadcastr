@@ -124,8 +124,11 @@ def api_add_song_swap_reaction():
     """
     Adds a reaction to a song swap. The user type (initiated or matched) will be 
     inferred based on user id and song swap id.
+    Doing this will create a broadcast.  If autotitle is 1 (default) it will 
+    randomly create a fun title for the broadcast based on the reaction.
     Example:
-        POST /api/add-song-swap-reaction?user=LastFmProfileName&songswapid=n&reaction=n
+        POST /api/add-song-swap-reaction?user=LastFmProfileName&songswapid=n
+                                        &reaction=n&autotitle=1
     Raises:
         400 Bad Request: If the user or recipient is not provided or invalid.
         400 Bad Request: If the song swap id is not provided or invalid.
@@ -136,6 +139,8 @@ def api_add_song_swap_reaction():
     user = request.args.get("user", "")
     song_swap_id = int(request.args.get("songswapid", "0"))
     reaction = int(request.args.get("reaction", "0"))
+    auto_generate_title = request.args.get("autotitle", "1")
+    auto_generate_title = 1 if auto_generate_title == "" else int(auto_generate_title)
 
     user_id = sql_query.query_user_id(user)
     user_type = sql_query.query_inferred_type_for_song_swap(song_swap_id, user_id)
@@ -197,7 +202,10 @@ def api_add_song_swap_reaction():
     cursor.close()
     connection.close()
 
-    title = sql_query.query_reaction_text_for_song_swap_reaction(reaction)
+    if auto_generate_title == 1:
+        title = sql_query.query_reaction_text_for_song_swap_reaction(reaction)
+    else:
+        title = "Song Swap Reaction"
 
     # These could theoretically link to the track, but opted to link them to the song swap for now.
     sql_query.store_broadcast(0,
