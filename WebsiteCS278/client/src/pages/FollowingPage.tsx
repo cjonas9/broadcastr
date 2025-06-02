@@ -35,7 +35,29 @@ export default function FollowingPage() {
         }
 
         const data = await res.json();
-        setFollowing(data.following);
+        
+        // Fetch full profile for each following user
+        const followingProfiles = await Promise.all(
+          data.following.map(async (following: { following: string }) => {
+            const profileRes = await fetch(
+              `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(following.following)}`
+            );
+            
+            if (!profileRes.ok) return null;
+            
+            const profileData = await profileRes.json();
+            const profile = profileData.userProfile[0];
+            
+            return {
+              username: profile.profile,
+              profileImage: profile.pfpmed || profile.pfpsm || profile.pfpxl || "",
+              swag: profile.swag
+            };
+          })
+        );
+
+        // Filter out any failed profile fetches
+        setFollowing(followingProfiles.filter((profile): profile is User => profile !== null));
         setError(null);
       } catch (err) {
         console.error("Error fetching following:", err);
