@@ -1,9 +1,10 @@
 import { useRoute, useLocation } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 
 const VITE_API_URL = "https://broadcastr.onrender.com";
+const POLLING_INTERVAL = 5000; // Poll every 5 seconds for new messages
 
 interface Message {
   id: number;
@@ -23,38 +24,51 @@ export default function DirectMessage() {
   const [error, setError] = useState<string | null>(null);
   const [input, setInput] = useState("");
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!userDetails?.profile || !params?.username) return;
+  const fetchMessages = useCallback(async () => {
+    if (!userDetails?.profile || !params?.username) return;
 
-      try {
-        setLoading(true);
-        const res = await fetch(
-          `${VITE_API_URL}/api/user/direct-messages?user=${encodeURIComponent(userDetails.profile)}&conversant=${encodeURIComponent(params.username)}`
-        );
+    try {
+      const res = await fetch(
+        `${VITE_API_URL}/api/user/direct-messages?user=${encodeURIComponent(userDetails.profile)}&conversant=${encodeURIComponent(params.username)}`
+      );
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch messages");
-        }
-
-        const data = await res.json();
-        setMessages(data.directMessages);
-
-        // Mark messages as read
-        await fetch(
-          `${VITE_API_URL}/api/mark-messages-read?user=${encodeURIComponent(params.username)}&recipient=${encodeURIComponent(userDetails.profile)}`,
-          { method: "POST" }
-        );
-      } catch (err) {
-        console.error("Error fetching messages:", err);
-        setError("Failed to load messages");
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        throw new Error("Failed to fetch messages");
       }
+
+      const data = await res.json();
+      setMessages(data.directMessages);
+
+      // Mark messages as read
+      await fetch(
+        `${VITE_API_URL}/api/mark-messages-read?user=${encodeURIComponent(params.username)}&recipient=${encodeURIComponent(userDetails.profile)}`,
+        { method: "POST" }
+      );
+    } catch (err) {
+      console.error("Error fetching messages:", err);
+      setError("Failed to load messages");
+    }
+  }, [params?.username, userDetails?.profile]);
+
+  // Initial load
+  useEffect(() => {
+    const loadMessages = async () => {
+      setLoading(true);
+      await fetchMessages();
+      setLoading(false);
     };
 
-    fetchMessages();
-  }, [params?.username, userDetails?.profile]);
+    loadMessages();
+  }, [fetchMessages]);
+
+  // Poll for new messages
+  useEffect(() => {
+    if (!userDetails?.profile || !params?.username) return;
+
+    const pollInterval = setInterval(fetchMessages, POLLING_INTERVAL);
+
+    return () => clearInterval(pollInterval);
+  }, [fetchMessages, params?.username, userDetails?.profile]);
 
   const sendMessage = async () => {
     if (!input.trim() || !userDetails?.profile || !params?.username) return;
@@ -69,17 +83,8 @@ export default function DirectMessage() {
         throw new Error("Failed to send message");
       }
 
-      // Refresh messages
-      const messagesRes = await fetch(
-        `${VITE_API_URL}/api/user/direct-messages?user=${encodeURIComponent(userDetails.profile)}&conversant=${encodeURIComponent(params.username)}`
-      );
-
-      if (!messagesRes.ok) {
-        throw new Error("Failed to refresh messages");
-      }
-
-      const data = await messagesRes.json();
-      setMessages(data.directMessages);
+      // Fetch latest messages
+      await fetchMessages();
       setInput("");
     } catch (err) {
       console.error("Error sending message:", err);
@@ -157,7 +162,10 @@ export default function DirectMessage() {
                   msg.type === "Outgoing" ? "bg-purple-600 text-white" : "bg-gray-700 text-white"
                 }`}
               >
-                {msg.message}
+                <div className="text-sm">{msg.message}</div>
+                <div className="text-xs opacity-75 mt-1">
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
             </div>
           ))
