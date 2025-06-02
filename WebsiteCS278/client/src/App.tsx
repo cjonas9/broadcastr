@@ -24,6 +24,7 @@ import SignUp from "@/pages/SignUp";
 import { AuthProvider } from "./AuthContext";
 import FollowersPage from "./pages/FollowersPage";
 import FollowingPage from "./pages/FollowingPage";
+import SearchPage from "./pages/SearchPage";
 
 function Router() {
   return (
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/broadcast-track" component={BroadcastTrack}/>
       <Route path="/followers/:username" component={FollowersPage} />
       <Route path="/following/:username" component={FollowingPage} />
+      <Route path="/search" component={SearchPage} />
       <Route component={NotFound} />
     </Switch>
   );
