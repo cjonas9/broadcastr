@@ -66,6 +66,11 @@ export default function FriendProfile() {
     const fetchProfile = async () => {
       if (!username) return;
 
+	  if (username === userDetails?.profile) {
+		setLocation("/profile");
+		return;
+	  }
+
       try {
         setLoading(true);
         setError(null);
