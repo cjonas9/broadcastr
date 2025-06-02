@@ -11,6 +11,7 @@ import { BottomToolbar } from "@/components/BottomToolbar";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { useAuth } from "@/AuthContext";
 import { useFollow } from "@/hooks/useFollow";
+import TopBroadcastedTracks from "@/components/TopBroadcastedTracks";
 
 const VITE_API_URL = "https://broadcastr.onrender.com";
 
@@ -140,29 +141,7 @@ export default function FriendProfile() {
       </div>
 
       <main className="max-w-md mx-auto px-4 pb-16">
-        {/* Top Broadcasted Tracks Section */}
-        <section className="mt-8">
-          <h2 className="text-2xl font-bold text-white">Top Broadcasted Tracks</h2>
-          <p className="text-sm text-gray-400 mb-4">
-            Tracks broadcasted that were most liked by other broadcastrs
-          </p>
-          <TopTrackPost
-            track={{
-              id: 1,
-              name: "Loading...",
-              artist: "Loading...",
-              playCount: 0
-            }}
-            likes={0}
-          />
-
-          <div className="mt-4">
-            <button className="w-full bg-purple-600 text-white py-2 rounded-md text-center text-sm font-semibold">
-              Explore All
-            </button>
-          </div>
-        </section>
-
+        {friendProfile && <TopBroadcastedTracks username={friendProfile.profile} />}
         {friendProfile && <TopArtists username={friendProfile.profile} />}
       </main>
     </div>
