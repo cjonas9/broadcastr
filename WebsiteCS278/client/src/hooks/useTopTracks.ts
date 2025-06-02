@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Song } from '@/components/SongCard';
 
+const VITE_API_URL = "https://broadcastr.onrender.com";
+
 interface TopTrack {
   id: number;
   track: string;
@@ -18,7 +20,7 @@ export function useTopTracks(username: string, period: string = '7day', limit: n
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:8000/api/user/top-tracks?user=${username}&period=${period}&limit=${limit}`
+          `${VITE_API_URL}/api/user/top-tracks?user=${encodeURIComponent(username)}&period=${period}&limit=${limit}`
         );
         
         if (!response.ok) {
@@ -37,6 +39,7 @@ export function useTopTracks(username: string, period: string = '7day', limit: n
         setTracks(transformedTracks);
         setError(null);
       } catch (err) {
+        console.error('Error fetching tracks:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
