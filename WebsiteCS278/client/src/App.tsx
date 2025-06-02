@@ -45,7 +45,7 @@ function Router() {
       <Route path="/track-swap-results" component={TrackSwapResults}/>
       <Route path="/swap-points-results" component={SwapPointsResults}/>
       <Route path="/track-swap-history" component={TrackSwapHistory}/>
-      <Route path="/dm/:id" component={DirectMessage}/>
+      <Route path="/dm/:username" component={DirectMessage}/>
       <Route path="/profile" component={Profile}/>
       <Route path="/broadcast-track" component={BroadcastTrack}/>
       <Route path="/followers/:username" component={FollowersPage} />
