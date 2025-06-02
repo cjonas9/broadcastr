@@ -23,20 +23,47 @@ export default function BroadcastTrackPage() {
       setLoading(true);
       setError(null);
 
+      // Log the request details
+      console.log("Creating broadcast with:", {
+        user: userDetails.profile,
+        title: caption || `Broadcasting ${selectedTrack.name}`,
+        body: `${selectedTrack.name} by ${selectedTrack.artist}`,
+        relatedtype: "TRACK",
+        relatedid: selectedTrack.id
+      });
+
       const response = await fetch(
-        `${VITE_API_URL}/api/create-broadcast?user=${encodeURIComponent(userDetails.profile)}&title=${encodeURIComponent(caption)}&body=${encodeURIComponent(`${selectedTrack.name} by ${selectedTrack.artist}`)}&relatedtype=TRACK&relatedid=${selectedTrack.id}`,
-        { method: "POST" }
+        `${VITE_API_URL}/api/create-broadcast`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            user: userDetails.profile,
+            title: caption || `Broadcasting ${selectedTrack.name}`,
+            body: `${selectedTrack.name} by ${selectedTrack.artist}`,
+            relatedtype: "TRACK",
+            relatedid: selectedTrack.id
+          })
+        }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to create broadcast");
+        const errorData = await response.json();
+        console.error("Broadcast creation failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData.error || "Failed to create broadcast");
       }
 
       // Redirect to feed
       setLocation("/");
     } catch (err) {
       console.error("Error creating broadcast:", err);
-      setError("Failed to post track. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to post track. Please try again.");
     } finally {
       setLoading(false);
     }
