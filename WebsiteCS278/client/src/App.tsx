@@ -22,7 +22,8 @@ import BroadcastTrack from "./pages/BroadcastTrack";
 import LogIn from "@/pages/LogIn";
 import SignUp from "@/pages/SignUp";
 import { AuthProvider } from "./AuthContext";
-
+import FollowersPage from "./pages/FollowersPage";
+import FollowingPage from "./pages/FollowingPage";
 
 function Router() {
   return (
@@ -41,6 +42,8 @@ function Router() {
       <Route path="/dm/:id" component={DirectMessage}/>
       <Route path="/profile" component={Profile}/>
       <Route path="/broadcast-track" component={BroadcastTrack}/>
+      <Route path="/followers/:username" component={FollowersPage} />
+      <Route path="/following/:username" component={FollowingPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -52,9 +55,9 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <SwapProvider>
-			<AuthProvider>
-          		<Router />
-			</AuthProvider>
+          <AuthProvider>
+            <Router />
+          </AuthProvider>
         </SwapProvider>
       </TooltipProvider>
     </QueryClientProvider>
