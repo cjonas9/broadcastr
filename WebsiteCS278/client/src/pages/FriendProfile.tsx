@@ -13,6 +13,7 @@ import { useAuth } from "@/AuthContext";
 import { useFollow } from "@/hooks/useFollow";
 
 const VITE_API_URL = "https://broadcastr.onrender.com";
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 interface UserProfile {
   id: number;
@@ -31,6 +32,24 @@ interface UserProfile {
   swag: number;
 }
 
+// Development fallback profile
+const dummyProfile: UserProfile = {
+  id: 999,
+  profile: "dummyuser",
+  firstname: "Dummy",
+  lastname: "User",
+  email: "dummy@example.com",
+  profileurl: "",
+  bootstrapped: 0,
+  admin: 0,
+  lastlogin: new Date().toISOString(),
+  pfpsm: "https://via.placeholder.com/40",
+  pfpmed: "https://via.placeholder.com/100",
+  pfplg: "https://via.placeholder.com/200",
+  pfpxl: "https://via.placeholder.com/400",
+  swag: 100
+};
+
 export default function FriendProfile() {
   const [, params] = useRoute<{ username: string }>("/profile/:username");
   const [, setLocation] = useLocation();
@@ -48,21 +67,60 @@ export default function FriendProfile() {
 
       try {
         setLoading(true);
+        setError(null);
+
         const response = await fetch(
           `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(username)}`
         );
         
-        if (!response.ok) throw new Error('Failed to fetch profile');
+        if (!response.ok) {
+          console.error('API Error:', {
+            status: response.status,
+            statusText: response.statusText
+          });
+          
+          // In development, use dummy profile instead of showing error
+          if (isDevelopment) {
+            console.log('Using dummy profile for development');
+            setFriendProfile({
+              ...dummyProfile,
+              profile: username
+            });
+            return;
+          }
+          
+          throw new Error(`Failed to fetch profile: ${response.statusText}`);
+        }
         
         const data = await response.json();
+        console.log('Profile data:', data); // Debug log
+        
         if (data.userProfile && data.userProfile.length > 0) {
           setFriendProfile(data.userProfile[0]);
         } else {
-          setError('User not found');
+          // In development, use dummy profile for non-existent users
+          if (isDevelopment) {
+            console.log('Using dummy profile for non-existent user');
+            setFriendProfile({
+              ...dummyProfile,
+              profile: username
+            });
+          } else {
+            setError('User not found');
+          }
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
-        setError('Failed to load profile');
+        // In development, use dummy profile on error
+        if (isDevelopment) {
+          console.log('Using dummy profile after error');
+          setFriendProfile({
+            ...dummyProfile,
+            profile: username
+          });
+        } else {
+          setError(error instanceof Error ? error.message : 'Failed to load profile');
+        }
       } finally {
         setLoading(false);
       }
@@ -115,7 +173,7 @@ export default function FriendProfile() {
           friendProfile.pfpmed ||
           friendProfile.pfpsm ||
           friendProfile.pfpxl ||
-          ""
+          "https://via.placeholder.com/100"
         }
         swag={friendProfile.swag}
         showActions={true}
