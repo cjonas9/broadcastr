@@ -28,19 +28,40 @@ export default function SearchPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `${VITE_API_URL}/api/user/search?query=${encodeURIComponent(searchQuery)}`
-      );
+      // Fetch all users
+      const response = await fetch(`${VITE_API_URL}/api/query_users`);
 
       if (!response.ok) {
         throw new Error("Failed to search users");
       }
 
       const data = await response.json();
-      setUsers(data.users || []);
+      const allUsers = JSON.parse(data.output);
+      
+      // Filter users based on search query (case insensitive)
+      const searchTerm = searchQuery.trim().toLowerCase();
+      const filteredUsers = allUsers
+        .filter((user: any) => 
+          user.LastFmProfileName.toLowerCase().includes(searchTerm)
+        )
+        .map((user: any) => ({
+          username: user.LastFmProfileName,
+          profileImage: user.PfpMedium || user.PfpSmall || user.PfpExtraLarge || "",
+          swag: user.Swag || 0
+        }))
+        .slice(0, 10); // Limit to 10 results
+
+      if (filteredUsers.length > 0) {
+        setUsers(filteredUsers);
+        setError(null);
+      } else {
+        setUsers([]);
+        setError("No users found matching your search");
+      }
     } catch (err) {
       console.error("Error searching users:", err);
       setError("Failed to search users");
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -63,7 +84,7 @@ export default function SearchPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Search by username..."
+            placeholder="Search for users..."
             className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-purple-500"
           />
           <ButtonWrapper
@@ -121,11 +142,15 @@ export default function SearchPage() {
             ))}
           </div>
         ) : searchQuery ? (
-          <p className="text-center text-gray-400">No users found</p>
+          <div className="text-center text-gray-400">
+            <p className="mb-2">No users found matching "{searchQuery}"</p>
+            <p className="text-sm">Try a different search term</p>
+          </div>
         ) : (
           <div className="text-center text-gray-400">
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Search for users to follow</p>
+            <p>Enter a username to find profiles</p>
+            <p className="text-sm mt-2">Search will match partial usernames</p>
           </div>
         )}
       </div>
