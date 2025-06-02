@@ -8,8 +8,8 @@ export type MatchUser = {
 };
 
 type SwapContextType = {
-  selectedSong: Song | null;
-  setSelectedSong: (song: Song | null) => void;
+  swapTrack: Song | null;
+  setSwapTrack: (track: Song | null) => void;
   matchUser: MatchUser | null;
   setMatchUser: (user: MatchUser | null) => void;
 };
@@ -17,10 +17,10 @@ type SwapContextType = {
 const SwapContext = createContext<SwapContextType | undefined>(undefined);
 
 export function SwapProvider({ children }: { children: React.ReactNode }) {
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [swapTrack, setSwapTrack] = useState<Song | null>(null);
   const [matchUser, setMatchUser] = useState<MatchUser | null>(null);
   return (
-    <SwapContext.Provider value={{ selectedSong, setSelectedSong, matchUser, setMatchUser }}>
+    <SwapContext.Provider value={{ swapTrack, setSwapTrack, matchUser, setMatchUser }}>
       {children}
     </SwapContext.Provider>
   );

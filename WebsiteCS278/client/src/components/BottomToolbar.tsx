@@ -90,7 +90,7 @@ export function BottomToolbar() {
     if (tab === "feed") setLocation("/");
     if (tab === "profile") setLocation("/profile");
     if (tab === "search") setLocation("/search");
-    if (tab === "trackswap") setLocation("/track-swap");
+    if (tab === "trackswap") setLocation("/track-swap-entry");
   };
 
   return (
