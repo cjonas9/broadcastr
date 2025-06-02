@@ -9,7 +9,14 @@ export function useFollow(targetUsername: string) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userDetails || !targetUsername) return;
+    // Reset state when user changes
+    setIsFollowing(false);
+    setLoading(true);
+
+    if (!userDetails || !targetUsername) {
+      setLoading(false);
+      return;
+    }
 
     const checkFollowStatus = async () => {
       try {
@@ -22,6 +29,7 @@ export function useFollow(targetUsername: string) {
         setIsFollowing(data.following.some((f: any) => f.following === targetUsername));
       } catch (error) {
         console.error('Error checking follow status:', error);
+        setIsFollowing(false);
       } finally {
         setLoading(false);
       }

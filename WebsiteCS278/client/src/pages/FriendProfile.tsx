@@ -58,6 +58,7 @@ export default function FriendProfile() {
   const [friendProfile, setFriendProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const username = params?.username || "";
   const { isFollowing, followUser, unfollowUser, loading: followLoading } = useFollow(username);
@@ -137,6 +138,7 @@ export default function FriendProfile() {
       } else {
         await followUser();
       }
+      setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error updating follow status:', error);
     }
@@ -179,6 +181,7 @@ export default function FriendProfile() {
         swag={friendProfile.swag}
         showActions={true}
         onMessageClick={() => setLocation(`/dm/${friendProfile.profile}`)}
+        refreshKey={refreshKey}
       />
 
       <div className="flex justify-center gap-4 my-4">

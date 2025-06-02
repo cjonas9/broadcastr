@@ -10,9 +10,10 @@ type ProfileHeaderProps = {
   swag: number;
   showActions?: boolean;
   onMessageClick?: () => void;
+  refreshKey?: number;
 };
 
-export default function ProfileHeader({ username, profileImage, swag, showActions = false, onMessageClick }: ProfileHeaderProps) {
+export default function ProfileHeader({ username, profileImage, swag, showActions = false, onMessageClick, refreshKey = 0 }: ProfileHeaderProps) {
   const [, setLocation] = useLocation();
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -40,7 +41,7 @@ export default function ProfileHeader({ username, profileImage, swag, showAction
     };
 
     fetchCounts();
-  }, [cleanUsername]);
+  }, [cleanUsername, refreshKey]);
 
   return (
     <header className="flex flex-col items-center pt-10 pb-4">
