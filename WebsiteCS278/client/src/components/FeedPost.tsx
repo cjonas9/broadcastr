@@ -18,7 +18,7 @@ TODO:
 
 */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Heart, Trash2 } from "lucide-react";
 import SongCard, { Song } from "./SongCard";
 import { useAuth } from "@/AuthContext";
@@ -52,11 +52,35 @@ export const FeedPost: React.FC<FeedPostProps> = ({
   linkText,
   linkHref,
   track,
-  likes,
+  likes: initialLikes,
   onDelete,
 }) => {
   const { userDetails } = useAuth();
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likes, setLikes] = useState(initialLikes);
+  const [isLiking, setIsLiking] = useState(false);
+
+  // Check if the user has liked this broadcast
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      if (!userDetails?.profile) return;
+
+      try {
+        const response = await fetch(
+          `${VITE_API_URL}/api/get-likes?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`
+        );
+        if (!response.ok) throw new Error('Failed to fetch like status');
+        
+        const data = await response.json();
+        setIsLiked(data.hasLiked);
+      } catch (error) {
+        console.error('Error checking like status:', error);
+      }
+    };
+
+    checkLikeStatus();
+  }, [id, userDetails]);
 
   const handleDelete = async () => {
     if (!userDetails) return;
@@ -77,6 +101,62 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       console.error('Error deleting broadcast:', error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!userDetails?.profile || isLiking) return;
+
+    try {
+      setIsLiking(true);
+      const response = await fetch(
+        `${VITE_API_URL}/api/create-like?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`,
+        { method: 'POST' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to like broadcast');
+      }
+
+      setIsLiked(true);
+      setLikes(prev => prev + 1);
+
+      // Dispatch an event to notify other components about the like
+      window.dispatchEvent(new CustomEvent('broadcastLiked', {
+        detail: { broadcastId: id }
+      }));
+    } catch (error) {
+      console.error('Error liking broadcast:', error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const handleUnlike = async () => {
+    if (!userDetails?.profile || isLiking) return;
+
+    try {
+      setIsLiking(true);
+      const response = await fetch(
+        `${VITE_API_URL}/api/undo-like?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`,
+        { method: 'POST' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to unlike broadcast');
+      }
+
+      setIsLiked(false);
+      setLikes(prev => prev - 1);
+
+      // Dispatch an event to notify other components about the unlike
+      window.dispatchEvent(new CustomEvent('broadcastUnliked', {
+        detail: { broadcastId: id }
+      }));
+    } catch (error) {
+      console.error('Error unliking broadcast:', error);
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -126,9 +206,23 @@ export const FeedPost: React.FC<FeedPostProps> = ({
           {type === "track" && track && (
             <SongCard song={track} selected className="mt-2"/>
           )}
-          <div className="flex items-center gap-1 text-gray-400 text-sm mt-2">
-            <Heart size={16} className="mr-1" />
-            {likes} Likes
+          <div className="flex items-center gap-1 text-sm mt-2">
+            <button
+              onClick={isLiked ? handleUnlike : handleLike}
+              disabled={isLiking || !userDetails}
+              className={`flex items-center gap-1 transition-colors ${
+                isLiked 
+                  ? 'text-pink-500 hover:text-pink-600' 
+                  : 'text-gray-400 hover:text-pink-500'
+              }`}
+              title={isLiked ? 'Unlike' : 'Like'}
+            >
+              <Heart
+                size={16}
+                className={isLiked ? 'fill-current' : ''}
+              />
+              <span>{likes} {likes === 1 ? 'Like' : 'Likes'}</span>
+            </button>
           </div>
         </div>
       </div>
