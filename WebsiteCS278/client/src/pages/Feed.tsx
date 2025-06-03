@@ -63,18 +63,48 @@ export default function Feed() {
     fetchBroadcasts();
   }, []);
 
-  // Listen for new broadcasts
+  // Listen for broadcast events
   useEffect(() => {
     const handleNewBroadcast = () => {
       fetchBroadcasts();
     };
 
+    const handleBroadcastDeleted = () => {
+      fetchBroadcasts();
+    };
+
+    const handleBroadcastLiked = (event: CustomEvent) => {
+      const broadcastId = event.detail.broadcastId;
+      setBroadcasts(prevBroadcasts => 
+        prevBroadcasts.map(broadcast => 
+          broadcast.id === broadcastId
+            ? { ...broadcast, likes: broadcast.likes + 1 }
+            : broadcast
+        )
+      );
+    };
+
+    const handleBroadcastUnliked = (event: CustomEvent) => {
+      const broadcastId = event.detail.broadcastId;
+      setBroadcasts(prevBroadcasts => 
+        prevBroadcasts.map(broadcast => 
+          broadcast.id === broadcastId
+            ? { ...broadcast, likes: broadcast.likes - 1 }
+            : broadcast
+        )
+      );
+    };
+
     window.addEventListener('newBroadcast', handleNewBroadcast);
-    window.addEventListener('broadcastDeleted', handleNewBroadcast);
+    window.addEventListener('broadcastDeleted', handleBroadcastDeleted);
+    window.addEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
+    window.addEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
 
     return () => {
       window.removeEventListener('newBroadcast', handleNewBroadcast);
-      window.removeEventListener('broadcastDeleted', handleNewBroadcast);
+      window.removeEventListener('broadcastDeleted', handleBroadcastDeleted);
+      window.removeEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
+      window.removeEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
     };
   }, []);
 
@@ -89,7 +119,12 @@ export default function Feed() {
         throw new Error('Failed to delete broadcast');
       }
 
-      // Dispatch an event to notify that a broadcast was deleted
+      // Update local state immediately
+      setBroadcasts(prevBroadcasts => 
+        prevBroadcasts.filter(broadcast => broadcast.id !== broadcastId)
+      );
+
+      // Dispatch event to notify other components
       window.dispatchEvent(new Event('broadcastDeleted'));
     } catch (error) {
       console.error('Error deleting broadcast:', error);
@@ -116,9 +151,9 @@ export default function Feed() {
               key={broadcast.id}
               id={broadcast.id}
               user={{
-                id: 0, // We don't have this in the broadcast data
+                id: 0,
                 username: broadcast.user,
-                swag: 0, // We don't have this in the broadcast data
+                swag: 0,
                 profileImage: broadcast.user_pfp_med || broadcast.user_pfp_sm || broadcast.user_pfp_lg || broadcast.user_pfp_xl || "https://via.placeholder.com/100"
               }}
               timeAgo={new Date(broadcast.timestamp).toLocaleDateString()}

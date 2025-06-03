@@ -68,14 +68,47 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
     return () => clearInterval(interval);
   }, []);
 
-  // Listen for the custom event that signals a broadcast was deleted
+  // Listen for broadcast events
   useEffect(() => {
     const handleBroadcastDelete = () => {
       setLastRefresh(Date.now());
     };
 
+    const handleBroadcastLiked = (event: CustomEvent) => {
+      const broadcastId = event.detail.broadcastId;
+      setTracks(prevTracks => 
+        prevTracks.map(track => 
+          track.broadcastid === broadcastId
+            ? { ...track, likes: track.likes + 1 }
+            : track
+        )
+      );
+      // Refresh after a short delay to ensure proper order
+      setTimeout(() => setLastRefresh(Date.now()), 500);
+    };
+
+    const handleBroadcastUnliked = (event: CustomEvent) => {
+      const broadcastId = event.detail.broadcastId;
+      setTracks(prevTracks => 
+        prevTracks.map(track => 
+          track.broadcastid === broadcastId
+            ? { ...track, likes: track.likes - 1 }
+            : track
+        )
+      );
+      // Refresh after a short delay to ensure proper order
+      setTimeout(() => setLastRefresh(Date.now()), 500);
+    };
+
     window.addEventListener('broadcastDeleted', handleBroadcastDelete);
-    return () => window.removeEventListener('broadcastDeleted', handleBroadcastDelete);
+    window.addEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
+    window.addEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
+
+    return () => {
+      window.removeEventListener('broadcastDeleted', handleBroadcastDelete);
+      window.removeEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
+      window.removeEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
+    };
   }, []);
 
   const handleDelete = async (broadcastId: number) => {
@@ -153,7 +186,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
               id: 0,
               username,
               swag: 0,
-              profileImage: "https://via.placeholder.com/100"
+              profileImage: userDetails?.pfpmed || userDetails?.pfpsm || userDetails?.pfpxl || "https://via.placeholder.com/100"
             }}
             timeAgo=""
             content=""
