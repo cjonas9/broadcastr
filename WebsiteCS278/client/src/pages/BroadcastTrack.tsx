@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { BottomToolbar } from "@/components/BottomToolbar";
 import TrackSelector from "@/components/TrackSelector";
@@ -16,38 +16,44 @@ export default function BroadcastTrackPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Debug log to check user details
+    console.log("Current user details:", userDetails);
+  }, [userDetails]);
+
   const handlePost = async () => {
-    if (!selectedTrack || !userDetails?.profile) return;
+    if (!selectedTrack) {
+      setError("Please select a track first");
+      return;
+    }
+    
+    if (!userDetails?.profile) {
+      console.error("No user profile found:", userDetails);
+      setError("User profile not found. Please try logging in again.");
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
-      // Log the request details
-      console.log("Creating broadcast with:", {
-        user: userDetails.profile,
-        title: caption || `Broadcasting ${selectedTrack.name}`,
-        body: `${selectedTrack.name} by ${selectedTrack.artist}`,
-        relatedtype: "TRACK",
-        relatedid: selectedTrack.id
-      });
+      const title = caption || `Broadcasting ${selectedTrack.name}`;
+      const body = `${selectedTrack.name} by ${selectedTrack.artist}`;
+      
+      // Create URL with query parameters
+      const url = new URL(`${VITE_API_URL}/api/create-broadcast`);
+      url.searchParams.append('user', userDetails.profile);
+      url.searchParams.append('title', title);
+      url.searchParams.append('body', body);
+      url.searchParams.append('relatedtype', 'TRACK');
+      url.searchParams.append('relatedid', selectedTrack.id);
 
-      const response = await fetch(
-        `${VITE_API_URL}/api/create-broadcast`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            user: userDetails.profile,
-            title: caption || `Broadcasting ${selectedTrack.name}`,
-            body: `${selectedTrack.name} by ${selectedTrack.artist}`,
-            relatedtype: "TRACK",
-            relatedid: selectedTrack.id
-          })
-        }
-      );
+      console.log("Creating broadcast with URL:", url.toString());
+
+      const response = await fetch(url.toString(), {
+        method: "POST",
+        credentials: 'include'
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -58,6 +64,9 @@ export default function BroadcastTrackPage() {
         });
         throw new Error(errorData.error || "Failed to create broadcast");
       }
+
+      const responseData = await response.json();
+      console.log("Broadcast created successfully:", responseData);
 
       // Redirect to feed
       setLocation("/");
@@ -70,7 +79,7 @@ export default function BroadcastTrackPage() {
   };
 
   // Error handling for unauthenticated users
-  if (!userDetails) {
+  if (!userDetails?.profile) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
         <div className="text-center">
