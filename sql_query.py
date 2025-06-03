@@ -633,11 +633,11 @@ def store_broadcast(broadcast_id, user_id, title, body, related_type_id, related
 
 def store_like(user_id, related_type_id, related_id):
 	"""
-	Stores a liike record.
+	Stores a like record.
 	Args:
-		user_id: ID of the user creating the broadcast
-		related_type_id: type id that this broadcast relates to
-		related_id: record id that this broadcast relates to
+		user_id: ID of the user creating the like
+		related_type_id: type id that this like relates to
+		related_id: record id that this like relates to
 	Returns:
 		numeric id of the inserted record
 	"""
@@ -916,6 +916,34 @@ def delete_top_tracks(userid, periodid):
 
 	cursor.close()
 	connection.close()
+
+def delete_like(user_id, related_type_id, related_id):
+	"""
+	Deletes a like record.
+	Args:
+		user_id: ID of the user who liked
+		related_type_id: type id that this like relates to
+		related_id: record id that this like relates to
+	Returns:
+		number of deleted rows
+	"""
+	connection = get_db_connection_isolation_none()
+	cursor = connection.cursor()
+
+	cursor.execute(
+		"""
+		DELETE
+		FROM Like
+		WHERE UserID = ?
+			AND RelatedTypeID = ?
+			AND RelatedID = ?
+		""",
+		(user_id, related_type_id, related_id))
+
+	cursor.close()
+	connection.close()
+
+	return cursor.rowcount
 
 #################################################
 #                                                #
