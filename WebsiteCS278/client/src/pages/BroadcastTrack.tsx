@@ -37,28 +37,23 @@ export default function BroadcastTrackPage() {
       setLoading(true);
       setError(null);
 
-      // Log the request details
-      const requestData = {
-        username: userDetails.profile,  // Changed from 'user' to 'username'
-        title: caption || `Broadcasting ${selectedTrack.name}`,
-        body: `${selectedTrack.name} by ${selectedTrack.artist}`,
-        relatedtype: "TRACK",
-        relatedid: selectedTrack.id
-      };
+      const title = caption || `Broadcasting ${selectedTrack.name}`;
+      const body = `${selectedTrack.name} by ${selectedTrack.artist}`;
+      
+      // Create URL with query parameters
+      const url = new URL(`${VITE_API_URL}/api/create-broadcast`);
+      url.searchParams.append('user', userDetails.profile);
+      url.searchParams.append('title', title);
+      url.searchParams.append('body', body);
+      url.searchParams.append('relatedtype', 'TRACK');
+      url.searchParams.append('relatedid', selectedTrack.id);
 
-      console.log("Creating broadcast with:", requestData);
+      console.log("Creating broadcast with URL:", url.toString());
 
-      const response = await fetch(
-        `${VITE_API_URL}/api/create-broadcast`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(requestData),
-          credentials: 'include'  // Added to ensure cookies are sent
-        }
-      );
+      const response = await fetch(url.toString(), {
+        method: "POST",
+        credentials: 'include'
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
