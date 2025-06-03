@@ -55,8 +55,12 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
     }
   }, [username, limit]);
 
-  const handleDelete = (broadcastId: number) => {
+  const handleDelete = async (broadcastId: number) => {
+    // First update local state for immediate feedback
     setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
+    
+    // Then refetch the data to ensure we're in sync with the server
+    await fetchTracks();
   };
 
   if (loading) {
