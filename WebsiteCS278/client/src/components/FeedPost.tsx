@@ -156,11 +156,18 @@ export const FeedPost: React.FC<FeedPostProps> = ({
         { method: 'POST' }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to like broadcast');
+      const data = await response.json();
+      
+      if (response.status === 409 || data.success === 0) {
+        // Like already exists, just update the UI state
+        setIsLiked(true);
+        return;
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to like broadcast');
+      }
+
       if (data.success) {
         setIsLiked(true);
         setLikes(prev => prev + 1);
@@ -190,11 +197,18 @@ export const FeedPost: React.FC<FeedPostProps> = ({
         { method: 'POST' }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to unlike broadcast');
+      const data = await response.json();
+
+      if (response.status === 404) {
+        // Like doesn't exist, just update the UI state
+        setIsLiked(false);
+        return;
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to unlike broadcast');
+      }
+
       if (data.success) {
         setIsLiked(false);
         setLikes(prev => prev - 1);

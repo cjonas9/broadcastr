@@ -19,6 +19,7 @@ def api_create_like():
         400 Bad Request: If the related id is not provided or invalid.
     Returns:
         201 Success: The database ID of the newly created like record.
+        409 Conflict: If the like already exists.
     """
     user = request.args.get("user", "")
     relatedtype = request.args.get("relatedtype", "")
@@ -31,9 +32,42 @@ def api_create_like():
     if error_string != "":
         return jsonify({"error": error_string}), 400
 
-    new_record_id = sql_query.store_like(user_id, related_type_id, related_id)
+    connection = sql_query.get_db_connection()  # Use default isolation level
+    cursor = connection.cursor()
 
-    return jsonify({"success": new_record_id}), 201
+    try:
+        # Check if like already exists
+        cursor.execute(
+            """
+            SELECT COUNT(*) as count
+            FROM Like
+            WHERE UserID = ?
+                AND RelatedTypeID = ?
+                AND RelatedID = ?
+            """,
+            (user_id, related_type_id, related_id))
+        
+        row = cursor.fetchone()
+        if row["count"] > 0:
+            return jsonify({"error": "Like already exists"}), 409
+
+        # Insert new like
+        cursor.execute(
+            """
+            INSERT INTO Like(UserID, RelatedTypeID, RelatedID, Timestamp)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            """,
+            (user_id, related_type_id, related_id))
+        
+        new_id = cursor.lastrowid
+        connection.commit()
+        return jsonify({"success": new_id}), 201
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        connection.close()
 
 @like_bp.route("/api/undo-like", methods=['POST'])
 def api_undo_like():
@@ -47,6 +81,7 @@ def api_undo_like():
         400 Bad Request: If the related id is not provided or invalid.
     Returns:
         200 Success: boolean indicating the operation was successful
+        404 Not Found: If the like does not exist
     """
     user = request.args.get("user", "")
     relatedtype = request.args.get("relatedtype", "")
@@ -59,11 +94,44 @@ def api_undo_like():
     if error_string != "":
         return jsonify({"error": error_string}), 400
 
-    deleted_rows = sql_query.delete_like(user_id, related_type_id, related_id)
+    connection = sql_query.get_db_connection()  # Use default isolation level
+    cursor = connection.cursor()
 
-    print(f"deleted rows: {deleted_rows}")
+    try:
+        # Check if like exists first
+        cursor.execute(
+            """
+            SELECT COUNT(*) as count
+            FROM Like
+            WHERE UserID = ?
+                AND RelatedTypeID = ?
+                AND RelatedID = ?
+            """,
+            (user_id, related_type_id, related_id))
+        
+        row = cursor.fetchone()
+        if row["count"] == 0:
+            return jsonify({"error": "Like does not exist"}), 404
 
-    return jsonify({"success": True if deleted_rows != 0 else False}), 200
+        # Delete the like
+        cursor.execute(
+            """
+            DELETE
+            FROM Like
+            WHERE UserID = ?
+                AND RelatedTypeID = ?
+                AND RelatedID = ?
+            """,
+            (user_id, related_type_id, related_id))
+        
+        connection.commit()
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        connection.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cursor.close()
+        connection.close()
 
 @like_bp.route("/api/get-likes")
 def api_get_likes():
@@ -89,23 +157,23 @@ def api_get_likes():
     if error_string != "":
         return jsonify({"error": error_string}), 400
 
-    connection = sql_query.get_db_connection_isolation_none()
+    connection = sql_query.get_db_connection()  # Use default isolation level
     cursor = connection.cursor()
 
-    cursor.execute(
-        """
-        SELECT COUNT(*) as count
-        FROM Like
-        WHERE UserID = ?
-            AND RelatedTypeID = ?
-            AND RelatedID = ?
-        """,
-        (user_id, related_type_id, related_id))
+    try:
+        cursor.execute(
+            """
+            SELECT COUNT(*) as count
+            FROM Like
+            WHERE UserID = ?
+                AND RelatedTypeID = ?
+                AND RelatedID = ?
+            """,
+            (user_id, related_type_id, related_id))
 
-    row = cursor.fetchone()
-    has_liked = row["count"] > 0
-
-    cursor.close()
-    connection.close()
-
-    return jsonify({"hasLiked": has_liked}), 200 
+        row = cursor.fetchone()
+        has_liked = row["count"] > 0
+        return jsonify({"hasLiked": has_liked}), 200
+    finally:
+        cursor.close()
+        connection.close() 
