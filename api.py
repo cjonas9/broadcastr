@@ -98,13 +98,29 @@ def api_listens():
 def api_top_listeners():
     artist = request.args.get("artist", "")
     period = request.args.get("period", "")
-    limit  = int(request.args.get("limit", "10"))
+    limit = int(request.args.get("limit", "10"))
+    current_user = request.args.get("current_user", "")  # Add current_user parameter
+    
+    # Get top listeners from database
     results = query_top_listeners_for_artist(artist, period, limit)
-    # results is List[(username, playcount)]
+    db_listeners = {row[0]: row[1] for row in results}  # username -> playcount
+    
+    # If current user isn't in top listeners or has 0 plays, check Last.fm
+    if current_user:
+        current_user_plays = db_listeners.get(current_user, 0)
+        if current_user_plays == 0:
+            current_user_plays = db_query.get_artist_playcount(current_user, artist, period)
+            if current_user_plays > 0:
+                db_listeners[current_user] = current_user_plays
+    
+    # Sort by playcount and take top N
+    sorted_listeners = sorted(db_listeners.items(), key=lambda x: x[1], reverse=True)[:limit]
+    
     top_listeners = [
-        {"username": row[0], "playcount": row[1]}
-        for row in results
+        {"username": username, "playcount": playcount}
+        for username, playcount in sorted_listeners
     ]
+    
     return jsonify({
         "artist": artist,
         "period": period,
