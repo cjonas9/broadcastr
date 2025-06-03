@@ -3,8 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 interface User {
   username: string;
@@ -26,26 +25,26 @@ export default function FollowingPage() {
 
       try {
         setLoading(true);
-        const res = await fetch(
-          `${VITE_API_URL}/api/user/following?user=${encodeURIComponent(params.username)}`
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}/api/user/following?user=${encodeURIComponent(params.username)}`
         );
 
-        if (!res.ok) {
+        if (!response.ok) {
           throw new Error("Failed to fetch following");
         }
 
-        const data = await res.json();
+        const data = await response.json();
         
         // Fetch full profile for each following user
         const followingProfiles = await Promise.all(
           data.following.map(async (following: { following: string }) => {
-            const profileRes = await fetch(
-              `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(following.following)}`
+            const profileResponse = await fetch(
+              `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(following.following)}`
             );
             
-            if (!profileRes.ok) return null;
+            if (!profileResponse.ok) return null;
             
-            const profileData = await profileRes.json();
+            const profileData = await profileResponse.json();
             const profile = profileData.userProfile[0];
             
             return {

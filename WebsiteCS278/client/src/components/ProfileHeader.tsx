@@ -1,8 +1,7 @@
 import { LightningBoltIcon } from "@/lib/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 type ProfileHeaderProps = {
   username: string;
@@ -24,14 +23,14 @@ export default function ProfileHeader({ username, profileImage, swag, showAction
       try {
         // Fetch followers count
         const followersRes = await fetch(
-          `${VITE_API_URL}/api/user/followers?user=${cleanUsername}`
+          `${API_CONFIG.baseUrl}/api/user/followers?user=${cleanUsername}`
         );
         const followersData = await followersRes.json();
         setFollowerCount(followersData.followers.length);
 
         // Fetch following count
         const followingRes = await fetch(
-          `${VITE_API_URL}/api/user/following?user=${cleanUsername}`
+          `${API_CONFIG.baseUrl}/api/user/following?user=${cleanUsername}`
         );
         const followingData = await followingRes.json();
         setFollowingCount(followingData.following.length);

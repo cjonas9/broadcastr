@@ -12,6 +12,7 @@ import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { useAuth } from "@/AuthContext";
 import { useFollow } from "@/hooks/useFollow";
 import TopBroadcastedTracks from "@/components/TopBroadcastedTracks";
+import { API_CONFIG } from "@/config";
 
 const VITE_API_URL = "https://broadcastr.onrender.com";
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -77,7 +78,7 @@ export default function FriendProfile() {
         setError(null);
 
         const response = await fetch(
-          `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(username)}`
+          `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(username)}`
         );
         
         if (!response.ok) {
@@ -133,7 +134,9 @@ export default function FriendProfile() {
       }
     };
 
-    fetchProfile();
+    if (username) {
+      fetchProfile();
+    }
   }, [username]);
 
   const handleFollowClick = async () => {

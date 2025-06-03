@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Song } from '@/components/SongCard';
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from '@/config';
 
 interface TopTrack {
   id: number;
@@ -20,7 +19,7 @@ export function useTopTracks(username: string, period: string = '7day', limit: n
       try {
         setLoading(true);
         const response = await fetch(
-          `${VITE_API_URL}/api/user/top-tracks?user=${encodeURIComponent(username)}&period=${period}&limit=${limit}`
+          `${API_CONFIG.baseUrl}/api/user/top-tracks?user=${encodeURIComponent(username)}&period=${period}&limit=${limit}`
         );
         
         if (!response.ok) {

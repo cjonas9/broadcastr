@@ -3,8 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 interface User {
   username: string;
@@ -27,7 +26,7 @@ export default function FollowersPage() {
       try {
         setLoading(true);
         const res = await fetch(
-          `${VITE_API_URL}/api/user/followers?user=${encodeURIComponent(params.username)}`
+          `${API_CONFIG.baseUrl}/api/user/followers?user=${encodeURIComponent(params.username)}`
         );
 
         if (!res.ok) {
@@ -40,7 +39,7 @@ export default function FollowersPage() {
         const followerProfiles = await Promise.all(
           data.followers.map(async (follower: { follower: string }) => {
             const profileRes = await fetch(
-              `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(follower.follower)}`
+              `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(follower.follower)}`
             );
             
             if (!profileRes.ok) return null;

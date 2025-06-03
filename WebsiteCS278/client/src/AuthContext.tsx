@@ -5,6 +5,7 @@ import React, {
 	useEffect,
 	ReactNode,
   } from "react";
+import { API_CONFIG } from "@/config";
   
   // -----------------------------------------------------------------------------
   // 1. UserDetails type (matches /api/user/profile response fields)
@@ -51,8 +52,6 @@ import React, {
 	children: ReactNode;
   }
   
-  const VITE_API_URL = "https://broadcastr.onrender.com";
-  
   export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	// keep old pieces for backward compatibility
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -82,7 +81,7 @@ import React, {
 	const fetchUserProfile = async (user: string) => {
 	  try {
 		const res = await fetch(
-		  `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(user)}`
+		  `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(user)}`
 		);
 		if (!res.ok) throw new Error("Failed to fetch user profile");
 		const { userProfile } = await res.json();
@@ -104,7 +103,7 @@ import React, {
 	  // 1. call your /api/user/login
 	  try {
 		const loginRes = await fetch(
-		  `${VITE_API_URL}/api/user/login?user=${encodeURIComponent(
+		  `${API_CONFIG.baseUrl}/api/user/login?user=${encodeURIComponent(
 			user
 		  )}&password=${encodeURIComponent(password)}`,
 		  { method: "POST" }

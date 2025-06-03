@@ -4,8 +4,7 @@ import { Search } from "lucide-react";
 import { useAuth } from "@/AuthContext";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { BottomToolbar } from "@/components/BottomToolbar";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 interface User {
   username: string;
@@ -30,7 +29,7 @@ export default function SearchPage() {
 
       // Try to fetch the exact user profile
       const response = await fetch(
-        `${VITE_API_URL}/api/user/profile?user=${encodeURIComponent(searchQuery.trim())}`
+        `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(searchQuery.trim())}`
       );
 
       if (!response.ok) {

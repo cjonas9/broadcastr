@@ -5,8 +5,7 @@ import TrackSelector from "@/components/TrackSelector";
 import { useAuth } from "@/AuthContext";
 import { useLocation } from "wouter";
 import { Heading } from "@/components/Heading";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 // Related type descriptions that match the database
 const RELATED_TYPE = {
@@ -46,7 +45,7 @@ export default function BroadcastTrackPage() {
       const body = `${selectedTrack.name} by ${selectedTrack.artist}`;
       
       // Create URL with query parameters
-      const url = new URL(`${VITE_API_URL}/api/create-broadcast`);
+      const url = new URL(`${API_CONFIG.baseUrl}/api/create-broadcast`);
       url.searchParams.append('user', userDetails.profile);
       url.searchParams.append('title', title);
       url.searchParams.append('body', body);

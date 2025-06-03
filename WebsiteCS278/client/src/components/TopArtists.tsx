@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/AuthContext";
 import { ButtonWrapper } from "./ButtonWrapper";
 import { Heading } from "@/components/Heading";
-
-const VITE_API_URL="https://broadcastr.onrender.com"
+import { API_CONFIG } from "@/config";
 
 type Artist = {
   id: number;
@@ -30,15 +29,14 @@ export default function TopArtists({ username }: TopArtistsProps) {
   const isOwnProfile = userDetails?.profile === username;
 
   useEffect(() => {
-    if (!username) return;
-
-    async function load() {
+    const fetchArtists = async () => {
       try {
-        const res = await fetch(
-          VITE_API_URL + `/api/user/top-artists?user=${encodeURIComponent(username)}&period=overall&limit=10`
+        setLoading(true);
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}/api/user/top-artists?user=${encodeURIComponent(username)}&period=overall&limit=10`
         );
-        if (!res.ok) throw new Error('Failed to fetch top artists');
-        const { topArtists } = await res.json();
+        if (!response.ok) throw new Error('Failed to fetch top artists');
+        const { topArtists } = await response.json();
         setArtists(topArtists);
       } catch (err) {
         console.error("Failed to load top artists:", err);
@@ -46,8 +44,10 @@ export default function TopArtists({ username }: TopArtistsProps) {
       } finally {
         setLoading(false);
       }
-    }
-    load();
+    };
+
+    if (!username) return;
+    fetchArtists();
   }, [username]);
 
   if (loading) {
