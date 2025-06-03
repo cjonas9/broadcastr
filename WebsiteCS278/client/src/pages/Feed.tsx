@@ -83,6 +83,10 @@ export default function Feed() {
     return () => window.removeEventListener('newBroadcast', handleNewBroadcast);
   }, []);
 
+  const handleBroadcastDelete = (broadcastId: number) => {
+    setBroadcasts(prevBroadcasts => prevBroadcasts.filter(b => b.id !== broadcastId));
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-between p-6">
       <div className="max-w-md mx-auto w-full flex-1">
@@ -101,6 +105,7 @@ export default function Feed() {
           {broadcasts.map((broadcast) => (
             <FeedPost
               key={broadcast.id}
+              id={broadcast.id}
               user={{
                 id: 0, // We don't have this in the broadcast data
                 username: broadcast.user,
@@ -111,13 +116,13 @@ export default function Feed() {
               content={broadcast.title}
               type={broadcast.type.toLowerCase() === "track" ? "track" : "activity"}
               track={broadcast.type.toLowerCase() === "track" ? {
-                id: broadcast.relatedid.toString(),
-                title: broadcast.body.split(" by ")[0],
+                id: broadcast.relatedid,
+                name: broadcast.body.split(" by ")[0],
                 artist: broadcast.body.split(" by ")[1],
-                albumArt: "https://via.placeholder.com/100", // Default image
-                trackLink: broadcast.relatedto || "#"
+                playCount: 0
               } : undefined}
               likes={broadcast.likes}
+              onDelete={() => handleBroadcastDelete(broadcast.id)}
             />
           ))}
 
