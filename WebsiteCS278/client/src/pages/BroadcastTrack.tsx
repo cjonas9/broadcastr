@@ -8,6 +8,11 @@ import { Heading } from "@/components/Heading";
 
 const VITE_API_URL = "https://broadcastr.onrender.com";
 
+// Related type descriptions that match the database
+const RELATED_TYPE = {
+  TRACK: "Track"  // This matches the Description column in the RelatedType table
+};
+
 export default function BroadcastTrackPage() {
   const [, setLocation] = useLocation();
   const { userDetails } = useAuth();
@@ -45,14 +50,13 @@ export default function BroadcastTrackPage() {
       url.searchParams.append('user', userDetails.profile);
       url.searchParams.append('title', title);
       url.searchParams.append('body', body);
-      url.searchParams.append('relatedtype', 'TRACK');
-      url.searchParams.append('relatedid', selectedTrack.id);
+      url.searchParams.append('relatedtype', RELATED_TYPE.TRACK);
+      url.searchParams.append('relatedid', selectedTrack.id.toString());
 
       console.log("Creating broadcast with URL:", url.toString());
 
       const response = await fetch(url.toString(), {
-        method: "POST",
-        credentials: 'include'
+        method: "POST"
       });
 
       if (!response.ok) {
@@ -67,6 +71,12 @@ export default function BroadcastTrackPage() {
 
       const responseData = await response.json();
       console.log("Broadcast created successfully:", responseData);
+
+      // Dispatch an event to notify that a new broadcast was created
+      window.dispatchEvent(new Event('newBroadcast'));
+
+      // Wait a brief moment to ensure the event is processed
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Redirect to feed
       setLocation("/");

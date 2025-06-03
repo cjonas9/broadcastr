@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Heading } from "@/components/Heading";
 import TopTrackPost from "@/components/TopTrackPost";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
+import { useAuth } from "@/AuthContext";
+import { FeedPost } from "@/components/FeedPost";
 
 const VITE_API_URL = "https://broadcastr.onrender.com";
 
@@ -23,34 +25,43 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   const [tracks, setTracks] = useState<TopBroadcastedTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userDetails } = useAuth();
+
+  const fetchTracks = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${VITE_API_URL}/api/user/top-broadcasted-tracks?user=${encodeURIComponent(username)}&limit=${limit}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch top broadcasted tracks');
+      }
+
+      const data = await response.json();
+      setTracks(data.topTracks);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching top broadcasted tracks:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTracks = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `${VITE_API_URL}/api/user/top-broadcasted-tracks?user=${encodeURIComponent(username)}&limit=${limit}`
-        );
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch top broadcasted tracks');
-        }
-
-        const data = await response.json();
-        setTracks(data.topTracks);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching top broadcasted tracks:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (username) {
       fetchTracks();
     }
   }, [username, limit]);
+
+  const handleDelete = async (broadcastId: number) => {
+    // First update local state for immediate feedback
+    setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
+    
+    // Then refetch the data to ensure we're in sync with the server
+    await fetchTracks();
+  };
 
   if (loading) {
     return (
@@ -88,8 +99,18 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       
       <div className="space-y-4">
         {tracks.map((track) => (
-          <TopTrackPost
+          <FeedPost
             key={track.broadcastid}
+            id={track.broadcastid}
+            user={{
+              id: 0,
+              username,
+              swag: 0,
+              profileImage: "https://via.placeholder.com/100"
+            }}
+            timeAgo=""
+            content=""
+            type="track"
             track={{
               id: track.trackid,
               name: track.track,
@@ -97,6 +118,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
               playCount: 0
             }}
             likes={track.likes}
+            onDelete={() => handleDelete(track.broadcastid)}
           />
         ))}
       </div>
