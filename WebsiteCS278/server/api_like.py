@@ -89,7 +89,7 @@ def api_get_likes():
     if error_string != "":
         return jsonify({"error": error_string}), 400
 
-    connection = sql_query.get_db_connection()
+    connection = sql_query.get_db_connection_isolation_none()
     cursor = connection.cursor()
 
     cursor.execute(
