@@ -196,7 +196,6 @@ def api_user_login():
 
     # If the user data has not been refreshed in the last day, refresh it.
     if sql_query.user_refresh_due(user_id):
-        sql_query.refresh_user_data(user)
         db_query.refresh_user_data(user)
 
     return jsonify({"success": True, "error": ""}), 201
