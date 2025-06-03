@@ -62,25 +62,68 @@ export const FeedPost: React.FC<FeedPostProps> = ({
   const [isLiking, setIsLiking] = useState(false);
 
   // Check if the user has liked this broadcast
-  useEffect(() => {
-    const checkLikeStatus = async () => {
-      if (!userDetails?.profile) return;
+  const checkLikeStatus = async () => {
+    if (!userDetails?.profile) return;
 
-      try {
-        const response = await fetch(
-          `${VITE_API_URL}/api/get-likes?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`
-        );
-        if (!response.ok) throw new Error('Failed to fetch like status');
-        
-        const data = await response.json();
-        setIsLiked(data.hasLiked);
-      } catch (error) {
-        console.error('Error checking like status:', error);
+    try {
+      const response = await fetch(
+        `${VITE_API_URL}/api/get-likes?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch like status');
+      
+      const data = await response.json();
+      setIsLiked(data.hasLiked);
+    } catch (error) {
+      console.error('Error checking like status:', error);
+    }
+  };
+
+  // Check like status on mount and when user changes
+  useEffect(() => {
+    checkLikeStatus();
+  }, [id, userDetails]);
+
+  // Listen for visibility changes to recheck like status
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkLikeStatus();
       }
     };
 
-    checkLikeStatus();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', checkLikeStatus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', checkLikeStatus);
+    };
   }, [id, userDetails]);
+
+  // Listen for like/unlike events from other components
+  useEffect(() => {
+    const handleBroadcastLiked = (event: CustomEvent) => {
+      if (event.detail.broadcastId === id) {
+        setIsLiked(true);
+        setLikes(prev => prev + 1);
+      }
+    };
+
+    const handleBroadcastUnliked = (event: CustomEvent) => {
+      if (event.detail.broadcastId === id) {
+        setIsLiked(false);
+        setLikes(prev => prev - 1);
+      }
+    };
+
+    window.addEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
+    window.addEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
+
+    return () => {
+      window.removeEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
+      window.removeEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
+    };
+  }, [id]);
 
   const handleDelete = async () => {
     if (!userDetails) return;
