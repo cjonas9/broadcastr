@@ -8,6 +8,11 @@ import { Heading } from "@/components/Heading";
 
 const VITE_API_URL = "https://broadcastr.onrender.com";
 
+// Related type IDs from the server's RelatedType enum
+const RELATED_TYPE = {
+  TRACK: 6
+};
+
 export default function BroadcastTrackPage() {
   const [, setLocation] = useLocation();
   const { userDetails } = useAuth();
@@ -45,8 +50,8 @@ export default function BroadcastTrackPage() {
       url.searchParams.append('user', userDetails.profile);
       url.searchParams.append('title', title);
       url.searchParams.append('body', body);
-      url.searchParams.append('relatedtype', 'TRACK');
-      url.searchParams.append('relatedid', selectedTrack.id);
+      url.searchParams.append('relatedtype', RELATED_TYPE.TRACK.toString());
+      url.searchParams.append('relatedid', selectedTrack.id.toString());
 
       console.log("Creating broadcast with URL:", url.toString());
 
