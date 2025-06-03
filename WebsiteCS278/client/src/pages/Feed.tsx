@@ -21,6 +21,10 @@ const VITE_API_URL = "https://broadcastr.onrender.com";
 interface Broadcast {
   id: number;
   user: string;
+  user_pfp_sm: string;
+  user_pfp_med: string;
+  user_pfp_lg: string;
+  user_pfp_xl: string;
   title: string;
   body: string;
   timestamp: string;
@@ -36,55 +40,60 @@ export default function Feed() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
   const fetchBroadcasts = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${VITE_API_URL}/api/get-broadcasts`);
-      
       if (!response.ok) {
         throw new Error('Failed to fetch broadcasts');
       }
-
       const data = await response.json();
-      console.log("Fetched broadcasts:", data.broadcasts);
-      setBroadcasts(data.broadcasts || []);
+      setBroadcasts(data.broadcasts);
       setError(null);
     } catch (err) {
       console.error('Error fetching broadcasts:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load broadcasts');
+      setError('Failed to load broadcasts');
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch broadcasts when component mounts or lastRefresh changes
   useEffect(() => {
     fetchBroadcasts();
-  }, [lastRefresh]);
-
-  // Poll for new broadcasts every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLastRefresh(Date.now());
-    }, 10000);
-
-    return () => clearInterval(interval);
   }, []);
 
-  // Listen for the custom event that signals a new broadcast was created
+  // Listen for new broadcasts
   useEffect(() => {
     const handleNewBroadcast = () => {
-      setLastRefresh(Date.now());
+      fetchBroadcasts();
     };
 
     window.addEventListener('newBroadcast', handleNewBroadcast);
-    return () => window.removeEventListener('newBroadcast', handleNewBroadcast);
+    window.addEventListener('broadcastDeleted', handleNewBroadcast);
+
+    return () => {
+      window.removeEventListener('newBroadcast', handleNewBroadcast);
+      window.removeEventListener('broadcastDeleted', handleNewBroadcast);
+    };
   }, []);
 
-  const handleBroadcastDelete = (broadcastId: number) => {
-    setBroadcasts(prevBroadcasts => prevBroadcasts.filter(b => b.id !== broadcastId));
+  const handleBroadcastDelete = async (broadcastId: number) => {
+    try {
+      const response = await fetch(
+        `${VITE_API_URL}/api/delete-broadcast?id=${broadcastId}`,
+        { method: 'POST' }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete broadcast');
+      }
+
+      // Dispatch an event to notify that a broadcast was deleted
+      window.dispatchEvent(new Event('broadcastDeleted'));
+    } catch (error) {
+      console.error('Error deleting broadcast:', error);
+    }
   };
 
   return (
@@ -110,7 +119,7 @@ export default function Feed() {
                 id: 0, // We don't have this in the broadcast data
                 username: broadcast.user,
                 swag: 0, // We don't have this in the broadcast data
-                profileImage: "https://via.placeholder.com/100" // Default image
+                profileImage: broadcast.user_pfp_med || broadcast.user_pfp_sm || broadcast.user_pfp_lg || broadcast.user_pfp_xl || "https://via.placeholder.com/100"
               }}
               timeAgo={new Date(broadcast.timestamp).toLocaleDateString()}
               content={broadcast.title}
@@ -130,17 +139,19 @@ export default function Feed() {
             <div className="text-center text-gray-400">No broadcasts yet. Be the first to share!</div>
           )}
         </div>
+      </div>
 
+      <div className="fixed bottom-24 right-6">
         <ButtonWrapper
-          variant="primary"
-          icon={<Plus size={16} />}
           width="hug"
-          className="fixed left-1/2 -translate-x-1/2 bottom-20 z-50"
+          variant="primary"
           onClick={() => setLocation("/broadcast-track")}
+          className="!rounded-full !p-4"
         >
-          Broadcast Track
+          <Plus size={24} />
         </ButtonWrapper>
       </div>
+
       <BottomToolbar />
     </div>
   );
