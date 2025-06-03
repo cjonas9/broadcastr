@@ -77,9 +77,21 @@ def api_get_broadcasts():
     Returns JSON:
       {
         "broadcasts": [
-          { "id": int, "user": str, "title": str, "body": str,
-            "timestamp": str, "type": str, "relatedto": str, "relatedid: int",
-            "likes": int },
+            { 
+                "id": int,
+                "user": str,
+                "user_pfp_sm": str,
+                "user_pfp_med": str,
+                "user_pfp_lg": str,
+                "user_pfp_xl": str,
+                "title": str,
+                "body": str,
+                "timestamp": str,
+                "type": str,
+                "relatedto": str,
+                "relatedid: int",
+                "likes": int
+            },
           …
         ]
       }
@@ -90,8 +102,12 @@ def api_get_broadcasts():
     user_id = sql_query.query_user_id(user)
 
     sql = """
-        SELECT broadcasts.id, broadcasts.user, broadcasts.title, broadcasts.body,
+        SELECT broadcasts.id, broadcasts.user, 
+               broadcasts.user_pfp_sm, broadcasts.user_pfp_med,
+               broadcasts.user_pfp_lg, broadcasts.user_pfp_xl,
+               broadcasts.title, broadcasts.body,
                broadcasts.timestamp, broadcasts.type, broadcasts.relatedid, broadcasts.relatedto,
+               broadcasts.track_url,
                COUNT(Like.LikeID) AS likes
         FROM (
     """
@@ -108,6 +124,8 @@ def api_get_broadcasts():
                 """
             sql += """
                 SELECT Broadcast.BroadcastID AS id, UserTable.LastFmProfileName AS user,
+                    UserTable.PfpSmall AS user_pfp_sm, UserTable.PfpMedium AS user_pfp_med,
+                    UserTable.PfpLarge AS user_pfp_lg, UserTable.PfpExtraLarge AS user_pfp_xl,
                     Broadcast.Title AS title, Broadcast.Body AS body,
                     Broadcast.Timestamp AS timestamp, RelatedType.Description AS type,
                     Broadcast.RelatedID AS relatedid,
@@ -116,6 +134,10 @@ def api_get_broadcasts():
                 sql += f"{row['DbTable']}.{row['DbNameField']} AS relatedto,"
             else:
                 sql += "'' AS relatedto,"
+            if row['DbIdField'] == "TrackID":
+                 sql += "Track.LastFmTrackUrl AS track_url,"
+            else:
+                sql += "'' AS track_url,"
             sql += """
                     Broadcast.Deleted AS deleted
                 FROM Broadcast
@@ -138,8 +160,12 @@ def api_get_broadcasts():
         LEFT JOIN Like ON broadcasts.id = Like.RelatedID
 			AND Like.RelatedTypeID = {related_type_enum.RelatedType.BROADCAST.value}
         WHERE deleted = 0
-		GROUP BY broadcasts.id, broadcasts.user, broadcasts.title, broadcasts.body,
-				 broadcasts.timestamp, broadcasts.type, broadcasts.RelatedID, broadcasts.relatedto
+		GROUP BY broadcasts.id, broadcasts.user,
+                 broadcasts.user_pfp_sm, broadcasts.user_pfp_med,
+                 broadcasts.user_pfp_lg, broadcasts.user_pfp_xl,
+                 broadcasts.title, broadcasts.body,
+				 broadcasts.timestamp, broadcasts.type, broadcasts.RelatedID, broadcasts.relatedto,
+                 broadcasts.track_url
         ORDER BY broadcasts.Timestamp DESC
         LIMIT ?
     """
@@ -157,15 +183,20 @@ def api_get_broadcasts():
 
     broadcasts = [
         {
-          "id":         row["id"],
-          "user":       row["user"],
-          "title":      row["title"],
-          "body":       row["body"],
-          "timestamp":  row["timestamp"],
-          "type":       row["type"],
-          "relatedto":  row["relatedto"],
-          "relatedid":  row["relatedid"],
-          "likes":      row["likes"]
+          "id":             row["id"],
+          "user":           row["user"],
+          "user_pfp_sm":    row["user_pfp_sm"],
+          "user_pfp_med":   row["user_pfp_med"],
+          "user_pfp_lg":    row["user_pfp_lg"],
+          "user_pfp_xl":    row["user_pfp_xl"],
+          "title":          row["title"],
+          "body":           row["body"],
+          "timestamp":      row["timestamp"],
+          "type":           row["type"],
+          "relatedid":      row["relatedid"],
+          "relatedto":      row["relatedto"],
+          "track_url":      row["track_url"],
+          "likes":          row["likes"]
         }
         for row in rows
     ]
