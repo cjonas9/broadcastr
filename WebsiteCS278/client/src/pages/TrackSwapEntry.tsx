@@ -32,8 +32,8 @@ export default function TrackSwapEntry() {
     <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-center mb-2 mt-12">Track Swap Battle</h1>
-          <p className="text-center text-gray-300 mb-8">
+          <Heading level={1} serif={true} className="mb-4 mt-12 text-center">Track Swap Battle</Heading>
+          <p className="text-center text-gray-400 mb-12">
             Expand your music taste by swapping tracks with other music lovers!
           </p>
 

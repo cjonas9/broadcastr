@@ -39,7 +39,7 @@ export default function TrackSelector({
 
   return (
     <div className={className}>
-      <label className="block mb-2 text-gray-300 text-center">{label}</label>
+      <label className="block mb-2 text-gray-400">{label}</label>
       {!selectedTrack ? (
         <div>
           <div className="w-full rounded-lg border border-dashed border-gray-600 bg-gray-800 text-gray-400 px-4 py-6 mb-4 text-center">

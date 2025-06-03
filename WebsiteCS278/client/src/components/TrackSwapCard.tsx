@@ -1,8 +1,8 @@
 import React, { MouseEvent } from 'react';
 import { useLocation } from 'wouter';
 import MatchProfileCard from './MatchProfileCard';
-import SongCard from './SongCard';
 import { ButtonWrapper } from './ButtonWrapper';
+import StatusTag from './StatusTag';
 
 export interface TrackSwap {
   id: number;
@@ -63,14 +63,20 @@ export function TrackSwapCard({ swap, currentUser, userProfiles, onRateTrack, on
   const status = getSwapStatus();
   const statusColors = {
     completed: 'bg-green-900/50 text-green-400',
-    action_required: 'bg-blue-900/50 text-blue-400',
-    pending: 'bg-yellow-900/50 text-yellow-400'
+    action_required: 'bg-yellow-900/50 text-yellow-400',
+    pending: 'bg-blue-900/50 text-blue-400',
   };
 
   const statusText = {
     completed: 'Completed',
     action_required: 'Action Required',
     pending: 'Pending'
+  };
+
+  const statusVariants = {
+    completed: 'completed',
+    action_required: 'action_required',
+    pending: 'pending',
   };
 
   const handleCardClick = () => {
@@ -81,23 +87,19 @@ export function TrackSwapCard({ swap, currentUser, userProfiles, onRateTrack, on
     setLocation(`/profile/${otherUser.replace(/^@/, "")}`);
   };
 
-  const handleSongClick = () => {
-    // TODO: Add play functionality
-  };
-
   const handleActionClick = () => {
     // Prevent card click when clicking action buttons
   };
 
   return (
     <div 
-      className="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-750 transition-colors"
+      className={`rounded-lg p-3 cursor-pointer hover:bg-gray-750 transition-colors border-2 ${
+        isInitiator ? 'bg-gray-800/30 border-gray-500/10' : 'bg-purple-900/15 border-purple-500/10'
+      }`}
       onClick={handleCardClick}
     >
       <div className="flex justify-between items-center mb-4">
-        <span className={`px-2 py-1 rounded text-sm ${statusColors[status]}`}>
-          {statusText[status]}
-        </span>
+        <StatusTag label={statusText[status]} variant={statusVariants[status] as 'pending' | 'action_required' | 'completed'} />
         <span className="text-gray-400 text-sm">
           {new Date(swap.swap_initiated_timestamp).toLocaleDateString()}
         </span>
@@ -105,7 +107,6 @@ export function TrackSwapCard({ swap, currentUser, userProfiles, onRateTrack, on
 
       <div className="space-y-4">
         {/* Matched User Profile */}
-        <div className="mb-4">
           <h3 className="text-sm text-gray-400 mb-2">Matched with:</h3>
           <MatchProfileCard
             username={otherUser}
@@ -113,101 +114,21 @@ export function TrackSwapCard({ swap, currentUser, userProfiles, onRateTrack, on
             swag={otherUserProfile?.swag || 0}
             onClick={handleProfileClick}
           />
-        </div>
 
-        {/* Initiated Track Section */}
-        {swap.initiated_track_id && (
-          <div>
-            <h3 className="text-sm text-gray-400 mb-2">
-              {isInitiator ? 'You sent:' : 'Received from match:'}
-            </h3>
-            <SongCard
-              song={{
-                id: swap.initiated_track_id,
-                name: swap.initiated_track_name || '',
-                artist: swap.initiated_artist_name || '',
-                playCount: 0,
-              }}
-              className='bg-gray-700'
-              showPlayButton={true}
-              onClick={handleSongClick}
-            />
-            {swap.initiated_reaction && (
-              <div className="mt-2 text-sm text-gray-400">
-                Rating: {swap.initiated_reaction}/5
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Matched Track Section */}
-        {swap.matched_track_id && (
-          <div>
-            <h3 className="text-sm text-gray-400 mb-2">
-              {isInitiator ? 'Received from match:' : 'You sent:'}
-            </h3>
-            <SongCard
-              song={{
-                id: swap.matched_track_id,
-                name: swap.matched_track_name || '',
-                artist: swap.matched_artist_name || '',
-                playCount: 0
-              }}
-              className='bg-gray-700'
-              showPlayButton={true}
-              onClick={handleSongClick}
-            />
-            {swap.matched_reaction && (
-              <div className="mt-2 text-sm text-gray-400">
-                Rating: {swap.matched_reaction}/5
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Action Required Sections */}
-        {status === 'action_required' && (
-          <div className="mt-4" onClick={handleActionClick}>
-            {!swap.matched_track_id && !isInitiator && (
-              <ButtonWrapper
-                width="full"
-                onClick={() => onSendTrack(swap)}
-              >
-                Send a Track
-              </ButtonWrapper>
-            )}
-            {swap.matched_track_id && !isInitiator && !swap.matched_reaction && (
-              <div className="space-y-2">
-                <p className="text-center text-gray-400">Rate this track:</p>
-                <div className="flex justify-center space-x-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <button
-                      key={rating}
-                      onClick={() => onRateTrack(swap.id, rating)}
-                      className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600"
-                    >
-                      {rating}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {swap.initiated_track_id && isInitiator && !swap.initiated_reaction && (
-              <div className="space-y-2">
-                <p className="text-center text-gray-400">Rate this track:</p>
-                <div className="flex justify-center space-x-2">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <button
-                      key={rating}
-                      onClick={() => onRateTrack(swap.id, rating)}
-                      className="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600"
-                    >
-                      {rating}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Swap Summary */}
+        {status === 'completed' && (
+          <div className="mt-4 mb-4 p-4 rounded-xl" style={{background: 'linear-gradient(90deg, #2B185A 0%, #A21CAF 100%)'}}>
+            <h3 className="text-lg mb-2 text-white font-semibold">Swap Results</h3>
+            <div className="text-base text-white/80">
+              {isInitiator 
+                ? <>Your track received <span className="font-bold">+{swap.initiated_reaction || 0} swag</span></>
+                : <>Your track received <span className="font-bold">+{swap.matched_reaction || 0} swag</span></>}
+            </div>
+            <div className="text-base text-white/80">
+              {isInitiator
+                ? <>Their track received <span className="font-bold">+{swap.matched_reaction || 0} swag</span></>
+                : <>Their track received <span className="font-bold">+{swap.initiated_reaction || 0} swag</span></>}
+            </div>
           </div>
         )}
       </div>

@@ -157,10 +157,10 @@ export default function TrackSwapHistory() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
-      <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
+      <div className="max-w-md mx-auto w-full flex-1 flex flex-col mb-24">
         <div className="flex-1">
           <button className="text-2xl mb-4" onClick={() => setLocation("/track-swap-entry")}>←</button>
-          <Heading level={3} serif={false} className="mb-4 font-bold text-center">Track Swap History</Heading>
+          <Heading level={2} serif={true} className="mb-8 text-center">Track Swap History</Heading>
 
           {swaps.length === 0 ? (
             <div className="text-center text-gray-400 mt-8">

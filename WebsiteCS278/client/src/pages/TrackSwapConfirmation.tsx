@@ -25,8 +25,8 @@ export default function TrackSwapConfirmation() {
     <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
       <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-center mb-2 mt-12">Track Swap Sent!</h1>
-          <p className="text-center text-gray-300 mb-8">
+          <Heading level={2} serif={true} className="mb-3 mt-12 text-center">Track Swap Sent!</Heading>
+          <p className="text-center text-gray-400 mb-12">
             Your track has been sent to your match.
           </p>
 
@@ -49,14 +49,14 @@ export default function TrackSwapConfirmation() {
             />
           </div>
         </div>
-        <div className="mt-auto pt-6 pb-16">
-        <ButtonWrapper
-          width="full"
-          variant="primary"
-          onClick={() => setLocation("/")}
-          >
-            Return Home
-          </ButtonWrapper>
+        <div className="mt-auto pt-6">
+          <ButtonWrapper
+            width="full"
+            variant="primary"
+            onClick={() => setLocation("/")}
+            >
+              Return Home
+            </ButtonWrapper>
         </div>
       </div>
     </div>

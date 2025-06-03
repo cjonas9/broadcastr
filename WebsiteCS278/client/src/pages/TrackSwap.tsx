@@ -44,7 +44,6 @@ export default function TrackSwap() {
           const response = await fetch(
             `${API_CONFIG.baseUrl}/api/get-song-swaps?user=${encodeURIComponent(userDetails.profile)}&songswapid=${storedSwapId}`
           );
-          
           if (response.ok) {
             const data = await response.json();
             if (data.songSwaps && data.songSwaps.length > 0) {
@@ -68,97 +67,76 @@ export default function TrackSwap() {
         setIsLoading(true);
         setError(null);
 
-        console.log('Fetching match for user:', userDetails.profile);
-
-        // Call initiate-song-swap endpoint to get a match
+        // Call new matchmaking endpoint
         const response = await fetch(
-          `${API_CONFIG.baseUrl}/api/initiate-song-swap?user=${encodeURIComponent(userDetails.profile)}`,
-          { method: 'POST' }
+          `${API_CONFIG.baseUrl}/api/find-song-swap-match?user=${encodeURIComponent(userDetails.profile)}`
         );
-
-        console.log('Initiate swap response status:', response.status);
         const data = await response.json();
-        console.log('Initiate swap response data:', data);
-
         if (!response.ok) {
           throw new Error(data.error || 'Failed to find a match');
         }
 
-        // Store the song swap ID
-        setSongSwapId(data.song_swap_id);
-        localStorage.setItem(SONG_SWAP_ID_KEY, data.song_swap_id.toString());
-
         // Fetch the user's profile using their Last.fm profile name
-        console.log('Fetching details for Last.fm profile:', data.matched_user_profile);
         const userResponse = await fetch(
           `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(data.matched_user_profile)}`
         );
-
-        console.log('User profile response status:', userResponse.status);
         const userData = await userResponse.json();
-        console.log('User profile response data:', userData);
-
         if (!userResponse.ok) {
           throw new Error('Failed to fetch matched user details');
         }
-
         if (!userData.userProfile || userData.userProfile.length === 0) {
           throw new Error('No user profile data found');
         }
-
         const matchedUserData = userData.userProfile[0];
-        console.log('Matched user data:', matchedUserData);
-
-        // Set the matched user with proper profile image
         const newMatchedUser = {
           username: matchedUserData.profile,
           profileImage: matchedUserData.pfpsm || matchedUserData.pfpmed || matchedUserData.pfplg || matchedUserData.pfpxl || '',
           swag: matchedUserData.swag || 0
         };
-        console.log('Setting matched user:', newMatchedUser);
         setMatchedUser(newMatchedUser);
         setMatchUser(newMatchedUser);
-        
-        // Store the match in localStorage
         localStorage.setItem(MATCHED_USER_KEY, JSON.stringify(newMatchedUser));
-
+        // Do not set songSwapId yet!
       } catch (err) {
         console.error('Error in fetchMatchedUser:', err);
         setError(err instanceof Error ? err.message : 'Failed to find a match');
-        // Only clear localStorage if we failed to get a new match
         clearLocalStorage();
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchMatchedUser();
   }, [userDetails, setMatchUser]);
 
   const handleInitiateSwap = async () => {
-    if (!localSelectedTrack || !userDetails || !matchedUser || !songSwapId) return;
-
+    if (!localSelectedTrack || !userDetails || !matchedUser) return;
     try {
       setIsLoading(true);
       setError(null);
-
-      // Add the track to the existing song swap
-      const response = await fetch(
-        `${API_CONFIG.baseUrl}/api/add-song-swap-track?user=${encodeURIComponent(userDetails.profile)}&songswapid=${songSwapId}&trackid=${localSelectedTrack.id}`,
+      // 1. Create the swap
+      const createSwapResponse = await fetch(
+        `${API_CONFIG.baseUrl}/api/create-song-swap?user=${encodeURIComponent(userDetails.profile)}&matched_user=${encodeURIComponent(matchedUser.username)}`,
         { method: 'POST' }
       );
-
-      if (!response.ok) {
-        const data = await response.json();
+      const createSwapData = await createSwapResponse.json();
+      if (!createSwapResponse.ok) {
+        throw new Error(createSwapData.error || 'Failed to create song swap');
+      }
+      setSongSwapId(createSwapData.song_swap_id);
+      localStorage.setItem(SONG_SWAP_ID_KEY, createSwapData.song_swap_id.toString());
+      // 2. Add the track to the new swap
+      const addTrackResponse = await fetch(
+        `${API_CONFIG.baseUrl}/api/add-song-swap-track?user=${encodeURIComponent(userDetails.profile)}&songswapid=${createSwapData.song_swap_id}&trackid=${localSelectedTrack.id}`,
+        { method: 'POST' }
+      );
+      if (!addTrackResponse.ok) {
+        const data = await addTrackResponse.json();
         throw new Error(data.error || 'Failed to add track to song swap');
       }
-
-      // Set the selected track in the global context and navigate to confirmation
       setSwapTrack(localSelectedTrack);
       setLocation("/track-swap-confirmation");
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add track to song swap');
+      setError(err instanceof Error ? err.message : 'Failed to initiate song swap');
     } finally {
       setIsLoading(false);
     }
@@ -252,14 +230,14 @@ export default function TrackSwap() {
         <div className="flex-1">
           <button className="text-2xl mb-4" onClick={handleCancel}>←</button>
           {/* Header */}
-          <Heading level={3} serif={false} className="mb-4 font-bold text-center">Track Swap Battle</Heading>
-          <p className="text-center text-gray-300 mb-8">
+          <Heading level={2} serif={true} className="mb-4">Track Swap Battle</Heading>
+          <p className="text-gray-400 mb-8">
             Swap a song with your matched partner to expand your music taste! If your match saves your song, you earn +5 swag
           </p>
 
           {/* Match of the day */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-center mb-2">Your Match of the day</h2>
+            <h2 className="text-md text-gray-400 mb-2">Your Match of the day</h2>
             <MatchProfileCard
               username={matchedUser.username}
               profileImage={matchedUser.profileImage}
