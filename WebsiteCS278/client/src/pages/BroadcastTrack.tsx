@@ -51,8 +51,7 @@ export default function BroadcastTrackPage() {
       console.log("Creating broadcast with URL:", url.toString());
 
       const response = await fetch(url.toString(), {
-        method: "POST",
-        credentials: 'include'
+        method: "POST"
       });
 
       if (!response.ok) {
