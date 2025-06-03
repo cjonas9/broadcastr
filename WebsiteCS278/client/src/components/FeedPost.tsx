@@ -22,8 +22,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Heart, Trash2 } from "lucide-react";
 import SongCard, { Song } from "./SongCard";
 import { useAuth } from "@/AuthContext";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 type FeedPostProps = {
   id: number;
@@ -67,7 +66,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
 
     try {
       const response = await fetch(
-        `${VITE_API_URL}/api/get-likes?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`
+        `${API_CONFIG.baseUrl}/api/get-likes?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`
       );
       if (!response.ok) throw new Error('Failed to fetch like status');
       
@@ -131,7 +130,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
     try {
       setIsDeleting(true);
       const response = await fetch(
-        `${VITE_API_URL}/api/delete-broadcast?id=${id}`,
+        `${API_CONFIG.baseUrl}/api/delete-broadcast?id=${id}`,
         { method: 'POST' }
       );
       
@@ -153,7 +152,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
     try {
       setIsLiking(true);
       const response = await fetch(
-        `${VITE_API_URL}/api/create-like?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`,
+        `${API_CONFIG.baseUrl}/api/create-like?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`,
         { method: 'POST' }
       );
 
@@ -194,7 +193,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
     try {
       setIsLiking(true);
       const response = await fetch(
-        `${VITE_API_URL}/api/undo-like?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`,
+        `${API_CONFIG.baseUrl}/api/undo-like?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`,
         { method: 'POST' }
       );
 

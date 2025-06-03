@@ -5,17 +5,16 @@ import { ArrowLeft, ChevronRightIcon } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import SwagTag from "@/components/SwagTag";
 import { fetchSwag, awardSwag } from "@/utils/swag";
-
-const BACKEND_API_URL="https://broadcastr.onrender.com"
+import { API_CONFIG } from "@/config";
 
 // API call to fetch artist by ID
 export async function getArtistById(id: number) {
   try {
-    const res = await fetch(BACKEND_API_URL + `/api/artist/by-id?id=${id}`);
+    const res = await fetch(API_CONFIG.baseUrl + `/api/artist/by-id?id=${id}`);
     if (!res.ok) return null;
-	console.log("hello")
+    console.log("hello")
     const data = await res.json();
-	console.log("Fetched artist data:", data);
+    console.log("Fetched artist data:", data);
     return data.artist;
   } catch (err) {
     console.error("Failed to fetch artist:", err);
@@ -74,14 +73,14 @@ export default function ArtistDetail() {
       try {
         if (!artist) return;
         const tlRes = await fetch(
-          BACKEND_API_URL + `/api/artist/top-listeners?artist=${encodeURIComponent(
+          API_CONFIG.baseUrl + `/api/artist/top-listeners?artist=${encodeURIComponent(
             artist.name
           )}&period=overall&limit=50`
         );
         const { topListeners: fetchedTL } = await tlRes.json();
 
         const pRes = await fetch(
-          BACKEND_API_URL + `/api/artist/listens?user=${encodeURIComponent(
+          API_CONFIG.baseUrl + `/api/artist/listens?user=${encodeURIComponent(
             currentUser.username.replace(/^@/, "")
           )}&artist=${encodeURIComponent(artist.name)}&period=overall`
         );

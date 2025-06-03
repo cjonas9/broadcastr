@@ -1,5 +1,4 @@
-const BACKEND_API_URL = "https://broadcastr.onrender.com";
-const BACKEND_API_URL_LOCAL = "http://localhost:8000";
+import { API_CONFIG } from "@/config";
 
 /**
  * Fetches a user's current swag points
@@ -7,8 +6,7 @@ const BACKEND_API_URL_LOCAL = "http://localhost:8000";
 export async function fetchSwag(username: string): Promise<number | null> {
   try {
     const res = await fetch(
-      // `${BACKEND_API_URL}/api/user/profile?user=${encodeURIComponent(username)}`
-      `${BACKEND_API_URL_LOCAL}/api/user/profile?user=${encodeURIComponent(username)}`
+      `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(username)}`
     );
     const data = await res.json();
     if (data.userProfile && data.userProfile.length > 0) {
@@ -31,9 +29,8 @@ export async function awardSwag(username: string, points: number): Promise<{
 } | null> {
   try {
     const res = await fetch(
-      // `${BACKEND_API_URL}/api/user/add-swag?user=${encodeURIComponent(username)}&swag=${points}`,
-      `${BACKEND_API_URL_LOCAL}/api/user/add-swag?user=${encodeURIComponent(username)}&swag=${points}`,
-      { method: "POST" }
+      `${API_CONFIG.baseUrl}/api/user/add-swag?user=${encodeURIComponent(username)}&swag=${points}`,
+      { method: 'POST' }
     );
     const data = await res.json();
     // The existing endpoint returns "updated swag balance" instead of the detailed response

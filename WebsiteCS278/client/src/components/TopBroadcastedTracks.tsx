@@ -4,8 +4,7 @@ import TopTrackPost from "@/components/TopTrackPost";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { useAuth } from "@/AuthContext";
 import { FeedPost } from "@/components/FeedPost";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 interface TopBroadcastedTrack {
   broadcastid: number;
@@ -33,7 +32,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       setLoading(true);
       console.log('Fetching tracks for user:', username);
       const response = await fetch(
-        `${VITE_API_URL}/api/user/top-broadcasted-tracks?user=${encodeURIComponent(username)}&limit=${limit}`
+        `${API_CONFIG.baseUrl}/api/user/top-broadcasted-tracks?user=${encodeURIComponent(username)}&limit=${limit}`
       );
       
       if (!response.ok) {
@@ -120,7 +119,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       
       // First send the delete request
       const deleteResponse = await fetch(
-        `${VITE_API_URL}/api/delete-broadcast?id=${broadcastId}`,
+        `${API_CONFIG.baseUrl}/api/delete-broadcast?id=${broadcastId}`,
         { method: 'POST' }
       );
       

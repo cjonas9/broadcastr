@@ -13,12 +13,7 @@ import { ButtonWrapper } from "@/components/ButtonWrapper";
 import TrackSelector from "@/components/TrackSelector";
 import { useAuth } from "@/AuthContext";
 import { Heading } from "@/components/Heading";
-
-// Use environment variable for API URL with development fallback
-// const API_URL = import.meta.env.DEV 
-//   ? 'http://localhost:8000'  // Use localhost in development
-//   : 'https://broadcastr.onrender.com';  // Use production in production
-const API_URL = 'http://localhost:8000';
+import { API_CONFIG } from "@/config";
 
 // Storage keys for persisting match data
 const MATCHED_USER_KEY = 'track_swap_matched_user';
@@ -47,7 +42,7 @@ export default function TrackSwap() {
         try {
           // Verify the stored match is still valid
           const response = await fetch(
-            `${API_URL}/api/get-song-swaps?user=${encodeURIComponent(userDetails.profile)}&songswapid=${storedSwapId}`
+            `${API_CONFIG.baseUrl}/api/get-song-swaps?user=${encodeURIComponent(userDetails.profile)}&songswapid=${storedSwapId}`
           );
           
           if (response.ok) {
@@ -77,7 +72,7 @@ export default function TrackSwap() {
 
         // Call initiate-song-swap endpoint to get a match
         const response = await fetch(
-          `${API_URL}/api/initiate-song-swap?user=${encodeURIComponent(userDetails.profile)}`,
+          `${API_CONFIG.baseUrl}/api/initiate-song-swap?user=${encodeURIComponent(userDetails.profile)}`,
           { method: 'POST' }
         );
 
@@ -96,7 +91,7 @@ export default function TrackSwap() {
         // Fetch the user's profile using their Last.fm profile name
         console.log('Fetching details for Last.fm profile:', data.matched_user_profile);
         const userResponse = await fetch(
-          `${API_URL}/api/user/profile?user=${encodeURIComponent(data.matched_user_profile)}`
+          `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(data.matched_user_profile)}`
         );
 
         console.log('User profile response status:', userResponse.status);
@@ -149,7 +144,7 @@ export default function TrackSwap() {
 
       // Add the track to the existing song swap
       const response = await fetch(
-        `${API_URL}/api/add-song-swap-track?user=${encodeURIComponent(userDetails.profile)}&songswapid=${songSwapId}&trackid=${localSelectedTrack.id}`,
+        `${API_CONFIG.baseUrl}/api/add-song-swap-track?user=${encodeURIComponent(userDetails.profile)}&songswapid=${songSwapId}&trackid=${localSelectedTrack.id}`,
         { method: 'POST' }
       );
 

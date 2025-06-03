@@ -3,6 +3,7 @@ import { Heading } from "@/components/Heading";
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/AuthContext";
+import { API_CONFIG } from "@/config";
 
 const VITE_API_URL="https://broadcastr.onrender.com"
 
@@ -13,13 +14,16 @@ export default function LogIn() {
 	const { login } = useAuth();
 
 	const handleLogin = async () => {
-	try {
-		await login(lastfm, password);
-		// If login(...) resolves, userDetails is now populated
-		setLocation("/"); // redirect to home
-	} catch (err: any) {
-		alert(err.message || "Login failed");
-	}
+		try {
+			const response = await fetch(
+				`${API_CONFIG.baseUrl}/api/user/login?user=${encodeURIComponent(lastfm)}&password=${encodeURIComponent(password)}`
+			);
+			await login(lastfm, password);
+			// If login(...) resolves, userDetails is now populated
+			setLocation("/"); // redirect to home
+		} catch (err: any) {
+			alert(err.message || "Login failed");
+		}
 	};
 
 	return (

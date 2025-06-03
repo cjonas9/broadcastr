@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/AuthContext';
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from '@/config';
 
 export function useFollow(targetUsername: string) {
   const { userDetails } = useAuth();
@@ -21,7 +20,7 @@ export function useFollow(targetUsername: string) {
     const checkFollowStatus = async () => {
       try {
         const response = await fetch(
-          `${VITE_API_URL}/api/user/following?user=${userDetails.profile}`
+          `${API_CONFIG.baseUrl}/api/user/following?user=${userDetails.profile}`
         );
         if (!response.ok) throw new Error('Failed to fetch following status');
         
@@ -43,7 +42,7 @@ export function useFollow(targetUsername: string) {
     
     try {
       const response = await fetch(
-        `${VITE_API_URL}/api/user/follow?follower=${userDetails.profile}&followee=${targetUsername}`,
+        `${API_CONFIG.baseUrl}/api/user/follow?follower=${userDetails.profile}&followee=${targetUsername}`,
         { method: 'POST' }
       );
       
@@ -60,7 +59,7 @@ export function useFollow(targetUsername: string) {
     
     try {
       const response = await fetch(
-        `${VITE_API_URL}/api/user/unfollow?follower=${userDetails.profile}&followee=${targetUsername}`,
+        `${API_CONFIG.baseUrl}/api/user/unfollow?follower=${userDetails.profile}&followee=${targetUsername}`,
         { method: 'POST' }
       );
       

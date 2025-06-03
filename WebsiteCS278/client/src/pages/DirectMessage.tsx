@@ -2,8 +2,8 @@ import { useRoute, useLocation } from "wouter";
 import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/AuthContext";
+import { API_CONFIG } from "@/config";
 
-const VITE_API_URL = "https://broadcastr.onrender.com";
 const POLLING_INTERVAL = 5000; // Poll every 5 seconds for new messages
 
 interface Message {
@@ -28,8 +28,8 @@ export default function DirectMessage() {
     if (!userDetails?.profile || !params?.username) return;
 
     try {
-      const res = await fetch(
-        `${VITE_API_URL}/api/user/direct-messages?user=${encodeURIComponent(userDetails.profile)}&conversant=${encodeURIComponent(params.username)}`
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/api/user/direct-messages?user=${encodeURIComponent(userDetails.profile)}&conversant=${encodeURIComponent(params.username)}`
       );
 
       if (!res.ok) {
@@ -41,8 +41,8 @@ export default function DirectMessage() {
 
       // Mark messages as read
       await fetch(
-        `${VITE_API_URL}/api/mark-messages-read?user=${encodeURIComponent(params.username)}&recipient=${encodeURIComponent(userDetails.profile)}`,
-        { method: "POST" }
+        `${API_CONFIG.baseUrl}/api/mark-messages-read?user=${encodeURIComponent(params.username)}&recipient=${encodeURIComponent(userDetails.profile)}`,
+        { method: 'POST' }
       );
     } catch (err) {
       console.error("Error fetching messages:", err);
@@ -74,12 +74,12 @@ export default function DirectMessage() {
     if (!input.trim() || !userDetails?.profile || !params?.username) return;
 
     try {
-      const res = await fetch(
-        `${VITE_API_URL}/api/send-direct-message?user=${encodeURIComponent(userDetails.profile)}&recipient=${encodeURIComponent(params.username)}&message=${encodeURIComponent(input.trim())}`,
-        { method: "POST" }
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/api/send-direct-message?user=${encodeURIComponent(userDetails.profile)}&recipient=${encodeURIComponent(params.username)}&message=${encodeURIComponent(input.trim())}`,
+        { method: 'POST' }
       );
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error("Failed to send message");
       }
 

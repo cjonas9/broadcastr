@@ -4,37 +4,13 @@ import { useAuth } from '@/AuthContext';
 import { ButtonWrapper } from '@/components/ButtonWrapper';
 import { BottomToolbar } from '@/components/BottomToolbar';
 import { Heading } from '@/components/Heading';
-import MatchProfileCard from '@/components/MatchProfileCard';
-import SongCard from '@/components/SongCard';
-import { ArrowLeft } from 'lucide-react';
+import { TrackSwapCard, TrackSwap } from '@/components/TrackSwapCard';
+import { API_CONFIG } from "@/config";
 
-interface TrackSwap {
-  id: number;
-  status: 'pending' | 'completed' | 'cancelled';
-  initiatedBy: {
-    username: string;
-    profileImage: string;
-    swag: number;
-  };
-  receivedFrom: {
-    username: string;
-    profileImage: string;
-    swag: number;
-  };
-  sentTrack: {
-    id: number;
-    name: string;
-    artist: string;
-    playCount: number;
-  };
-  receivedTrack: {
-    id: number;
-    name: string;
-    artist: string;
-    playCount: number;
-  } | null;
-  rating: number | null;
-  createdAt: string;
+interface UserProfile {
+  username: string;
+  profileImage: string;
+  swag: number;
 }
 
 export default function TrackSwapHistory() {
@@ -43,84 +19,98 @@ export default function TrackSwapHistory() {
   const [swaps, setSwaps] = useState<TrackSwap[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
+
+  const fetchUserProfile = async (username: string) => {
+    try {
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(username)}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch user profile');
+      const data = await response.json();
+      return data.userProfile[0];
+    } catch (err) {
+      console.error('Error fetching user profile:', err);
+      return null;
+    }
+  };
+
+  const fetchTrackSwaps = async () => {
+    if (!userDetails) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const apiUrl = `${API_CONFIG.baseUrl}/api/get-song-swaps?user=${encodeURIComponent(userDetails.profile)}`;
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Error response:', text);
+        throw new Error(`Failed to fetch track swaps: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setSwaps(data.songSwaps);
+
+      // Fetch profiles for all unique users in the swaps
+      const uniqueUsers = new Set<string>();
+      data.songSwaps.forEach((swap: TrackSwap) => {
+        uniqueUsers.add(swap.initiated_user);
+        uniqueUsers.add(swap.matched_user);
+      });
+
+      const profilePromises = Array.from(uniqueUsers).map(username => fetchUserProfile(username));
+      const profiles = await Promise.all(profilePromises);
+      
+      const profileMap: Record<string, UserProfile> = {};
+      profiles.forEach((profile, index) => {
+        if (profile) {
+          profileMap[Array.from(uniqueUsers)[index]] = {
+            username: profile.profile,
+            profileImage: profile.pfpmed || profile.pfpsm || '',
+            swag: profile.swag
+          };
+        }
+      });
+      
+      setUserProfiles(profileMap);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch track swaps');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTrackSwaps = async () => {
-      if (!userDetails) return;
-
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/track-swaps?user=${userDetails.profile}`);
-        // if (!response.ok) throw new Error('Failed to fetch track swaps');
-        // const data = await response.json();
-        // setSwaps(data.swaps);
-
-        // Mock data for now
-        setSwaps([
-          {
-            id: 1,
-            status: 'pending',
-            initiatedBy: {
-              username: '@user1',
-              profileImage: '',
-              swag: 100
-            },
-            receivedFrom: {
-              username: '@user2',
-              profileImage: '',
-              swag: 150
-            },
-            sentTrack: {
-              id: 1,
-              name: 'Song 1',
-              artist: 'Artist 1',
-              playCount: 100
-            },
-            receivedTrack: null,
-            rating: null,
-            createdAt: '2024-03-20T10:00:00Z'
-          },
-          {
-            id: 2,
-            status: 'completed',
-            initiatedBy: {
-              username: '@user3',
-              profileImage: '',
-              swag: 200
-            },
-            receivedFrom: {
-              username: '@user4',
-              profileImage: '',
-              swag: 180
-            },
-            sentTrack: {
-              id: 2,
-              name: 'Song 2',
-              artist: 'Artist 2',
-              playCount: 200
-            },
-            receivedTrack: {
-              id: 3,
-              name: 'Song 3',
-              artist: 'Artist 3',
-              playCount: 150
-            },
-            rating: 4,
-            createdAt: '2024-03-19T15:30:00Z'
-          }
-        ]);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch track swaps');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchTrackSwaps();
   }, [userDetails]);
+
+  const handleRateTrack = async (swapId: number, rating: number) => {
+    if (!userDetails) return;
+
+    try {
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/api/add-song-swap-reaction?user=${encodeURIComponent(userDetails.profile)}&songswapid=${swapId}&reaction=${rating}`,
+        { method: 'POST' }
+      );
+
+      if (!response.ok) throw new Error('Failed to rate track');
+      
+      // Refresh the swaps list
+      await fetchTrackSwaps();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to rate track');
+    }
+  };
+
+  const handleSendTrack = (swap: TrackSwap) => {
+    // Store the swap ID and navigate to track selection
+    localStorage.setItem('pending_swap_id', swap.id.toString());
+    setLocation('/track-swap-action');
+  };
 
   if (!userDetails) {
     return (
@@ -186,63 +176,14 @@ export default function TrackSwapHistory() {
           ) : (
             <div className="space-y-6">
               {swaps.map((swap) => (
-                <div key={swap.id} className="bg-gray-800 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      swap.status === 'completed' ? 'bg-green-900/50 text-green-400' :
-                      swap.status === 'cancelled' ? 'bg-red-900/50 text-red-400' :
-                      'bg-yellow-900/50 text-yellow-400'
-                    }`}>
-                      {swap.status.charAt(0).toUpperCase() + swap.status.slice(1)}
-                    </span>
-                    <span className="text-gray-400 text-sm">
-                      {new Date(swap.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-sm text-gray-400 mb-2">You sent to:</h3>
-                      <MatchProfileCard
-                        username={swap.receivedFrom.username}
-                        profileImage={swap.receivedFrom.profileImage}
-                        swag={swap.receivedFrom.swag}
-                        onClick={() => setLocation(`/profile/${swap.receivedFrom.username.replace(/^@/, "")}`)}
-                      />
-                      <div className="mt-2">
-                        <SongCard
-                          song={swap.sentTrack}
-                          selected={true}
-                          onClick={() => {}}
-                        />
-                      </div>
-                    </div>
-
-                    {swap.receivedTrack && (
-                      <div>
-                        <h3 className="text-sm text-gray-400 mb-2">You received from:</h3>
-                        <MatchProfileCard
-                          username={swap.initiatedBy.username}
-                          profileImage={swap.initiatedBy.profileImage}
-                          swag={swap.initiatedBy.swag}
-                          onClick={() => setLocation(`/profile/${swap.initiatedBy.username.replace(/^@/, "")}`)}
-                        />
-                        <div className="mt-2">
-                          <SongCard
-                            song={swap.receivedTrack}
-                            selected={true}
-                            onClick={() => {}}
-                          />
-                        </div>
-                        {swap.rating && (
-                          <div className="mt-2 text-center text-gray-400">
-                            You rated this track {swap.rating} stars
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <TrackSwapCard
+                  key={swap.id}
+                  swap={swap}
+                  currentUser={userDetails.profile}
+                  userProfiles={userProfiles}
+                  onRateTrack={handleRateTrack}
+                  onSendTrack={handleSendTrack}
+                />
               ))}
             </div>
           )}

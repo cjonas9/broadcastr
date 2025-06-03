@@ -15,8 +15,7 @@ import { Heading } from "@/components/Heading";
 import { FeedPost } from "@/components/FeedPost";
 import { useLocation } from "wouter";
 import { useAuth } from "@/AuthContext";
-
-const VITE_API_URL = "https://broadcastr.onrender.com";
+import { API_CONFIG } from "@/config";
 
 interface Broadcast {
   id: number;
@@ -44,7 +43,7 @@ export default function Feed() {
   const fetchBroadcasts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${VITE_API_URL}/api/get-broadcasts`);
+      const response = await fetch(`${API_CONFIG.baseUrl}/api/get-broadcasts`);
       if (!response.ok) {
         throw new Error('Failed to fetch broadcasts');
       }
@@ -111,7 +110,7 @@ export default function Feed() {
   const handleBroadcastDelete = async (broadcastId: number) => {
     try {
       const response = await fetch(
-        `${VITE_API_URL}/api/delete-broadcast?id=${broadcastId}`,
+        `${API_CONFIG.baseUrl}/api/delete-broadcast?id=${broadcastId}`,
         { method: 'POST' }
       );
       
