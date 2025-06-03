@@ -31,6 +31,7 @@ interface Broadcast {
   relatedto: string;
   relatedid: number;
   likes: number;
+  isLiked: boolean;
 }
 
 export default function Feed() {
@@ -43,7 +44,11 @@ export default function Feed() {
   const fetchBroadcasts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_CONFIG.baseUrl}/api/get-broadcasts`);
+      const url = new URL(`${API_CONFIG.baseUrl}/api/get-broadcasts`);
+      if (userDetails?.profile) {
+        url.searchParams.append('current_user', userDetails.profile);
+      }
+      const response = await fetch(url.toString());
       if (!response.ok) {
         throw new Error('Failed to fetch broadcasts');
       }
@@ -77,7 +82,7 @@ export default function Feed() {
       setBroadcasts(prevBroadcasts => 
         prevBroadcasts.map(broadcast => 
           broadcast.id === broadcastId
-            ? { ...broadcast, likes: broadcast.likes + 1 }
+            ? { ...broadcast, likes: broadcast.likes + 1, isLiked: true }
             : broadcast
         )
       );
@@ -88,7 +93,7 @@ export default function Feed() {
       setBroadcasts(prevBroadcasts => 
         prevBroadcasts.map(broadcast => 
           broadcast.id === broadcastId
-            ? { ...broadcast, likes: broadcast.likes - 1 }
+            ? { ...broadcast, likes: broadcast.likes - 1, isLiked: false }
             : broadcast
         )
       );
@@ -166,6 +171,7 @@ export default function Feed() {
                 playCount: 0
               } : undefined}
               likes={broadcast.likes}
+              isLiked={broadcast.isLiked}
               onDelete={() => handleBroadcastDelete(broadcast.id)}
             />
           ))}

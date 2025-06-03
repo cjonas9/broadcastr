@@ -40,6 +40,7 @@ type FeedPostProps = {
   linkHref?: string;
   track?: Song;
   likes: number;
+  isLiked?: boolean;
   onDelete?: () => void;
 };
 
@@ -54,36 +55,19 @@ export const FeedPost: React.FC<FeedPostProps> = ({
   linkHref,
   track,
   likes: initialLikes,
+  isLiked: initialIsLiked = false,
   onDelete,
 }) => {
   const { userDetails } = useAuth();
   const [isDeleting, setIsDeleting] = React.useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likes, setLikes] = useState(initialLikes);
   const [isLiking, setIsLiking] = useState(false);
 
-  // Check if the user has liked this broadcast
-  const checkLikeStatus = useCallback(async () => {
-    if (!userDetails?.profile) return;
-
-    try {
-      const response = await fetch(
-        `${API_CONFIG.baseUrl}/api/get-likes?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`
-      );
-      if (!response.ok) throw new Error('Failed to fetch like status');
-      
-      const data = await response.json();
-      setIsLiked(data.hasLiked);
-      setLikes(data.totalLikes); // Update likes count from server
-    } catch (error) {
-      console.error('Error checking like status:', error);
-    }
-  }, [id, userDetails]);
-
-  // Check like status on mount and when user changes
+  // Update isLiked state when initialIsLiked prop changes
   useEffect(() => {
-    checkLikeStatus();
-  }, [checkLikeStatus]);
+    setIsLiked(initialIsLiked);
+  }, [initialIsLiked]);
 
   // Listen for visibility changes to recheck like status
   useEffect(() => {
@@ -100,7 +84,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', checkLikeStatus);
     };
-  }, [checkLikeStatus]);
+  }, []);
 
   // Listen for like/unlike events from other components
   useEffect(() => {
@@ -123,7 +107,25 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       window.removeEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
       window.removeEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
     };
-  }, [id, checkLikeStatus]);
+  }, [id]);
+
+  // Check if the user has liked this broadcast
+  const checkLikeStatus = useCallback(async () => {
+    if (!userDetails?.profile) return;
+
+    try {
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/api/get-likes?user=${userDetails.profile}&relatedtype=Broadcast&relatedid=${id}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch like status');
+      
+      const data = await response.json();
+      setIsLiked(data.hasLiked);
+      setLikes(data.totalLikes); // Update likes count from server
+    } catch (error) {
+      console.error('Error checking like status:', error);
+    }
+  }, [id, userDetails]);
 
   const handleDelete = async () => {
     if (!userDetails) return;
