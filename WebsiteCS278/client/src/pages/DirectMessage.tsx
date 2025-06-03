@@ -32,11 +32,11 @@ export default function DirectMessage() {
         `${API_CONFIG.baseUrl}/api/user/direct-messages?user=${encodeURIComponent(userDetails.profile)}&conversant=${encodeURIComponent(params.username)}`
       );
 
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error("Failed to fetch messages");
       }
 
-      const data = await res.json();
+      const data = await response.json();
       setMessages(data.directMessages);
 
       // Mark messages as read
