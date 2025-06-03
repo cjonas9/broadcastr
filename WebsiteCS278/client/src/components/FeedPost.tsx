@@ -18,7 +18,7 @@ TODO:
 
 */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Heart, Trash2 } from "lucide-react";
 import SongCard, { Song } from "./SongCard";
 import { useAuth } from "@/AuthContext";
@@ -62,7 +62,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
   const [isLiking, setIsLiking] = useState(false);
 
   // Check if the user has liked this broadcast
-  const checkLikeStatus = async () => {
+  const checkLikeStatus = useCallback(async () => {
     if (!userDetails?.profile) return;
 
     try {
@@ -76,12 +76,12 @@ export const FeedPost: React.FC<FeedPostProps> = ({
     } catch (error) {
       console.error('Error checking like status:', error);
     }
-  };
+  }, [id, userDetails]);
 
   // Check like status on mount and when user changes
   useEffect(() => {
     checkLikeStatus();
-  }, [id, userDetails]);
+  }, [checkLikeStatus]);
 
   // Listen for visibility changes to recheck like status
   useEffect(() => {
@@ -98,7 +98,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', checkLikeStatus);
     };
-  }, [id, userDetails]);
+  }, [checkLikeStatus]);
 
   // Listen for like/unlike events from other components
   useEffect(() => {
@@ -148,7 +148,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
   };
 
   const handleLike = async () => {
-    if (!userDetails?.profile || isLiking) return;
+    if (!userDetails?.profile || isLiking || isLiked) return;
 
     try {
       setIsLiking(true);
@@ -170,13 +170,15 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       }));
     } catch (error) {
       console.error('Error liking broadcast:', error);
+      // Recheck like status in case of error
+      await checkLikeStatus();
     } finally {
       setIsLiking(false);
     }
   };
 
   const handleUnlike = async () => {
-    if (!userDetails?.profile || isLiking) return;
+    if (!userDetails?.profile || isLiking || !isLiked) return;
 
     try {
       setIsLiking(true);
@@ -198,6 +200,8 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       }));
     } catch (error) {
       console.error('Error unliking broadcast:', error);
+      // Recheck like status in case of error
+      await checkLikeStatus();
     } finally {
       setIsLiking(false);
     }
@@ -257,7 +261,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
                 isLiked 
                   ? 'text-pink-500 hover:text-pink-600' 
                   : 'text-gray-400 hover:text-pink-500'
-              }`}
+              } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
               title={isLiked ? 'Unlike' : 'Like'}
             >
               <Heart
