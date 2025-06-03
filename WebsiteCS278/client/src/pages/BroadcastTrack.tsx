@@ -72,6 +72,12 @@ export default function BroadcastTrackPage() {
       const responseData = await response.json();
       console.log("Broadcast created successfully:", responseData);
 
+      // Dispatch an event to notify that a new broadcast was created
+      window.dispatchEvent(new Event('newBroadcast'));
+
+      // Wait a brief moment to ensure the event is processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Redirect to feed
       setLocation("/");
     } catch (err) {

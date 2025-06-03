@@ -36,29 +36,51 @@ export default function Feed() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
-  useEffect(() => {
-    const fetchBroadcasts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`${VITE_API_URL}/api/get-broadcasts`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch broadcasts');
-        }
-
-        const data = await response.json();
-        setBroadcasts(data.broadcasts);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching broadcasts:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load broadcasts');
-      } finally {
-        setLoading(false);
+  const fetchBroadcasts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${VITE_API_URL}/api/get-broadcasts`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch broadcasts');
       }
+
+      const data = await response.json();
+      console.log("Fetched broadcasts:", data.broadcasts);
+      setBroadcasts(data.broadcasts || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching broadcasts:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load broadcasts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch broadcasts when component mounts or lastRefresh changes
+  useEffect(() => {
+    fetchBroadcasts();
+  }, [lastRefresh]);
+
+  // Poll for new broadcasts every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastRefresh(Date.now());
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Listen for the custom event that signals a new broadcast was created
+  useEffect(() => {
+    const handleNewBroadcast = () => {
+      setLastRefresh(Date.now());
     };
 
-    fetchBroadcasts();
+    window.addEventListener('newBroadcast', handleNewBroadcast);
+    return () => window.removeEventListener('newBroadcast', handleNewBroadcast);
   }, []);
 
   return (
@@ -67,7 +89,7 @@ export default function Feed() {
         <Heading level={1}>Discovery Feed</Heading>
         <p className="text-lg text-gray-500 mb-4">Explore other users' activity and their recommended tracks</p>
         
-        {loading && (
+        {loading && broadcasts.length === 0 && (
           <div className="text-center text-gray-400">Loading broadcasts...</div>
         )}
 
@@ -98,6 +120,10 @@ export default function Feed() {
               likes={broadcast.likes}
             />
           ))}
+
+          {broadcasts.length === 0 && !loading && !error && (
+            <div className="text-center text-gray-400">No broadcasts yet. Be the first to share!</div>
+          )}
         </div>
 
         <ButtonWrapper
