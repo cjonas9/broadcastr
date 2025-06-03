@@ -13,12 +13,13 @@ interface TopBroadcastedTrack {
   artist: string;
   lastfmtrackurl: string;
   likes: number;
+  isLiked: boolean;
 }
 
-interface TopBroadcastedTracksProps {
+type TopBroadcastedTracksProps = {
   username: string;
   limit?: number;
-}
+};
 
 export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadcastedTracksProps) {
   const [tracks, setTracks] = useState<TopBroadcastedTrack[]>([]);
@@ -27,51 +28,40 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { userDetails } = useAuth();
 
-  const fetchTracks = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching tracks for user:', username);
-      const response = await fetch(
-        `${API_CONFIG.baseUrl}/api/user/top-broadcasted-tracks?user=${encodeURIComponent(username)}&limit=${limit}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch top broadcasted tracks');
+  useEffect(() => {
+    const fetchTracks = async () => {
+      try {
+        setLoading(true);
+        const url = new URL(`${API_CONFIG.baseUrl}/api/user/top-broadcasted-tracks`);
+        url.searchParams.append('user', username);
+        url.searchParams.append('limit', limit.toString());
+        if (userDetails?.profile) {
+          url.searchParams.append('current_user', userDetails.profile);
+        }
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+          throw new Error('Failed to fetch top broadcasted tracks');
+        }
+        const data = await response.json();
+        setTracks(data.topTracks);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching top broadcasted tracks:', err);
+        setError('Failed to load tracks');
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const data = await response.json();
-      console.log('Received tracks:', data.topTracks);
-      setTracks(data.topTracks);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching top broadcasted tracks:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (username) {
-      console.log('Username or lastRefresh changed, fetching tracks for:', username);
-      fetchTracks();
-    }
-  }, [username, limit, lastRefresh]);
-
-  // Poll for updates every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLastRefresh(Date.now());
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
+    fetchTracks();
+  }, [username, limit, lastRefresh, userDetails]);
 
   // Listen for broadcast events
   useEffect(() => {
-    const handleBroadcastDelete = () => {
+    const handleBroadcastDelete = (event: CustomEvent) => {
+      const broadcastId = event.detail.broadcastId;
       // Remove the deleted broadcast immediately
-      setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== event.detail.broadcastId));
+      setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
       // Then refresh to ensure consistency
       setLastRefresh(Date.now());
     };
@@ -81,7 +71,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       setTracks(prevTracks => {
         const updatedTracks = prevTracks.map(track => 
           track.broadcastid === broadcastId
-            ? { ...track, likes: track.likes + 1 }
+            ? { ...track, likes: track.likes + 1, isLiked: true }
             : track
         );
         // Sort tracks by likes in descending order
@@ -94,7 +84,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       setTracks(prevTracks => {
         const updatedTracks = prevTracks.map(track => 
           track.broadcastid === broadcastId
-            ? { ...track, likes: track.likes - 1 }
+            ? { ...track, likes: track.likes - 1, isLiked: false }
             : track
         );
         // Sort tracks by likes in descending order
@@ -102,12 +92,12 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       });
     };
 
-    window.addEventListener('broadcastDeleted', handleBroadcastDelete);
+    window.addEventListener('broadcastDeleted', handleBroadcastDelete as EventListener);
     window.addEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
     window.addEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
 
     return () => {
-      window.removeEventListener('broadcastDeleted', handleBroadcastDelete);
+      window.removeEventListener('broadcastDeleted', handleBroadcastDelete as EventListener);
       window.removeEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
       window.removeEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
     };
@@ -133,7 +123,9 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
       
       // Dispatch event to notify other components
-      window.dispatchEvent(new Event('broadcastDeleted'));
+      window.dispatchEvent(new CustomEvent('broadcastDeleted', {
+        detail: { broadcastId }
+      }));
       
       // Trigger a refresh after a short delay
       setTimeout(() => {
@@ -200,6 +192,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
               playCount: 0
             }}
             likes={track.likes}
+            isLiked={track.isLiked}
             onDelete={() => handleDelete(track.broadcastid)}
           />
         ))}
