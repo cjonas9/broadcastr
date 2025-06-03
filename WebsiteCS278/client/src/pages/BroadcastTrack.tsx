@@ -6,14 +6,70 @@ import { useAuth } from "@/AuthContext";
 import { useLocation } from "wouter";
 import { Heading } from "@/components/Heading";
 
+const VITE_API_URL = "https://broadcastr.onrender.com";
+
 export default function BroadcastTrackPage() {
   const [, setLocation] = useLocation();
   const { userDetails } = useAuth();
   const [caption, setCaption] = useState("");
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handlePost = async () => {
+    if (!selectedTrack || !userDetails?.profile) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Log the request details
+      console.log("Creating broadcast with:", {
+        user: userDetails.profile,
+        title: caption || `Broadcasting ${selectedTrack.name}`,
+        body: `${selectedTrack.name} by ${selectedTrack.artist}`,
+        relatedtype: "TRACK",
+        relatedid: selectedTrack.id
+      });
+
+      const response = await fetch(
+        `${VITE_API_URL}/api/create-broadcast`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            user: userDetails.profile,
+            title: caption || `Broadcasting ${selectedTrack.name}`,
+            body: `${selectedTrack.name} by ${selectedTrack.artist}`,
+            relatedtype: "TRACK",
+            relatedid: selectedTrack.id
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Broadcast creation failed:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData.error || "Failed to create broadcast");
+      }
+
+      // Redirect to feed
+      setLocation("/");
+    } catch (err) {
+      console.error("Error creating broadcast:", err);
+      setError(err instanceof Error ? err.message : "Failed to post track. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Error handling for unauthenticated users
-  // TODO: remove when log in flow is complete
   if (!userDetails) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
@@ -53,8 +109,16 @@ export default function BroadcastTrackPage() {
           username={userDetails.profile}
           className="mb-6"
         />
-        <ButtonWrapper width="full" className="mt-8" disabled={!selectedTrack}>
-          + Post Track
+        {error && (
+          <div className="text-red-500 text-center mb-4">{error}</div>
+        )}
+        <ButtonWrapper 
+          width="full" 
+          className="mt-8" 
+          disabled={!selectedTrack || loading}
+          onClick={handlePost}
+        >
+          {loading ? "Posting..." : "+ Post Track"}
         </ButtonWrapper>
       </div>
       <BottomToolbar />
