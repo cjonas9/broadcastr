@@ -11,6 +11,7 @@ from api_song_swap import song_swap_bp
 from api_user_profile import user_profile_bp
 import related_type_enum
 import sql_query
+import db_query
 
 app = Flask(__name__)
 
@@ -80,10 +81,17 @@ def query_top_listeners_for_artist(artistname, periodname, limit: int = 10):
 @app.route("/api/artist/listens")
 def api_listens():
     """GET /api/artist/listens?user=…&artist=…&period=…"""
-    user   = request.args.get("user",   "")
+    user = request.args.get("user", "")
     artist = request.args.get("artist", "")
     period = request.args.get("period", "")
-    count  = query_listens_for_artist(user, artist, period)
+    
+    # First try to get from TopArtist table
+    count = query_listens_for_artist(user, artist, period)
+    
+    # If not found in TopArtist table, query Last.fm API directly
+    if count == 0:
+        count = db_query.get_artist_playcount(user, artist, period)
+        
     return jsonify({ "user": user, "artist": artist, "period": period, "plays": count })
 
 @app.route("/api/artist/top-listeners")
@@ -144,7 +152,7 @@ def api_user_top_artists():
           "id":          row["id"],
           "name":        row["name"],
           "scrobbles":   row["scrobbles"],
-          # If you don’t yet have images in your DB, you can leave it blank:
+          # If you don't yet have images in your DB, you can leave it blank:
           "imageUrl":    ""
         }
         for row in rows
