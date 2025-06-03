@@ -348,6 +348,21 @@ def query_period_id(period):
 	"""
 	return query_id("PeriodID", "Period", [["PeriodName", period]])
 
+def query_like_id(user_id, related_type_id, related_id):
+	"""
+	Queries the database for the numeric id of a like.
+	Args:
+		user_id: The database id of the user who liked
+		related_type_id: The database id of the type the like is related to
+		related_id: The database id of the record the like is related to
+	Returns:
+		numeric like id
+	"""
+
+	return query_id("LikeID", "Like", [["UserID", user_id],
+									   ["RelatedTypeID", related_type_id],
+									   ["RelatedID", related_id]])
+
 def query_id(idfield, table, lookup_pairs):
 	"""
 	Queries the database for a numeric id of a record.

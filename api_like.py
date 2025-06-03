@@ -17,17 +17,21 @@ def api_create_like():
         400 Bad Request: If the user is not provided or invalid.
         400 Bad Request: If the related type is not provided or invalid.
         400 Bad Request: If the related id is not provided or invalid.
+        400 Bad Request: If the like already exists.
     Returns:
         201 Success: The database ID of the newly created like record.
     """
     user = request.args.get("user", "")
     relatedtype = request.args.get("relatedtype", "")
     related_id = request.args.get("relatedid", "")
+    if not related_id.isnumeric():
+        related_id = 0
 
     user_id = sql_query.query_user_id(user)
     related_type_id = sql_query.query_related_type_id(relatedtype)
+    existing_like_id = sql_query.query_like_id(user_id, related_type_id, related_id)
 
-    error_string = validation.validate_like(user_id, related_type_id)
+    error_string = validation.validate_like(user_id, related_type_id, related_id, existing_like_id)
     if error_string != "":
         return jsonify({"error": error_string}), 400
 
@@ -45,17 +49,21 @@ def api_undo_like():
         400 Bad Request: If the user is not provided or invalid.
         400 Bad Request: If the related type is not provided or invalid.
         400 Bad Request: If the related id is not provided or invalid.
+        400 Bad Request: If the like does not exist.
     Returns:
         200 Success: boolean indicating the operation was successful
     """
     user = request.args.get("user", "")
     relatedtype = request.args.get("relatedtype", "")
     related_id = request.args.get("relatedid", "")
+    if not related_id.isnumeric():
+        related_id = 0
 
     user_id = sql_query.query_user_id(user)
     related_type_id = sql_query.query_related_type_id(relatedtype)
+    existing_like_id = sql_query.query_like_id(user_id, related_type_id, related_id)
 
-    error_string = validation.validate_like(user_id, related_type_id)
+    error_string = validation.validate_undo_like(user_id, related_type_id, related_id, existing_like_id)
     if error_string != "":
         return jsonify({"error": error_string}), 400
 
