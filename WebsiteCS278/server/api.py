@@ -43,7 +43,7 @@ def api_user_top_broadcasted_tracks():
         LIMIT ?
     """
 
-    conn = sql_query.get_db_connection()
+    conn = sql_query.get_db_connection_isolation_none()
     rows = conn.execute(sql, (related_type_enum.RelatedType.BROADCAST.value,
                               related_type_enum.RelatedType.TRACK.value,
                               user_id, limit)).fetchall()
