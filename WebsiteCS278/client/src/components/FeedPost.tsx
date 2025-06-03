@@ -242,7 +242,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
           className="w-12 h-12 rounded-md object-cover"
         />
         <div className="flex-1">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-white">@{user.username}</span>
               {timeAgo && (
@@ -260,15 +260,20 @@ export const FeedPost: React.FC<FeedPostProps> = ({
               </button>
             )}
           </div>
-          <div className="text-white mt-1">
+          
+          {/* Content section */}
+          <div className="space-y-3">
             {/* Title */}
             {content && (
-              <h3 className="font-semibold text-lg mb-1">{content}</h3>
+              <h3 className="text-lg font-semibold text-white">{content}</h3>
             )}
+            
             {/* Body */}
             {body && type !== "track" && (
-              <p className="text-gray-200">{body}</p>
+              <p className="text-gray-300 whitespace-pre-wrap">{body}</p>
             )}
+            
+            {/* Link if present */}
             {type === "activity-link" && linkText && linkHref && (
               <div>
                 <a
@@ -280,11 +285,17 @@ export const FeedPost: React.FC<FeedPostProps> = ({
                 </a>
               </div>
             )}
+            
+            {/* Track card if it's a track */}
+            {type === "track" && track && (
+              <div className="mt-2">
+                <SongCard song={track} selected />
+              </div>
+            )}
           </div>
-          {type === "track" && track && (
-            <SongCard song={track} selected className="mt-2"/>
-          )}
-          <div className="flex items-center gap-1 text-sm mt-2">
+
+          {/* Like button */}
+          <div className="flex items-center gap-1 text-sm mt-4">
             <button
               onClick={isLiked ? handleUnlike : handleLike}
               disabled={isLiking || !userDetails}
