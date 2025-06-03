@@ -25,11 +25,13 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   const [tracks, setTracks] = useState<TopBroadcastedTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { userDetails } = useAuth();
 
   const fetchTracks = async () => {
     try {
       setLoading(true);
+      console.log('Fetching tracks for user:', username);
       const response = await fetch(
         `${VITE_API_URL}/api/user/top-broadcasted-tracks?user=${encodeURIComponent(username)}&limit=${limit}`
       );
@@ -39,6 +41,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       }
 
       const data = await response.json();
+      console.log('Received tracks:', data.topTracks);
       setTracks(data.topTracks);
       setError(null);
     } catch (err) {
@@ -51,19 +54,63 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
 
   useEffect(() => {
     if (username) {
+      console.log('Username or lastRefresh changed, fetching tracks for:', username);
       fetchTracks();
     }
-  }, [username, limit]);
+  }, [username, limit, lastRefresh]);
+
+  // Poll for updates every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastRefresh(Date.now());
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Listen for the custom event that signals a broadcast was deleted
+  useEffect(() => {
+    const handleBroadcastDelete = () => {
+      setLastRefresh(Date.now());
+    };
+
+    window.addEventListener('broadcastDeleted', handleBroadcastDelete);
+    return () => window.removeEventListener('broadcastDeleted', handleBroadcastDelete);
+  }, []);
 
   const handleDelete = async (broadcastId: number) => {
-    // First update local state for immediate feedback
-    setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
-    
-    // Then refetch the data to ensure we're in sync with the server
-    await fetchTracks();
+    try {
+      console.log('Deleting broadcast:', broadcastId);
+      
+      // First send the delete request
+      const deleteResponse = await fetch(
+        `${VITE_API_URL}/api/delete-broadcast?id=${broadcastId}`,
+        { method: 'POST' }
+      );
+      
+      if (!deleteResponse.ok) {
+        throw new Error('Failed to delete broadcast');
+      }
+
+      console.log('Delete request successful');
+      
+      // Update local state for immediate feedback
+      setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('broadcastDeleted'));
+      
+      // Trigger a refresh after a short delay
+      setTimeout(() => {
+        setLastRefresh(Date.now());
+      }, 500);
+    } catch (err) {
+      console.error('Error during delete operation:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete broadcast');
+    }
   };
 
-  if (loading) {
+  if (loading && tracks.length === 0) {
     return (
       <section className="mt-8">
         <h2 className="text-2xl font-bold text-white">Top Broadcasted Tracks</h2>
