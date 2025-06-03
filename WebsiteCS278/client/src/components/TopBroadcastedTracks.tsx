@@ -71,33 +71,36 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   // Listen for broadcast events
   useEffect(() => {
     const handleBroadcastDelete = () => {
+      // Remove the deleted broadcast immediately
+      setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== event.detail.broadcastId));
+      // Then refresh to ensure consistency
       setLastRefresh(Date.now());
     };
 
     const handleBroadcastLiked = (event: CustomEvent) => {
       const broadcastId = event.detail.broadcastId;
-      setTracks(prevTracks => 
-        prevTracks.map(track => 
+      setTracks(prevTracks => {
+        const updatedTracks = prevTracks.map(track => 
           track.broadcastid === broadcastId
             ? { ...track, likes: track.likes + 1 }
             : track
-        )
-      );
-      // Refresh after a short delay to ensure proper order
-      setTimeout(() => setLastRefresh(Date.now()), 500);
+        );
+        // Sort tracks by likes in descending order
+        return [...updatedTracks].sort((a, b) => b.likes - a.likes);
+      });
     };
 
     const handleBroadcastUnliked = (event: CustomEvent) => {
       const broadcastId = event.detail.broadcastId;
-      setTracks(prevTracks => 
-        prevTracks.map(track => 
+      setTracks(prevTracks => {
+        const updatedTracks = prevTracks.map(track => 
           track.broadcastid === broadcastId
             ? { ...track, likes: track.likes - 1 }
             : track
-        )
-      );
-      // Refresh after a short delay to ensure proper order
-      setTimeout(() => setLastRefresh(Date.now()), 500);
+        );
+        // Sort tracks by likes in descending order
+        return [...updatedTracks].sort((a, b) => b.likes - a.likes);
+      });
     };
 
     window.addEventListener('broadcastDeleted', handleBroadcastDelete);

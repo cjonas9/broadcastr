@@ -161,16 +161,20 @@ export const FeedPost: React.FC<FeedPostProps> = ({
         throw new Error('Failed to like broadcast');
       }
 
-      setIsLiked(true);
-      setLikes(prev => prev + 1);
-
-      // Dispatch an event to notify other components about the like
-      window.dispatchEvent(new CustomEvent('broadcastLiked', {
-        detail: { broadcastId: id }
-      }));
+      const data = await response.json();
+      if (data.success) {
+        setIsLiked(true);
+        setLikes(prev => prev + 1);
+        // Dispatch event after successful server response
+        window.dispatchEvent(new CustomEvent('broadcastLiked', {
+          detail: { broadcastId: id }
+        }));
+      } else {
+        throw new Error('Server returned unsuccessful response');
+      }
     } catch (error) {
       console.error('Error liking broadcast:', error);
-      // Recheck like status in case of error
+      // Revert optimistic updates and recheck status
       await checkLikeStatus();
     } finally {
       setIsLiking(false);
@@ -191,16 +195,20 @@ export const FeedPost: React.FC<FeedPostProps> = ({
         throw new Error('Failed to unlike broadcast');
       }
 
-      setIsLiked(false);
-      setLikes(prev => prev - 1);
-
-      // Dispatch an event to notify other components about the unlike
-      window.dispatchEvent(new CustomEvent('broadcastUnliked', {
-        detail: { broadcastId: id }
-      }));
+      const data = await response.json();
+      if (data.success) {
+        setIsLiked(false);
+        setLikes(prev => prev - 1);
+        // Dispatch event after successful server response
+        window.dispatchEvent(new CustomEvent('broadcastUnliked', {
+          detail: { broadcastId: id }
+        }));
+      } else {
+        throw new Error('Server returned unsuccessful response');
+      }
     } catch (error) {
       console.error('Error unliking broadcast:', error);
-      // Recheck like status in case of error
+      // Revert optimistic updates and recheck status
       await checkLikeStatus();
     } finally {
       setIsLiking(false);
