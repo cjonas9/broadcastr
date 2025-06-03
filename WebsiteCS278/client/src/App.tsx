@@ -27,7 +27,8 @@ import FollowersPage from "./pages/FollowersPage";
 import FollowingPage from "./pages/FollowingPage";
 import SearchPage from "./pages/SearchPage";
 import TrackSwapHistory from "./pages/TrackSwapHistory";
-
+import TrackSwapDetail from "./pages/TrackSwapDetail";
+import TrackSwapAction from "./pages/TrackSwapAction";
 
 function Router() {
   return (
@@ -45,6 +46,8 @@ function Router() {
       <Route path="/track-swap-results" component={TrackSwapResults}/>
       <Route path="/swap-points-results" component={SwapPointsResults}/>
       <Route path="/track-swap-history" component={TrackSwapHistory}/>
+      <Route path="/track-swap-detail" component={TrackSwapDetail}/>
+      <Route path="/track-swap-action" component={TrackSwapAction}/>
       <Route path="/dm/:username" component={DirectMessage}/>
       <Route path="/profile" component={Profile}/>
       <Route path="/broadcast-track" component={BroadcastTrack}/>
