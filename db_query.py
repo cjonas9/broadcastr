@@ -1,11 +1,11 @@
-import requests
 import time
+import requests
 import pprint as pp
 
 import constants
 import sql_query
 
-key = "68237ca563ba0ac6a5915f31452b32d1"
+key = sql_query.query_config(constants.LAST_FM_API_CONFIG_KEY)
 
 # NOTE: PERIOD CAN BE "7day", "1month", "3month", "6month", "12month", or "overall"
 def get_top_artists(username, period, api_key=key, limit=20):

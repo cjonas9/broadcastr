@@ -31,6 +31,39 @@ def get_db_connection_isolation_none():
 	conn.row_factory = sqlite3.Row
 	return conn
 
+def query_config(config_key):
+	"""
+	Queries the database for a configuration value.
+	Args:
+		config_key: The key of the config value to look up
+	Returns:
+		str config value matching the key
+	"""
+	connection = get_db_connection()
+	cursor = connection.cursor()
+
+	# print(f"Looking up config value for {config_key}")
+
+	query = """
+		SELECT ConfigValue
+		FROM Config
+		WHERE ConfigKey = ?
+	"""
+
+	cursor.execute(query, (config_key,))
+	row = cursor.fetchone()
+	if row:
+		result = row[0]
+		# print(f"Config value for key {config_key} is {result}")
+	else:
+		result = ""
+		print(f"No config value with key {config_key} was found")
+
+	cursor.close()
+	connection.close()
+
+	return result
+
 def query_users():
 	"""
 	Queries the database for all user records.
