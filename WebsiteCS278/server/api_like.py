@@ -144,7 +144,7 @@ def api_get_likes():
         400 Bad Request: If the related type is not provided or invalid.
         400 Bad Request: If the related id is not provided or invalid.
     Returns:
-        200 Success: boolean indicating if the user has liked the item
+        200 Success: Object containing hasLiked boolean and total likes count
     """
     user = request.args.get("user", "")
     relatedtype = request.args.get("relatedtype", "")
@@ -161,6 +161,7 @@ def api_get_likes():
     cursor = connection.cursor()
 
     try:
+        # Get user's like status
         cursor.execute(
             """
             SELECT COUNT(*) as count
@@ -173,7 +174,24 @@ def api_get_likes():
 
         row = cursor.fetchone()
         has_liked = row["count"] > 0
-        return jsonify({"hasLiked": has_liked}), 200
+
+        # Get total likes count
+        cursor.execute(
+            """
+            SELECT COUNT(*) as count
+            FROM Like
+            WHERE RelatedTypeID = ?
+                AND RelatedID = ?
+            """,
+            (related_type_id, related_id))
+
+        row = cursor.fetchone()
+        total_likes = row["count"]
+
+        return jsonify({
+            "hasLiked": has_liked,
+            "totalLikes": total_likes
+        }), 200
     finally:
         cursor.close()
         connection.close() 

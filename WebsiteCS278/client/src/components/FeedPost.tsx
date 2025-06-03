@@ -72,6 +72,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       
       const data = await response.json();
       setIsLiked(data.hasLiked);
+      setLikes(data.totalLikes); // Update likes count from server
     } catch (error) {
       console.error('Error checking like status:', error);
     }
@@ -103,15 +104,13 @@ export const FeedPost: React.FC<FeedPostProps> = ({
   useEffect(() => {
     const handleBroadcastLiked = (event: CustomEvent) => {
       if (event.detail.broadcastId === id) {
-        setIsLiked(true);
-        setLikes(prev => prev + 1);
+        checkLikeStatus(); // Recheck status and count from server
       }
     };
 
     const handleBroadcastUnliked = (event: CustomEvent) => {
       if (event.detail.broadcastId === id) {
-        setIsLiked(false);
-        setLikes(prev => prev - 1);
+        checkLikeStatus(); // Recheck status and count from server
       }
     };
 
@@ -122,7 +121,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
       window.removeEventListener('broadcastLiked', handleBroadcastLiked as EventListener);
       window.removeEventListener('broadcastUnliked', handleBroadcastUnliked as EventListener);
     };
-  }, [id]);
+  }, [id, checkLikeStatus]);
 
   const handleDelete = async () => {
     if (!userDetails) return;
