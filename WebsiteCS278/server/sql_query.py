@@ -25,8 +25,6 @@ def store_like(user_id, related_type_id, related_id):
         
         row = cursor.fetchone()
         if row["count"] > 0:
-            cursor.close()
-            connection.close()
             return 0  # Like already exists
 
         # Insert new like

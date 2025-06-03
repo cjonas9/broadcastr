@@ -158,7 +158,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
 
       const data = await response.json();
       
-      if (response.status === 409) {
+      if (response.status === 409 || data.success === 0) {
         // Like already exists, just update the UI state
         setIsLiked(true);
         return;
