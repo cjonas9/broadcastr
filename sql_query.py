@@ -8,7 +8,7 @@ import time
 
 import db_query
 
-BROADCASTR_DB = "./data/broadcastr.db"
+BROADCASTR_DB = "/renderdisk/data/broadcastr.db"
 
 DEFAULT_PFP = "https://w7.pngwing.com/pngs/135/630/png-transparent-falling-in-love-woman-anxiety-student-others-angle-woman-ecchi-thumbnail.png"
 
