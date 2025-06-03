@@ -360,3 +360,58 @@ def api_get_song_swaps():
     ]
 
     return jsonify({ "songSwaps": song_swaps })
+
+@song_swap_bp.route("/api/find-song-swap-match", methods=['GET'])
+def api_find_song_swap_match():
+    user = request.args.get("user", "")
+    user_id = sql_query.query_user_id(user)
+    matched_user_id = sql_query.query_matched_user_for_song_swap(user_id)
+    if matched_user_id == 0:
+        return jsonify({"error": "Could not locate a matched user for song swap."}), 400
+    matched_user_profile = sql_query.query_user_name(matched_user_id)
+    return jsonify({
+        "matched_user_id": matched_user_id,
+        "matched_user_profile": matched_user_profile
+    }), 200
+
+@song_swap_bp.route("/api/create-song-swap", methods=['POST'])
+def api_create_song_swap():
+    user = request.args.get("user", "")
+    matched_user = request.args.get("matched_user", "")
+
+    user_id = sql_query.query_user_id(user)
+    matched_user_id = sql_query.query_user_id(matched_user)
+
+    error_string = validation.validate_song_swap(user_id)
+    if error_string != "":
+        return jsonify({"error": error_string}), 400
+
+    connection = sql_query.get_db_connection_isolation_none()
+    cursor = connection.cursor()
+    cursor.execute(
+        """
+        INSERT INTO SongSwap(InitiatedUserID, MatchedUserID, SwapInitiatedTimestamp)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+        """,
+        (user_id, matched_user_id)
+    )
+    new_swap_id = cursor.lastrowid
+    cursor.close()
+    connection.close()
+
+    # Only create broadcast here
+    sql_query.store_broadcast(
+        0,
+        constants.SYSTEM_ACCOUNT_ID,
+        "New Song Swap",
+        f"{user} has initiated a Song Swap with {matched_user}!",
+        related_type_enum.RelatedType.SONG_SWAP.value,
+        new_swap_id
+    )
+
+    return jsonify({
+        "success": True,
+        "song_swap_id": new_swap_id,
+        "matched_user_id": matched_user_id,
+        "matched_user_profile": matched_user
+    }), 201
