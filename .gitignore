@@ -4,3 +4,4 @@ node_modules/
 .pylintrc
 renderdisk/
 data/
+localdisk/

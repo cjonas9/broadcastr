@@ -246,6 +246,7 @@ def api_user_top_broadcasted_tracks():
           AND Like.RelatedTypeID = ?
         WHERE Broadcast.RelatedTypeID = ?
           AND Broadcast.UserID = ?
+          AND Broadcast.Deleted = 0
         GROUP BY Broadcast.BroadcastID, Track.TrackID, Track.TrackName,
             Artist.ArtistName, Track.LastFmTrackUrl
         ORDER BY COUNT(Like.LikeID) DESC, Broadcast.Timestamp DESC

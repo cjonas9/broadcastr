@@ -51,7 +51,7 @@ def query_users():
 def store_top_artists():
     user_input = request.json.get('input')
     period = request.json.get('period')
-    result = sql_query.store_top_artists(user_input, period)
+    result = db_query.store_top_artists(user_input, period)
     return jsonify({'output': result})
 
 @app.route('/query_top_artists', methods=['POST'])
@@ -65,7 +65,7 @@ def query_top_artists():
 def store_top_albums():
     user_input = request.json.get('input')
     period = request.json.get('period')
-    result = sql_query.store_top_albums(user_input, period)
+    result = db_query.store_top_albums(user_input, period)
     return jsonify({'output': result})
 
 @app.route('/query_top_albums', methods=['POST'])
@@ -79,7 +79,7 @@ def query_top_albums():
 def store_top_tracks():
     user_input = request.json.get('input')
     period = request.json.get('period')
-    result = sql_query.store_top_tracks(user_input, period)
+    result = db_query.store_top_tracks(user_input, period)
     return jsonify({'output': result})
 
 @app.route('/query_top_tracks', methods=['POST'])
@@ -98,12 +98,12 @@ def get_user_info():
 @app.route('/store_last_fm_user_info', methods=['POST'])
 def store_user_last_fm_info():
     user_input = request.json.get('input')
-    sql_query.store_user_last_fm_info(user_input)
+    db_query.store_user_last_fm_info(user_input)
     return jsonify({'output': 'success'})
 
 @app.route('/store_last_fm_all_user_info', methods=['POST'])
 def store_all_users_last_fm_info():
-    sql_query.store_all_users_last_fm_info()
+    db_query.store_all_users_last_fm_info()
     return jsonify({'output': 'success'})
 
 if __name__ == '__main__':

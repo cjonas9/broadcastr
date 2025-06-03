@@ -3,6 +3,8 @@ This module provides supporting functions for API routes pertaining to following
 """
 from flask import Blueprint, jsonify, request
 import related_type_enum
+
+import constants
 import sql_query
 
 following_bp = Blueprint('following', __name__)
@@ -48,7 +50,7 @@ def api_user_follow():
     connection.close()
 
     sql_query.store_broadcast(0,
-                              sql_query.SYSTEM_ACCOUNT_ID,
+                              constants.SYSTEM_ACCOUNT_ID,
                               "New Following",
                               f"{follower} is now following {followee}!",
                               related_type_enum.RelatedType.FOLLOWING.value,

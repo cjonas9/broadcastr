@@ -2,6 +2,8 @@
 This module provides supporting functions for API routes pertaining to song swaps.
 """
 from flask import Blueprint, jsonify, request
+
+import constants
 import related_type_enum
 import sql_query
 import validation
@@ -54,7 +56,7 @@ def api_initiate_song_swap():
     connection.close()
 
     sql_query.store_broadcast(0,
-                              sql_query.SYSTEM_ACCOUNT_ID,
+                              constants.SYSTEM_ACCOUNT_ID,
                               "New Song Swap",
                               f"{user} has initiated a Song Swap with {matched_user_profile}!",
                               related_type_enum.RelatedType.SONG_SWAP.value,
@@ -212,7 +214,7 @@ def api_add_song_swap_reaction():
 
     # These could theoretically link to the track, but opted to link them to the song swap for now.
     sql_query.store_broadcast(0,
-                              sql_query.SYSTEM_ACCOUNT_ID,
+                              constants.SYSTEM_ACCOUNT_ID,
                               title,
                               f"{user} has given their Song Swap track, {track_name}, a score of {reaction}!",
                               related_type_enum.RelatedType.SONG_SWAP.value,

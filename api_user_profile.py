@@ -3,6 +3,9 @@ This module provides supporting functions for API routes pertaining to user prof
 """
 from flask import Blueprint, jsonify, request
 import bcrypt
+
+import constants
+import db_query
 import related_type_enum
 import sql_query
 
@@ -127,10 +130,10 @@ def api_user_create_profile():
     connection.close()
 
     # Refresh/store all last.fm data for this user
-    sql_query.refresh_user_data(user)
+    db_query.refresh_user_data(user)
 
     sql_query.store_broadcast(0,
-                              sql_query.SYSTEM_ACCOUNT_ID,
+                              constants.SYSTEM_ACCOUNT_ID,
                               "New Broadcastr",
                               f"{user} has joined Broadcastr. Welcome {user}!",
                               related_type_enum.RelatedType.USER.value,
@@ -158,7 +161,7 @@ def api_user_login():
     user_id = sql_query.query_user_id(user)
 
     # Prevent logging in as invalid or system account
-    if user_id in (0, sql_query.SYSTEM_ACCOUNT_ID):
+    if user_id in (0, constants.SYSTEM_ACCOUNT_ID):
         return jsonify({"success": False, "error": "Missing or invalid user"}), 400
     # if not password.strip():
     #     return jsonify({"error": "password is required"}), 400
