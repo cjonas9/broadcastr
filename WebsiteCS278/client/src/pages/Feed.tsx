@@ -158,7 +158,9 @@ export default function Feed() {
                 id: 0,
                 username: broadcast.user,
                 swag: 0,
-                profileImage: broadcast.user_pfp_med || broadcast.user_pfp_sm || broadcast.user_pfp_lg || broadcast.user_pfp_xl || "https://via.placeholder.com/100"
+                profileImage: (broadcast.user === "System" || broadcast.user === "@System")
+                  ? "https://i.ibb.co/Q7fkzTqg/bc-logo.png"
+                  : broadcast.user_pfp_lg || broadcast.user_pfp_med || broadcast.user_pfp_xl || broadcast.user_pfp_sm
               }}
               timeAgo={new Date(broadcast.timestamp).toLocaleDateString()}
               content={broadcast.title}
