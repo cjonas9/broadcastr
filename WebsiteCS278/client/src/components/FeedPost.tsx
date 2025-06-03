@@ -34,6 +34,7 @@ type FeedPostProps = {
   },
   timeAgo: string;
   content: string;
+  body?: string;
   type: "activity" | "activity-link" | "track";
   linkText?: string;
   linkHref?: string;
@@ -47,6 +48,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
   user,
   timeAgo,
   content,
+  body,
   type,
   linkText,
   linkHref,
@@ -257,7 +259,14 @@ export const FeedPost: React.FC<FeedPostProps> = ({
             )}
           </div>
           <div className="text-white mt-1">
-            {content}
+            {/* Title */}
+            {content && (
+              <h3 className="font-semibold text-lg mb-1">{content}</h3>
+            )}
+            {/* Body */}
+            {body && type !== "track" && (
+              <p className="text-gray-200">{body}</p>
+            )}
             {type === "activity-link" && linkText && linkHref && (
               <div>
                 <a

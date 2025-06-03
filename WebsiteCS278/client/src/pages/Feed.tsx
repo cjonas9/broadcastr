@@ -157,6 +157,7 @@ export default function Feed() {
               }}
               timeAgo={new Date(broadcast.timestamp).toLocaleDateString()}
               content={broadcast.title}
+              body={broadcast.type.toLowerCase() === "track" ? undefined : broadcast.body}
               type={broadcast.type.toLowerCase() === "track" ? "track" : "activity"}
               track={broadcast.type.toLowerCase() === "track" ? {
                 id: broadcast.relatedid,
