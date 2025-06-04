@@ -27,6 +27,41 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { userDetails } = useAuth();
+  const [userProfile, setUserProfile] = useState<{
+    pfpsm?: string;
+    pfpmed?: string;
+    pfplg?: string;
+    pfpxl?: string;
+  } | null>(null);
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (username === userDetails?.profile) {
+        setUserProfile(userDetails);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(username)}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+
+        const data = await response.json();
+        if (data.userProfile && data.userProfile.length > 0) {
+          setUserProfile(data.userProfile[0]);
+        }
+      } catch (err) {
+        console.error('Error fetching user profile:', err);
+      }
+    };
+
+    fetchUserProfile();
+  }, [username, userDetails]);
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -180,7 +215,9 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
               id: 0,
               username,
               swag: 0,
-              profileImage: userDetails?.pfpmed || userDetails?.pfpsm || userDetails?.pfpxl || "https://via.placeholder.com/100"
+              profileImage: (username === "System" || username === "@System")
+                ? "https://i.ibb.co/Q7fkzTqg/bc-logo.png"
+                : userProfile?.pfpmed || userProfile?.pfpsm || userProfile?.pfplg || userProfile?.pfpxl || "https://via.placeholder.com/100"
             }}
             timeAgo=""
             content=""

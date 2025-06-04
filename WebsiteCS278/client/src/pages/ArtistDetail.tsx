@@ -75,7 +75,7 @@ export default function ArtistDetail() {
         const tlRes = await fetch(
           API_CONFIG.baseUrl + `/api/artist/top-listeners?artist=${encodeURIComponent(
             artist.name
-          )}&period=overall&limit=50`
+          )}&period=overall&limit=50&current_user=${encodeURIComponent(currentUser.username)}`
         );
         const { topListeners: fetchedTL } = await tlRes.json();
 
