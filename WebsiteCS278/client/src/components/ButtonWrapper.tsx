@@ -21,7 +21,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   icon?: React.ReactNode;
   width?: ButtonWidth;
-  corner?: "rounded-full" | "rounded-md";
+  corner?: "rounded-full" | "rounded-lg";
   children: React.ReactNode;
 }
 
@@ -50,7 +50,7 @@ export const ButtonWrapper = forwardRef<HTMLButtonElement, ButtonProps>(({
         "inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full font-medium transition-colors",
         variantClasses[variant],
         width === "full" ? "w-full" : "w-auto",
-        corner === "rounded-full" ? "rounded-full" : "rounded-md",
+        corner === "rounded-full" ? "rounded-full" : "rounded-lg",
         className
       )}
       disabled={isDisabled}
