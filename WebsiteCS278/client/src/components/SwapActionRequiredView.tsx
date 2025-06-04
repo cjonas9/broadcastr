@@ -25,6 +25,7 @@ interface SwapActionRequiredViewProps {
   ratingStage: 'rate' | 'select';
   ratingValue?: number;
   isSending?: boolean;
+  userDetails: { profile: string };
 }
 
 const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
@@ -39,7 +40,8 @@ const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
   onSendTrack,
   ratingStage,
   ratingValue,
-  isSending
+  isSending,
+  userDetails
 }) => {
   const [localRating, setLocalRating] = useState<number | undefined>(ratingValue);
 
@@ -113,7 +115,7 @@ const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
           <TrackSelector
             selectedTrack={selectedTrack ?? null}
             onTrackSelect={onTrackSelect ?? (() => {})}
-            username={otherUser}
+            username={userDetails.profile}
             label="Select a track to send them"
           />
         </div>
