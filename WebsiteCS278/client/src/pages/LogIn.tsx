@@ -47,7 +47,7 @@ export default function LogIn() {
 			onChange={e => setPassword(e.target.value)}
 		/>
 		<ButtonWrapper
-			className="w-full bg-[#6C4ED9] text-white font-bold py-4 rounded-full mb-4 text-lg"
+			className="w-full bg-[#6C4ED9] text-white font-bold rounded-full mb-4 text-lg"
 			onClick={() => handleLogin()}
 		>
 			Log In
