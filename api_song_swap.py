@@ -170,7 +170,7 @@ def api_add_song_swap_reaction():
         track_sql = """
             SELECT Track.TrackName
             FROM Track
-            INNER JOIN SongSwap ON Track.TrackID = SongSwap.InitiatedTrackID
+            INNER JOIN SongSwap ON Track.TrackID = SongSwap.MatchedTrackID
             WHERE SongSwap.SongSwapID = ?
         """
     elif user_type == "matched":
@@ -184,7 +184,7 @@ def api_add_song_swap_reaction():
         track_sql = """
             SELECT Track.TrackName
             FROM Track
-            INNER JOIN SongSwap ON Track.TrackID = SongSwap.MatchedTrackID
+            INNER JOIN SongSwap ON Track.TrackID = SongSwap.InitiatedTrackID
             WHERE SongSwap.SongSwapID = ?
         """
 
