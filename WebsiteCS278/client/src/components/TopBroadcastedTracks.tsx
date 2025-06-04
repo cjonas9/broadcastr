@@ -175,8 +175,8 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   if (loading && tracks.length === 0) {
     return (
       <section className="mt-8">
-        <h2 className="text-2xl font-bold text-white">Top Broadcasted Tracks</h2>
-        <p className="text-sm text-gray-400 mb-4">Loading...</p>
+        <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
+        <p className="text-center text-gray-400 text-sm mb-6">Loading...</p>
       </section>
     );
   }
@@ -184,8 +184,8 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   if (error) {
     return (
       <section className="mt-8">
-        <h2 className="text-2xl font-bold text-white">Top Broadcasted Tracks</h2>
-        <p className="text-sm text-gray-400 mb-4">Failed to load tracks</p>
+        <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
+        <p className="text-center text-gray-400 text-sm mb-6">Failed to load tracks</p>
       </section>
     );
   }
@@ -193,16 +193,16 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   if (!tracks.length) {
     return (
       <section className="mt-8">
-        <h2 className="text-2xl font-bold text-white">Top Broadcasted Tracks</h2>
-        <p className="text-sm text-gray-400 mb-4">No broadcasted tracks yet</p>
+        <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
+        <p className="text-center text-gray-400 text-sm mb-6">No broadcasted tracks yet</p>
       </section>
     );
   }
 
   return (
     <section className="mt-8">
-      <h2 className="text-2xl font-bold text-white">Top Broadcasted Tracks</h2>
-      <p className="text-sm text-gray-400 mb-4">
+        <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
+      <p className="text-center text-gray-400 text-sm mb-6">
         Tracks broadcasted that were most liked by other broadcastrs
       </p>
       
@@ -235,7 +235,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 mb-8">
         <ButtonWrapper
           width="full"
           variant="secondary"
