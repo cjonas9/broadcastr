@@ -177,39 +177,50 @@ export default function FriendProfile() {
   return (
     <div className="bg-gray-900 min-h-screen">
       <BottomToolbar />
-      
-      <ProfileHeader
-        username={"@" + friendProfile.profile}
-        profileImage={
-          friendProfile.pfpmed ||
-          friendProfile.pfpsm ||
-          friendProfile.pfpxl ||
-          "https://via.placeholder.com/100"
-        }
-        swag={friendProfile.swag}
-        showActions={true}
-        onMessageClick={() => setLocation(`/dm/${friendProfile.profile}`)}
-        refreshKey={refreshKey}
-      />
-
-      <div className="flex justify-center gap-4 my-4">
-        {userDetails && userDetails.profile !== friendProfile.profile && (
-          <ButtonWrapper
-            width="hug"
-            variant={isFollowing ? "secondary" : "primary"}
-            onClick={handleFollowClick}
-            className={isFollowing ? "!hover:bg-red-600" : ""}
-            disabled={followLoading}
+      <div className="max-w-md mx-auto p-6">
+          <button 
+            className="text-2xl mb-4 text-white"
+            onClick={() => window.history.back()}
           >
-            {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
-          </ButtonWrapper>
-        )}
-      </div>
+            ←
+          </button>
 
-      <main className="max-w-md mx-auto px-4 pb-16">
-        {friendProfile && <TopBroadcastedTracks username={friendProfile.profile} />}
-        {friendProfile && <TopArtists username={friendProfile.profile} />}
-      </main>
+        <ProfileHeader
+          username={"@" + friendProfile.profile}
+          profileImage={
+            friendProfile.pfpmed ||
+            friendProfile.pfpsm ||
+            friendProfile.pfpxl ||
+            "https://via.placeholder.com/100"
+          }
+          swag={friendProfile.swag}
+          showActions={true}
+          refreshKey={refreshKey}
+        />
+    
+        <div className="flex justify-center gap-4 mb-16">
+          {userDetails && userDetails.profile !== friendProfile.profile && (
+            <ButtonWrapper
+              width="hug"
+              corner="rounded-lg"
+              variant={isFollowing ? "secondary" : "primary"}
+              onClick={handleFollowClick}
+              className={isFollowing ? "!hover:bg-red-600" : ""}
+              disabled={followLoading}
+            >
+              {followLoading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
+            </ButtonWrapper>
+          )}
+          <ButtonWrapper variant="secondary" corner="rounded-lg" onClick={() => setLocation(`/dm/${friendProfile.profile}`)}>
+              Message
+          </ButtonWrapper>
+        </div>
+
+        <main className="max-w-md mx-auto pb-24">
+          {friendProfile && <TopBroadcastedTracks username={friendProfile.profile} />}
+          {friendProfile && <TopArtists username={friendProfile.profile} />}
+        </main>
+      </div>
     </div>
   );
 }
