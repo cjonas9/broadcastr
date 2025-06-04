@@ -271,13 +271,6 @@ export default function TrackSwapDetail() {
             otherUser={otherUser}
             otherUserProfile={otherUserProfile}
             sentTrack={sentTrack}
-            receivedTrack={isInitiator ? undefined : {
-              id: swap.initiated_track_id,
-              name: swap.initiated_track_name || '',
-              artist: swap.initiated_artist_name || '',
-              playCount: 0
-            }}
-            receivedRating={isInitiator ? undefined : (swap.matched_reaction || undefined)}
             onProfileClick={() => setLocation(`/profile/${otherUser.replace(/^@/, "")}`)}
             isInitiator={isInitiator}
           />

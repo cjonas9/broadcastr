@@ -76,7 +76,10 @@ export default function TrackSwapEntry() {
           </ButtonWrapper>
           <ButtonWrapper
             width="full"
-            onClick={() => setLocation("/track-swap")}
+            onClick={() => {
+              localStorage.setItem('should_fetch_new_match', 'true');
+              setLocation("/track-swap");
+            }}
           >
             Start Track Swap
           </ButtonWrapper>
