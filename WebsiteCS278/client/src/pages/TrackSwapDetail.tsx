@@ -271,6 +271,13 @@ export default function TrackSwapDetail() {
             otherUser={otherUser}
             otherUserProfile={otherUserProfile}
             sentTrack={sentTrack}
+            receivedTrack={isInitiator ? undefined : {
+              id: swap.initiated_track_id,
+              name: swap.initiated_track_name || '',
+              artist: swap.initiated_artist_name || '',
+              playCount: 0
+            }}
+            receivedRating={isInitiator ? undefined : (swap.matched_reaction || undefined)}
             onProfileClick={() => setLocation(`/profile/${otherUser.replace(/^@/, "")}`)}
             isInitiator={isInitiator}
           />
@@ -295,7 +302,7 @@ export default function TrackSwapDetail() {
     }
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
-        <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
+        <div className="max-w-md mx-auto w-full mb-24">
           <button className="text-2xl mb-2 text-left" onClick={() => setLocation("/track-swap-history")}>←</button>
           <SwapActionRequiredView
             isReceiver={isReceiver}
