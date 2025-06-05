@@ -59,7 +59,7 @@ export default function TrackSwapEntry() {
               <Trophy className="w-6 h-6 text-purple-400 mt-1" />
               <div>
                 <h3 className="font-semibold mb-1">3. Earn Swag</h3>
-                <p className="text-gray-400">Get +5 swag points when your match saves your track!</p>
+                <p className="text-gray-400">Your match will rate your track, and you'll get up to +5swag points based on their rating!</p>
               </div>
             </div>
           </div>
