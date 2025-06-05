@@ -6,8 +6,6 @@ import { API_CONFIG } from '@/config';
 
 interface Conversation {
   conversant: string;
-  messageCount: number;
-  unreadCount: number;
   lastConversation: string;
 }
 
@@ -38,8 +36,6 @@ export default function MessageBubble() {
         const data = await response.json();
         setConversations(data.conversations.map((conv: any) => ({
           conversant: conv.conversant,
-          messageCount: conv.messagecount,
-          unreadCount: conv.unreadcount,
           lastConversation: conv.lastconversation
         })));
         setError(null);
@@ -57,8 +53,6 @@ export default function MessageBubble() {
     }
   }, [userDetails?.profile]); // only re-run on login/logout
 
-  const totalUnread = conversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
-
   if (!userDetails) return null;
 
   return (
@@ -69,11 +63,6 @@ export default function MessageBubble() {
         className="relative bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg"
       >
         <MessageCircle size={24} />
-        {totalUnread > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {totalUnread}
-          </div>
-        )}
       </button>
 
       {/* convo panel */}
@@ -118,11 +107,6 @@ export default function MessageBubble() {
                         })}
                       </div>
                     </div>
-                    {conv.unreadCount > 0 && (
-                      <div className="bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {conv.unreadCount}
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>
