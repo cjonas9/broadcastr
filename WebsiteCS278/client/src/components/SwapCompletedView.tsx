@@ -30,13 +30,13 @@ const SwapCompletedView: React.FC<SwapCompletedViewProps> = ({
   onProfileClick
 }) => (
   <div className="mb-24">
-    <Heading level={2} serif={true} className="mb-6 text-4xl text-white">
+    <Heading level={2} serif={true} className="mb-3">
       Track Swap Results
     </Heading>
     <div className="mb-4">
       <StatusTag label="Complete" variant="completed" />
     </div>
-    <p className="mb-8 text-gray-400 text-md">
+    <p className="mb-4 text-gray-400 text-md">
       See how many swag points you rewarded each other's track swap!
     </p>
     <div className="mb-8 p-4 rounded-xl" style={{background: 'linear-gradient(90deg, #2B185A 0%, #A21CAF 100%)'}}>

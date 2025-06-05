@@ -64,22 +64,22 @@ def query_config(config_key):
 
 	return result
 
-def query_users():
-	"""
-	Queries the database for all user records.
-	Returns:
-		json results for users in the database
-	"""
-	connection = get_db_connection()
-	cursor = connection.cursor()
+# def query_users():
+# 	"""
+# 	Queries the database for all user records.
+# 	Returns:
+# 		json results for users in the database
+# 	"""
+# 	connection = get_db_connection()
+# 	cursor = connection.cursor()
 
-	cursor.execute("SELECT * FROM User")
-	data = cursor.fetchall()
+# 	cursor.execute("SELECT * FROM User")
+# 	data = cursor.fetchall()
 
-	cursor.close()
-	connection.close()
+# 	cursor.close()
+# 	connection.close()
 
-	return json.dumps(data)
+# 	return json.dumps(data)
 
 def query_related_type_tables():
 	"""
@@ -239,15 +239,15 @@ def query_user_name(user_id):
 	"""
 	return query_id("LastFmProfileName", "User", [["UserID", user_id]])
 
-def query_swag(username):
+def query_swag(user_id):
 	"""
 	Queries the database for current swag of a user.
 	Args:
-		username: The user's last.fm profile name
+		username: The user's numeric database id
 	Returns:
 		numeric swag amount
 	"""
-	return query_id("Swag", "User", [["LastFmProfileName", username]])
+	return query_id("Swag", "User", [["UserID", user_id]])
 
 def query_user_id_by_email(email):
 	"""
@@ -258,6 +258,26 @@ def query_user_id_by_email(email):
 		numeric user id
 	"""
 	return query_id("UserID", "User", [["EmailAddress", email]])
+
+def query_initiated_user_id(song_swap_id):
+	"""
+	Queries the database for the numeric id of a user who initiated a song swap.
+	Args:
+		song_swap_id: numeric database id of the song swap record
+	Returns:
+		numeric initiated user id
+	"""
+	return query_id("InitiatedUserID", "SongSwap", [["SongSwapID", song_swap_id]])
+
+def query_matched_user_id(song_swap_id):
+	"""
+	Queries the database for the numeric id of a user who matched a song swap.
+	Args:
+		song_swap_id: numeric database id of the song swap record
+	Returns:
+		numeric matched user id
+	"""
+	return query_id("MatchedUserID", "SongSwap", [["SongSwapID", song_swap_id]])
 
 def query_user_salt(username):
 	"""
@@ -303,6 +323,16 @@ def query_album_id(albumname, artistid):
 	"""
 	# Simply doing a name lookup for now, but MBID might be better with name as a fallback
 	return query_id("AlbumID", "Album", [["AlbumName", albumname], ["ArtistID", artistid]])
+
+def query_broadcastr_id(broadcast_id):
+	"""
+	Queries the database for the numeric id of a broadcastr.
+	Args:
+		broadcast_id: The database id of the broadcast to look up
+	Returns:
+		numeric user id
+	"""
+	return query_id("UserID", "Broadcast", [["BroadcastID", broadcast_id]])
 
 def query_related_type_id(relatedtype):
 	"""
@@ -805,16 +835,43 @@ def store_user(user, first_name, last_name, email, salt, hashed_password, bootst
 	cursor.execute(
 		"""
 			INSERT INTO User(LastFmProfileName, FirstName, LastName,
-							 EmailAddress, Salt, Password, BootstrappedUser)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
+							 EmailAddress, Salt, Password, BootstrappedUser, Swag)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		""",
-        (user, first_name, last_name, email, salt, hashed_password, bootstrapped))
+        (user, first_name, last_name, email, salt, hashed_password,
+		 bootstrapped, constants.SWAG_STARTING_BALANCE))
 
 	cursor.close()
 	connection.close()
 
 	print(f"New user stored with id: {cursor.lastrowid}")
 	return cursor.lastrowid
+
+def add_swag(user_id, swag):
+	"""
+	Adds swag to a user's profile.
+	Args:
+		username: profile name of the user account
+		add_swag: integer amount of swag to add
+	Returns:
+		numeric new swag balance for this user
+	"""
+	current_swag = query_swag(user_id)
+	new_swag = current_swag + int(swag)
+
+	connection = get_db_connection_isolation_none()
+	cursor = connection.cursor()
+
+	cursor.execute(
+        "UPDATE User " \
+        "SET Swag = ? " \
+        "WHERE UserID = ?",
+        (new_swag, user_id))
+
+	cursor.close()
+	connection.close()
+
+	return new_swag
 
 def user_refresh_due(user_id):
 	"""

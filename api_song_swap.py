@@ -159,6 +159,7 @@ def api_add_song_swap_reaction():
 
     sql = ""
     track_sql = ""
+    user_id_recommended_track = 0
     if user_type == "initiated":
         sql = """
             UPDATE SongSwap
@@ -170,9 +171,10 @@ def api_add_song_swap_reaction():
         track_sql = """
             SELECT Track.TrackName
             FROM Track
-            INNER JOIN SongSwap ON Track.TrackID = SongSwap.InitiatedTrackID
+            INNER JOIN SongSwap ON Track.TrackID = SongSwap.MatchedTrackID
             WHERE SongSwap.SongSwapID = ?
         """
+        user_id_recommended_track = sql_query.query_matched_user_id(song_swap_id)
     elif user_type == "matched":
         sql = """
             UPDATE SongSwap
@@ -184,9 +186,10 @@ def api_add_song_swap_reaction():
         track_sql = """
             SELECT Track.TrackName
             FROM Track
-            INNER JOIN SongSwap ON Track.TrackID = SongSwap.MatchedTrackID
+            INNER JOIN SongSwap ON Track.TrackID = SongSwap.InitiatedTrackID
             WHERE SongSwap.SongSwapID = ?
         """
+        user_id_recommended_track = sql_query.query_initiated_user_id(song_swap_id)
 
     cursor.execute(sql, (reaction, user_id, song_swap_id))
 
@@ -219,6 +222,10 @@ def api_add_song_swap_reaction():
                               f"{user} has given their Song Swap track, {track_name}, a score of {reaction}!",
                               related_type_enum.RelatedType.SONG_SWAP.value,
                               song_swap_id)
+
+    # Give swag to the user who recommended this track
+    if user_id_recommended_track != 0:
+        sql_query.add_swag(user_id_recommended_track, reaction)
 
     return jsonify({"success": True}), 200
 

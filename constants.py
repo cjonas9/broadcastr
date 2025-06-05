@@ -18,4 +18,10 @@ REFRESH_DAYS = "1"
 # Periods use when refreshing top artist/track data
 REFRESH_PERIODS = ["overall", "7day", "1month", "12month"]
 
+# Amount of swag a user receives when someone likes their broadcast
+SWAG_LIKED_BROADCAST = 1
+
+# New users get this much swag on profile creation
+SWAG_STARTING_BALANCE = 5
+
 SYSTEM_ACCOUNT_ID = 1

@@ -25,6 +25,7 @@ interface SwapActionRequiredViewProps {
   ratingStage: 'rate' | 'select';
   ratingValue?: number;
   isSending?: boolean;
+  userDetails: { profile: string };
 }
 
 const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
@@ -39,7 +40,8 @@ const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
   onSendTrack,
   ratingStage,
   ratingValue,
-  isSending
+  isSending,
+  userDetails
 }) => {
   const [localRating, setLocalRating] = useState<number | undefined>(ratingValue);
 
@@ -62,15 +64,15 @@ const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
 
   return (
     <div>
-      <Heading level={2} serif={true}>
-        You Received a Track Swap
+      <Heading level={2} serif={true} className="mb-3">
+        {isReceiver ? "You've Received a Track Swap Invite" : "Your Match Has Responded"}
       </Heading>
       <div className="mb-3">
         <StatusTag label="Action Required" variant="action_required" />
       </div>
       <p className="mb-8 text-gray-400 text-md">
         {isReceiver
-          ? 'Rate the track you received and send a track from your recent top tracks. The more your match likes it, the more swag points you get!'
+          ? 'Rate the track you received and send a track from your recent top tracks. The more your match likes the track you send, the more swag points you get!'
           : 'Let your match know how much you like the track they sent you. This determines how many swag points they get!'}
       </p>
       <div className="mb-6">
@@ -113,7 +115,7 @@ const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
           <TrackSelector
             selectedTrack={selectedTrack ?? null}
             onTrackSelect={onTrackSelect ?? (() => {})}
-            username={otherUser}
+            username={userDetails.profile}
             label="Select a track to send them"
           />
         </div>
@@ -122,7 +124,7 @@ const SwapActionRequiredView: React.FC<SwapActionRequiredViewProps> = ({
         width="full"
         onClick={handleSend}
         disabled={!canSend}
-        className={`mt-4 text-lg mb-24 ${!canSend ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`mt-4 text-lg ${!canSend ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {isReceiver ? 'Send Rating & Track' : 'View Swap Results'}
       </ButtonWrapper>

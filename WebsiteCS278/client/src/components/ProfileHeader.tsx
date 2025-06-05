@@ -2,6 +2,7 @@ import { LightningBoltIcon } from "@/lib/icons";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { API_CONFIG } from "@/config";
+import { ButtonWrapper } from "./ButtonWrapper";
 
 type ProfileHeaderProps = {
   username: string;
@@ -43,7 +44,7 @@ export default function ProfileHeader({ username, profileImage, swag, showAction
   }, [cleanUsername, refreshKey]);
 
   return (
-    <header className="flex flex-col items-center pt-10 pb-4">
+    <header className="flex flex-col items-center pt-4 pb-4">
       <div className="w-28 h-28 rounded-full bg-gray-800 overflow-hidden mb-3 border-2 border-[#7C3AED]">
         <img 
           src={profileImage}
@@ -75,18 +76,6 @@ export default function ProfileHeader({ username, profileImage, swag, showAction
           <div className="text-gray-400 text-sm">Following</div>
         </div>
       </div>
-
-      {/* Extra buttons */}
-      {showActions && (
-        <div className="mt-4 flex gap-4">
-          <button className="bg-white text-gray-900 font-medium px-4 py-2 rounded-lg hover:bg-gray-200 transition" onClick={onMessageClick}>
-            Message
-          </button>
-          <button className="bg-purple-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-purple-500 transition">
-            Spotify Profile
-          </button>
-        </div>
-      )}
     </header>
   );
 }

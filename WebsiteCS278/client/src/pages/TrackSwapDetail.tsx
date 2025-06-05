@@ -267,11 +267,12 @@ export default function TrackSwapDetail() {
       <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
         <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
           <button className="text-2xl mb-2 text-left" onClick={() => setLocation("/track-swap-history")}>←</button>
-          <SwapPendingView
+          <SwapPendingView  
             otherUser={otherUser}
             otherUserProfile={otherUserProfile}
             sentTrack={sentTrack}
             onProfileClick={() => setLocation(`/profile/${otherUser.replace(/^@/, "")}`)}
+            isInitiator={isInitiator}
           />
           <BottomToolbar />
         </div>
@@ -294,7 +295,7 @@ export default function TrackSwapDetail() {
     }
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
-        <div className="max-w-md mx-auto w-full flex-1 flex flex-col">
+        <div className="max-w-md mx-auto w-full mb-24">
           <button className="text-2xl mb-2 text-left" onClick={() => setLocation("/track-swap-history")}>←</button>
           <SwapActionRequiredView
             isReceiver={isReceiver}
@@ -323,6 +324,7 @@ export default function TrackSwapDetail() {
             ratingStage={ratingStage}
             ratingValue={undefined}
             isSending={isSubmittingRating}
+            userDetails={userDetails}
           />
           <BottomToolbar />
         </div>

@@ -29,29 +29,38 @@ export default function TrackSwap() {
   const [songSwapId, setSongSwapId] = useState<number | null>(null);
   const { setSwapTrack, setMatchUser } = useSwap();
 
+  // Initialize state from localStorage on mount
+  useEffect(() => {
+    const storedMatch = localStorage.getItem(MATCHED_USER_KEY);
+    const storedSwapId = localStorage.getItem(SONG_SWAP_ID_KEY);
+    
+    if (storedMatch) {
+      setMatchedUser(JSON.parse(storedMatch));
+      setMatchUser(JSON.parse(storedMatch));
+    }
+    if (storedSwapId) {
+      setSongSwapId(parseInt(storedSwapId));
+    }
+  }, [setMatchUser]);
+
   // Fetch matched user when component mounts
   useEffect(() => {
     const fetchMatchedUser = async () => {
       if (!userDetails) return;
 
-      //Check if we already have a match stored
-      const storedMatch = localStorage.getItem(MATCHED_USER_KEY);
-      const storedSwapId = localStorage.getItem(SONG_SWAP_ID_KEY);
+      // Check if we should fetch a new match
+      const shouldFetchNewMatch = localStorage.getItem('should_fetch_new_match') === 'true';
 
-      if (storedMatch && storedSwapId) {
+      // If we have a stored match and we shouldn't fetch a new one, verify it's still valid
+      if (matchedUser && songSwapId && !shouldFetchNewMatch) {
         try {
-          // Verify the stored match is still valid
           const response = await fetch(
-            `${API_CONFIG.baseUrl}/api/get-song-swaps?user=${encodeURIComponent(userDetails.profile)}&songswapid=${storedSwapId}`
+            `${API_CONFIG.baseUrl}/api/get-song-swaps?user=${encodeURIComponent(userDetails.profile)}&songswapid=${songSwapId}`
           );
           if (response.ok) {
             const data = await response.json();
             if (data.songSwaps && data.songSwaps.length > 0) {
-              // Match is still valid, use stored data
-              const parsedMatch = JSON.parse(storedMatch);
-              setMatchedUser(parsedMatch);
-              setMatchUser(parsedMatch);
-              setSongSwapId(parseInt(storedSwapId));
+              // Match is still valid, no need to do anything
               return;
             }
           }
@@ -63,50 +72,54 @@ export default function TrackSwap() {
         }
       }
 
-      try {
-        setIsLoading(true);
-        setError(null);
+      // Only fetch a new match if we should
+      if (shouldFetchNewMatch) {
+        try {
+          setIsLoading(true);
+          setError(null);
 
-        // Call new matchmaking endpoint
-        const response = await fetch(
-          `${API_CONFIG.baseUrl}/api/find-song-swap-match?user=${encodeURIComponent(userDetails.profile)}`
-        );
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to find a match');
-        }
+          // Call new matchmaking endpoint
+          const response = await fetch(
+            `${API_CONFIG.baseUrl}/api/find-song-swap-match?user=${encodeURIComponent(userDetails.profile)}`
+          );
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to find a match');
+          }
 
-        // Fetch the user's profile using their Last.fm profile name
-        const userResponse = await fetch(
-          `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(data.matched_user_profile)}`
-        );
-        const userData = await userResponse.json();
-        if (!userResponse.ok) {
-          throw new Error('Failed to fetch matched user details');
+          // Fetch the user's profile using their Last.fm profile name
+          const userResponse = await fetch(
+            `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(data.matched_user_profile)}`
+          );
+          const userData = await userResponse.json();
+          if (!userResponse.ok) {
+            throw new Error('Failed to fetch matched user details');
+          }
+          if (!userData.userProfile || userData.userProfile.length === 0) {
+            throw new Error('No user profile data found');
+          }
+          const matchedUserData = userData.userProfile[0];
+          const newMatchedUser = {
+            username: matchedUserData.profile,
+            profileImage: matchedUserData.pfpsm || matchedUserData.pfpmed || matchedUserData.pfplg || matchedUserData.pfpxl || '',
+            swag: matchedUserData.swag || 0
+          };
+          setMatchedUser(newMatchedUser);
+          setMatchUser(newMatchedUser);
+          localStorage.setItem(MATCHED_USER_KEY, JSON.stringify(newMatchedUser));
+          // Clear the flag after fetching
+          localStorage.removeItem('should_fetch_new_match');
+        } catch (err) {
+          console.error('Error in fetchMatchedUser:', err);
+          setError(err instanceof Error ? err.message : 'Failed to find a match');
+          clearLocalStorage();
+        } finally {
+          setIsLoading(false);
         }
-        if (!userData.userProfile || userData.userProfile.length === 0) {
-          throw new Error('No user profile data found');
-        }
-        const matchedUserData = userData.userProfile[0];
-        const newMatchedUser = {
-          username: matchedUserData.profile,
-          profileImage: matchedUserData.pfpsm || matchedUserData.pfpmed || matchedUserData.pfplg || matchedUserData.pfpxl || '',
-          swag: matchedUserData.swag || 0
-        };
-        setMatchedUser(newMatchedUser);
-        setMatchUser(newMatchedUser);
-        localStorage.setItem(MATCHED_USER_KEY, JSON.stringify(newMatchedUser));
-        // Do not set songSwapId yet!
-      } catch (err) {
-        console.error('Error in fetchMatchedUser:', err);
-        setError(err instanceof Error ? err.message : 'Failed to find a match');
-        clearLocalStorage();
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchMatchedUser();
-  }, [userDetails, setMatchUser]);
+  }, [userDetails, setMatchUser, matchedUser, songSwapId]);
 
   const handleInitiateSwap = async () => {
     if (!localSelectedTrack || !userDetails || !matchedUser) return;
@@ -142,22 +155,19 @@ export default function TrackSwap() {
     }
   };
 
-  // Add a function to handle cancellation
-  const handleCancel = () => {
-    // Clear the stored match data
-    localStorage.removeItem(MATCHED_USER_KEY);
-    localStorage.removeItem(SONG_SWAP_ID_KEY);
-    setMatchedUser(null);
-    setSongSwapId(null);
-    setLocation("/track-swap-entry");
-  };
-
   // Add function to clear localStorage
   const clearLocalStorage = () => {
     localStorage.removeItem(MATCHED_USER_KEY);
     localStorage.removeItem(SONG_SWAP_ID_KEY);
+    localStorage.removeItem('should_fetch_new_match');
     setMatchedUser(null);
     setSongSwapId(null);
+  };
+
+  // Add a function to handle cancellation
+  const handleCancel = () => {
+    clearLocalStorage();
+    setLocation("/track-swap-entry");
   };
 
   // Error handling for unauthenticated users
@@ -232,12 +242,12 @@ export default function TrackSwap() {
           {/* Header */}
           <Heading level={2} serif={true} className="mb-4">Track Swap Battle</Heading>
           <p className="text-gray-400 mb-8">
-            Swap a song with your matched partner to expand your music taste! If your match saves your song, you earn +5 swag
+            Swap a song with your matched partner to expand your music taste! The challenge is you can only select tracks from your recent top listens. Their rating of your track will determine how many swag points you get!
           </p>
 
           {/* Match of the day */}
           <div className="mb-8">
-            <h2 className="text-md text-gray-400 mb-2">Your Match of the day</h2>
+            <h2 className="text-md text-gray-400 mb-2">Your Match</h2>
             <MatchProfileCard
               username={matchedUser.username}
               profileImage={matchedUser.profileImage}

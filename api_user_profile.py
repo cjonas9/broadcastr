@@ -46,7 +46,11 @@ def api_user_profile():
         LIMIT 10
     """
     conn = sql_query.get_db_connection()
-    search_term = f"%{user}%" if partial else user
+    if partial:
+        separator = "%"
+        search_term = separator + separator.join(user) + separator
+    else:
+        search_term = user
     rows = conn.execute(sql, (search_term,)).fetchall()
     conn.close()
 
@@ -74,6 +78,102 @@ def api_user_profile():
     ]
 
     return jsonify({ "userProfile": user_profile })
+
+@user_profile_bp.route("/api/user/get-users")
+def api_user_get_users():
+    """
+    Retrieves a list of user profiles.
+    Example:
+        GET /api/user/get-users?includebootstrapped=0&loggedinwithindays=7&search_term=&limit=50
+    Params:
+        includebootstrapped: 0 to exclude bootstrapped users, 1 to include them
+        loggedinwithindays: 0 for all, otherwise limit to number of days since user 
+                            has last logged in.
+        search_term: search for a matching user id, provided letters must be in correct order
+        limit: numeric value indicating the number of records to return
+    Returns JSON:
+      {
+        "userProfile": [
+          { 
+            "id": int, 
+            "profile": str,
+            "profileurl": str,
+            "bootstrapped": int,
+            "lastlogin": str,
+            "pfpsm": str,
+            "pfpmed": str,
+            "pfplg": str,
+            "pfpxl": str,
+            "swag": int
+          },
+          …
+        ]
+      }
+    """
+    includebootstrapped = request.args.get("includebootstrapped", "")
+    loggedinwithindays = request.args.get("loggedinwithindays", "")
+    search_term = request.args.get("search_term", "")
+    limit = request.args.get("limit", "")
+
+    # validate and set defaults
+    includebootstrapped = 0 if not includebootstrapped.isnumeric() else int(includebootstrapped)
+    loggedinwithindays = 0 if not loggedinwithindays.isnumeric() else int(loggedinwithindays)
+    limit = 50 if not limit.isnumeric() else int(limit)
+
+    sql = """
+        SELECT User.UserID AS id, User.LastFmProfileName AS profile,
+               User.LastFmProfileUrl AS profileurl, User.BootstrappedUser AS bootstrapped,
+               User.LastLogin AS lastlogin,
+               User.PfpSmall AS pfpsm, User.PfpMedium AS pfpmed,
+               User.PfpLarge AS pfplg, User.PfpExtraLarge AS pfpxl,
+               User.Swag AS swag
+        FROM User
+        WHERE 1=1
+    """
+    if includebootstrapped != 1:
+        sql += """
+            AND BootstrappedUser = 0
+    """
+    if loggedinwithindays != 0:
+        sql += f"""
+            AND LastLogin > DATE(CURRENT_TIMESTAMP, '-{loggedinwithindays} days')
+    """
+    if search_term != "":
+        separator = "%"
+        search_term = separator + separator.join(search_term) + separator
+        sql += """
+            AND LastFmProfileName LIKE ?
+    """
+    sql += """
+        ORDER BY User.LastFmProfileName
+        LIMIT ?
+    """
+
+    conn = sql_query.get_db_connection()
+
+    if search_term != "":
+        rows = conn.execute(sql, (search_term, limit)).fetchall()
+    else:
+        rows = conn.execute(sql, (limit,)).fetchall()
+    conn.close()
+
+    users = [
+        {
+          "id":             row["id"],
+          "profile":        row["profile"],
+          "profileurl":     row["profileurl"],
+          "bootstrapped":   row["bootstrapped"],
+          "lastlogin":      row["lastlogin"],
+          "pfpsm":          row["pfpsm"],
+          "pfpmed":         row["pfpmed"],
+          "pfplg":          row["pfplg"],
+          "pfpxl":          row["pfpxl"],
+          "swag":           row["swag"]
+        }
+        for row in rows
+    ]
+
+    return jsonify({ "userProfile": users })
 
 @user_profile_bp.route("/api/user/create-profile", methods=['POST'])
 def api_user_create_profile():
@@ -273,26 +373,14 @@ def api_user_add_swag():
         200 Success: Updated swag balance for this user.
     """
     user = request.args.get("user", "")
-    swag = request.args.get("swag", "0")
+    swag = request.args.get("swag", "")
+    swag = 0 if not swag.isnumeric() else int(swag)
 
     user_id = sql_query.query_user_id(user)
 
     if user_id == 0:
         return jsonify({"error": "Missing or invalid user"}), 400
 
-    current_swag = sql_query.query_swag(user)
-    new_swag = current_swag + int(swag)
-
-    connection = sql_query.get_db_connection_isolation_none()
-    cursor = connection.cursor()
-
-    cursor.execute(
-        "UPDATE User " \
-        "SET Swag = ? " \
-        "WHERE UserID = ?",
-        (new_swag, user_id))
-
-    cursor.close()
-    connection.close()
+    new_swag = sql_query.add_swag(user_id, swag)
 
     return jsonify({"updated swag balance": new_swag}), 200

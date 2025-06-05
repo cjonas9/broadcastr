@@ -2,6 +2,8 @@
 This module provides supporting functions for API routes pertaining to likes.
 """
 from flask import Blueprint, jsonify, request
+import constants
+import related_type_enum
 import sql_query
 import validation
 
@@ -36,6 +38,12 @@ def api_create_like():
         return jsonify({"error": error_string}), 400
 
     new_record_id = sql_query.store_like(user_id, related_type_id, related_id)
+
+    # If this was a user liking another user's broadcast, give the broadcastr a swag
+    if related_type_id == related_type_enum.RelatedType.BROADCAST.value:
+        broadcastr_id = sql_query.query_broadcastr_id(related_id)
+        if user_id != broadcastr_id:
+            sql_query.add_swag(broadcastr_id, constants.SWAG_LIKED_BROADCAST)
 
     return jsonify({"success": new_record_id}), 201
 
