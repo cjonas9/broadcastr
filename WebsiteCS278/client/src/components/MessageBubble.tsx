@@ -62,11 +62,11 @@ export default function MessageBubble() {
   if (!userDetails) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-[60]">
+    <div className="fixed bottom-24 left-6 z-[60]">
       {/* message bubble */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg"
+        className="relative bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg"
       >
         <MessageCircle size={24} />
         {totalUnread > 0 && (
