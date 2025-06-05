@@ -13,9 +13,11 @@ export interface TrackSwap {
   initiated_track_id: number | null;
   initiated_track_name: string | null;
   initiated_artist_name: string | null;
+  initiated_track_url: string | null;
   matched_track_id: number | null;
   matched_track_name: string | null;
   matched_artist_name: string | null;
+  matched_track_url: string | null;
   initiated_reaction: number | null;
   matched_reaction: number | null;
   swap_initiated_timestamp: string;

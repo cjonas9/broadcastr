@@ -18,6 +18,7 @@ interface Track {
   name: string;
   artist: string;
   playCount: number;
+  url: string;
 }
 
 interface UserProfile {
@@ -239,13 +240,15 @@ export default function TrackSwapDetail() {
           id: swap.initiated_track_id,
           name: swap.initiated_track_name || '',
           artist: swap.initiated_artist_name || '',
-          playCount: 0
+          playCount: 0,
+          url: swap.initiated_track_url || ''
         } : undefined)
       : (swap.matched_track_id ? {
           id: swap.matched_track_id,
           name: swap.matched_track_name || '',
           artist: swap.matched_artist_name || '',
-          playCount: 0
+          playCount: 0,
+          url: swap.matched_track_url || ''
         } : undefined);
     if (!sentTrack) {
       return (
@@ -307,13 +310,15 @@ export default function TrackSwapDetail() {
                     id: swap.initiated_track_id,
                     name: swap.initiated_track_name || '',
                     artist: swap.initiated_artist_name || '',
-                    playCount: 0
+                    playCount: 0,
+                    url: swap.initiated_track_url || ''
                   } : undefined)
                 : (swap.matched_track_id ? {
                     id: swap.matched_track_id,
                     name: swap.matched_track_name || '',
                     artist: swap.matched_artist_name || '',
-                    playCount: 0
+                    playCount: 0,
+                    url: swap.matched_track_url || ''
                   } : undefined)
             }
             selectedTrack={selectedTrack}
@@ -348,23 +353,27 @@ export default function TrackSwapDetail() {
               id: swap.initiated_track_id,
               name: swap.initiated_track_name || '',
               artist: swap.initiated_artist_name || '',
-              playCount: 0
+              playCount: 0,
+              url: swap.initiated_track_url || ''
             } : {
               id: swap.matched_track_id,
               name: swap.matched_track_name || '',
               artist: swap.matched_artist_name || '',
-              playCount: 0
+              playCount: 0,
+              url: swap.matched_track_url || ''
             }}
             receivedTrack={isInitiator ? {
               id: swap.matched_track_id,
               name: swap.matched_track_name || '',
               artist: swap.matched_artist_name || '',
-              playCount: 0
+              playCount: 0,
+              url: swap.matched_track_url || ''
             } : {
               id: swap.initiated_track_id,
               name: swap.initiated_track_name || '',
               artist: swap.initiated_artist_name || '',
-              playCount: 0
+              playCount: 0,
+              url: swap.initiated_track_url || ''
             }}
             sentSwag={sentSwag}
             receivedSwag={receivedSwag}
