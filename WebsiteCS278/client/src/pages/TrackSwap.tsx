@@ -19,6 +19,12 @@ import { API_CONFIG } from "@/config";
 const MATCHED_USER_KEY = 'track_swap_matched_user';
 const SONG_SWAP_ID_KEY = 'track_swap_id';
 
+interface User {
+  username: string;
+  profileImage: string;
+  swag: number;
+}
+
 export default function TrackSwap() {
   const [, setLocation] = useLocation();
   const { userDetails } = useAuth();
@@ -28,6 +34,9 @@ export default function TrackSwap() {
   const [matchedUser, setMatchedUser] = useState<MatchUser | null>(null);
   const [songSwapId, setSongSwapId] = useState<number | null>(null);
   const { setSwapTrack, setMatchUser } = useSwap();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [showUserSearch, setShowUserSearch] = useState(false);
 
   // Initialize state from localStorage on mount
   useEffect(() => {
@@ -120,6 +129,55 @@ export default function TrackSwap() {
     };
     fetchMatchedUser();
   }, [userDetails, setMatchUser, matchedUser, songSwapId]);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/api/user/get-users?search_term=${encodeURIComponent(searchQuery.trim())}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to search users");
+      }
+
+      const data = await response.json();
+      if (data.userProfile && data.userProfile.length > 0) {
+        const transformedUsers = data.userProfile.map((profile: any) => ({
+          username: profile.profile,
+          profileImage: profile.pfpmed || profile.pfpsm || profile.pfpxl || "",
+          swag: profile.swag
+        }));
+        setUsers(transformedUsers);
+        setError(null);
+      } else {
+        setUsers([]);
+        setError("No users found");
+      }
+    } catch (err) {
+      console.error("Error searching users:", err);
+      setError("Failed to search users");
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUserSelect = (user: User) => {
+    const newMatchedUser = {
+      username: user.username,
+      profileImage: user.profileImage,
+      swag: user.swag
+    };
+    setMatchedUser(newMatchedUser);
+    setMatchUser(newMatchedUser);
+    localStorage.setItem(MATCHED_USER_KEY, JSON.stringify(newMatchedUser));
+    setShowUserSearch(false);
+  };
 
   const handleInitiateSwap = async () => {
     if (!localSelectedTrack || !userDetails || !matchedUser) return;
@@ -247,13 +305,105 @@ export default function TrackSwap() {
 
           {/* Match of the day */}
           <div className="mb-8">
-            <h2 className="text-md text-gray-400 mb-2">Your Match</h2>
-            <MatchProfileCard
-              username={matchedUser.username}
-              profileImage={matchedUser.profileImage}
-              swag={matchedUser.swag}
-              onClick={() => setLocation(`/profile/${matchedUser.username.replace(/^@/, "")}`)}
-            />
+            <div className="flex flex-col mb-2">
+              <h2 className="text-md text-gray-400">Your Match</h2>
+              <p className="text-gray-400 text-sm">We assign matches randomly, but you can also select your own match!</p>
+            </div>
+
+            {showUserSearch ? (
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    placeholder="Search users..."
+                    className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-purple-500"
+                  />
+                  <ButtonWrapper
+                    width="hug"
+                    variant="primary"
+                    corner="rounded-lg"
+                    onClick={handleSearch}
+                    disabled={isLoading || !searchQuery.trim()}
+                  >
+                    <Search className="h-5 w-5" />
+                  </ButtonWrapper>
+                </div>
+
+                {isLoading ? (
+                  <p className="text-center text-gray-400">Searching...</p>
+                ) : error ? (
+                  <p className="text-center text-gray-400">{error}</p>
+                ) : users.length > 0 ? (
+                  <div className="space-y-2">
+                    {users.map((user) => (
+                      <div
+                        key={user.username}
+                        onClick={() => handleUserSelect(user)}
+                        className="flex items-center justify-between bg-gray-800 p-4 rounded-lg cursor-pointer transition-colors hover:bg-gray-700"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <img
+                            src={user.profileImage || "https://via.placeholder.com/40"}
+                            alt={`${user.username}'s profile`}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div>
+                            <h3 className="font-medium">{user.username}</h3>
+                            <p className="text-sm text-gray-400">{user.swag} Swag</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : searchQuery ? (
+                  <div className="text-center text-gray-400">
+                    <p className="mb-2">No users found</p>
+                    <p className="text-sm">Try a different search term</p>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-400">
+                    <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Enter a username to search</p>
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <ButtonWrapper
+                    width="full"
+                    variant="secondary"
+                    onClick={() => {
+                      setShowUserSearch(false);
+                      setSearchQuery("");
+                      setUsers([]);
+                      setError(null);
+                    }}
+                  >
+                    Back to Random Match
+                  </ButtonWrapper>
+                </div>
+              </div>
+            ) : (
+              <>
+                <MatchProfileCard
+                  username={matchedUser.username}
+                  profileImage={matchedUser.profileImage}
+                  swag={matchedUser.swag}
+                  onClick={() => setLocation(`/profile/${matchedUser.username.replace(/^@/, "")}`)}
+                />
+                <div className="mt-4">
+                  <ButtonWrapper
+                    width="full"
+                    variant="secondary"
+                    onClick={() => setShowUserSearch(!showUserSearch)}
+                  >
+                    {showUserSearch ? "Hide Search" : "Find User"}
+                  </ButtonWrapper>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mb-8">
