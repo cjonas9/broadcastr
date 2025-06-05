@@ -816,7 +816,7 @@ def store_user(user, first_name, last_name, email, salt, hashed_password, bootst
 	print(f"New user stored with id: {cursor.lastrowid}")
 	return cursor.lastrowid
 
-def add_swag(username, add_swag):
+def add_swag(username, swag):
 	"""
 	Adds swag to a user's profile.
 	Args:
@@ -826,7 +826,7 @@ def add_swag(username, add_swag):
 		numeric new swag balance for this user
 	"""
 	current_swag = query_swag(username)
-	new_swag = current_swag + int(add_swag)
+	new_swag = current_swag + int(swag)
 	user_id = query_user_id(username)
 
 	connection = get_db_connection_isolation_none()
