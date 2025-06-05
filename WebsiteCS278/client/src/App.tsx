@@ -29,7 +29,6 @@ import SearchPage from "./pages/SearchPage";
 import TrackSwapHistory from "./pages/TrackSwapHistory";
 import TrackSwapDetail from "./pages/TrackSwapDetail";
 import TrackSwapAction from "./pages/TrackSwapAction";
-import MessageBubble from "./components/MessageBubble";
 
 function Router() {
   return (
@@ -60,20 +59,17 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <SwapProvider>
-          <AuthProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <SwapProvider>
             <Router />
-            <MessageBubble />
-          </AuthProvider>
-        </SwapProvider>
-      </TooltipProvider>
+            <Toaster />
+          </SwapProvider>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;

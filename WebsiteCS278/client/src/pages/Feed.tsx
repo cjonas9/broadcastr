@@ -10,7 +10,7 @@ TODO:
 import React, { useState, useEffect } from "react";
 import { BottomToolbar } from "@/components/BottomToolbar";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
-import { Plus } from "lucide-react";
+import { Plus, MessageCircle, X } from "lucide-react";
 import { Heading } from "@/components/Heading";
 import { FeedPost } from "@/components/FeedPost";
 import { useLocation } from "wouter";
@@ -34,12 +34,21 @@ interface Broadcast {
   isLiked: boolean;
 }
 
+interface Conversation {
+  conversant: string;
+  lastConversation: string;
+}
+
 export default function Feed() {
   const [location, setLocation] = useLocation();
   const { userDetails } = useAuth();
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
 
   const fetchBroadcasts = async () => {
     try {
@@ -60,6 +69,35 @@ export default function Feed() {
       setError('Failed to load broadcasts');
     } finally {
       setLoading(false);
+    }
+  };
+//   for getting message bubble on feed page!!!
+  const fetchConversations = async () => {
+    if (!userDetails?.profile) {
+      setLoadingConversations(false);
+      return;
+    }
+	
+    try {
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/api/user/conversations?user=${encodeURIComponent(userDetails.profile)}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch conversations');
+      }
+
+      const data = await response.json();
+      setConversations(data.conversations.map((conv: any) => ({
+        conversant: conv.conversant,
+        lastConversation: conv.lastconversation
+      })));
+      setConversationsError(null);
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      setConversationsError('Failed to load conversations');
+    } finally {
+      setLoadingConversations(false);
     }
   };
 
@@ -194,6 +232,70 @@ export default function Feed() {
           <Plus size={24} />
         </ButtonWrapper>
       </div>
+
+      <div className="fixed bottom-24 left-6">
+        <ButtonWrapper
+          width="hug"
+          variant="primary"
+          onClick={() => {
+            setIsMessagesOpen(true);
+            fetchConversations();
+          }}
+          className="!rounded-full !p-4"
+        >
+          <MessageCircle size={24} />
+        </ButtonWrapper>
+      </div>
+
+      {/* Messages Panel */}
+      {isMessagesOpen && (
+        <div className="fixed bottom-40 left-6 bg-gray-900 border border-gray-800 rounded-lg shadow-xl w-72">
+          <div className="flex items-center justify-between p-3 border-b border-gray-800">
+            <h3 className="text-white font-semibold">Messages</h3>
+            <button
+              onClick={() => setIsMessagesOpen(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div className="max-h-96 overflow-y-auto">
+            {loadingConversations ? (
+              <div className="p-4 text-gray-400 text-center">Loading...</div>
+            ) : conversationsError ? (
+              <div className="p-4 text-red-400 text-center">{conversationsError}</div>
+            ) : conversations.length === 0 ? (
+              <div className="p-4 text-gray-400 text-center">No conversations yet</div>
+            ) : (
+              <div className="divide-y divide-gray-800">
+                {conversations.map((conv) => (
+                  <button
+                    key={conv.conversant}
+                    onClick={() => {
+                      setLocation(`/dm/${conv.conversant}`);
+                      setIsMessagesOpen(false);
+                    }}
+                    className="w-full p-3 hover:bg-gray-800 flex items-center justify-between text-left"
+                  >
+                    <div>
+                      <div className="text-white">@{conv.conversant}</div>
+                      <div className="text-xs text-gray-400">
+                        {new Date(conv.lastConversation).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <BottomToolbar />
     </div>

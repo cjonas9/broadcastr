@@ -123,9 +123,9 @@ export default function DirectMessage() {
           <p className="text-lg mb-4">{error}</p>
           <button
             className="text-purple-400 hover:text-purple-300"
-            onClick={() => setLocation(`/profile/${params.username}`)}
+            onClick={() => setLocation("/")}
           >
-            Back to Profile
+            Back to Feed
           </button>
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function DirectMessage() {
       <div className="p-4 border-b border-gray-800 flex items-center relative">
         <button
           className="flex items-center text-purple-400 hover:text-purple-300"
-          onClick={() => setLocation(`/profile/${params.username}`)}
+          onClick={() => setLocation("/")}
         >
           <ArrowLeft className="mr-2 h-5 w-5" />
           Back
