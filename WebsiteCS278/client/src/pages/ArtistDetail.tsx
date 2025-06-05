@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import SwagTag from "@/components/SwagTag";
 import { fetchSwag, awardSwag } from "@/utils/swag";
 import { API_CONFIG } from "@/config";
+import { useAuth } from "@/AuthContext";
 
 // API call to fetch artist by ID
 export async function getArtistById(id: number) {
@@ -32,6 +33,7 @@ export default function ArtistDetail() {
   const [, params] = useRoute<{ id: string }>("/artist/:id");
   const [, setLocation] = useLocation();
   const artistId = params?.id ? parseInt(params.id) : null;
+  const { userDetails } = useAuth();
 
   const [artist, setArtist] = useState<{ id: number; name: string } | null>(null);
   const [topListeners, setTopListeners] = useState<Listener[]>([]);
@@ -41,13 +43,15 @@ export default function ArtistDetail() {
   const swagAwardedRef = useRef(false);
   const [userRanking, setUserRanking] = useState<string>("—");
 
-  const currentUser = {
-    username: "cjonas41",
-    swag: 69000,
-  };
+  // Check auth on mount and when userDetails changes
+  useEffect(() => {
+    if (!userDetails?.profile) {
+      setLocation("/login");
+    }
+  }, [userDetails, setLocation]);
 
   useEffect(() => {
-    if (artistId === null) return;
+    if (artistId === null || !userDetails?.profile) return;
 
     let isActive = true;
     async function fetchArtist() {
@@ -62,10 +66,10 @@ export default function ArtistDetail() {
     return () => {
       isActive = false;
     };
-  }, [artistId]);
+  }, [artistId, userDetails]);
 
   useEffect(() => {
-    if (!artist) return;
+    if (!artist || !userDetails?.profile) return;
     let isActive = true;
 
     async function fetchData() {
@@ -75,13 +79,13 @@ export default function ArtistDetail() {
         const tlRes = await fetch(
           API_CONFIG.baseUrl + `/api/artist/top-listeners?artist=${encodeURIComponent(
             artist.name
-          )}&period=overall&limit=50&current_user=${encodeURIComponent(currentUser.username)}`
+          )}&period=overall&limit=50&current_user=${encodeURIComponent(userDetails.profile)}`
         );
         const { topListeners: fetchedTL } = await tlRes.json();
 
         const pRes = await fetch(
           API_CONFIG.baseUrl + `/api/artist/listens?user=${encodeURIComponent(
-            currentUser.username.replace(/^@/, "")
+            userDetails.profile.replace(/^@/, "")
           )}&artist=${encodeURIComponent(artist.name)}&period=overall`
         );
         const { plays } = await pRes.json();
@@ -99,18 +103,17 @@ export default function ArtistDetail() {
     return () => {
       isActive = false;
     };
-  }, [artist, currentUser.username]);
+  }, [artist, userDetails]);
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && userDetails?.profile) {
       const sorted = [...topListeners].sort((a, b) => b.playcount - a.playcount);
-      const idx = sorted.findIndex((l) => l.username === currentUser.username);
+      const idx = sorted.findIndex((l) => l.username === userDetails.profile);
       setUserRanking(idx >= 0 ? `#${idx + 1}` : "—");
     }
-  }, [topListeners, loading, currentUser.username]);
+  }, [topListeners, loading, userDetails]);
 
-
-  if (!artist) {
+  if (!artist || !userDetails?.profile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
         <p className="text-xl">Loading artist…</p>
@@ -130,7 +133,7 @@ export default function ArtistDetail() {
   let listenersToShow: Array<Listener & { id: number }> = [];
   if (!loading) {
     const sorted = [...topListeners].sort((a, b) => b.playcount - a.playcount);
-    const idx = sorted.findIndex((l) => l.username === currentUser.username);
+    const idx = sorted.findIndex((l) => l.username === userDetails.profile);
 
     if (idx >= 0 && idx < 5) {
       listenersToShow = sorted.slice(0, 5).map((l, i) => ({ ...l, id: i + 1 }));
@@ -138,7 +141,7 @@ export default function ArtistDetail() {
       const top5 = sorted.slice(0, 5).map((l, i) => ({ ...l, id: i + 1 }));
       const you = idx >= 0
         ? { ...sorted[idx], id: idx + 1 }
-        : { username: currentUser.username, playcount: userScrobbles, id: -1 };
+        : { username: userDetails.profile || "", playcount: userScrobbles, id: -1 };
       listenersToShow = [...top5, { username: "...", playcount: 0, id: -2 }, you];
     }
   }
@@ -179,7 +182,7 @@ export default function ArtistDetail() {
 
         <div className="bg-gray-800 rounded-xl overflow-hidden">
           <div className="p-4 border-b border-gray-700">
-            <h3 className="text-lg font-medium">Top Listeners for Stanford</h3>
+            <h3 className="text-lg font-medium">Top {artist.name} Listeners for Stanford</h3>
           </div>
 
           {loading ? (
@@ -195,7 +198,7 @@ export default function ArtistDetail() {
               }
               
               // Determine user display ranking
-              const isYou = listener.username === currentUser.username;
+              const isYou = listener.username === userDetails.profile;
               let displayRank;
               if (isYou) {
                 displayRank = userRanking.replace('#', '');
