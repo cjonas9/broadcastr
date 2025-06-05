@@ -8,7 +8,7 @@ EXAMPLE USAGE:
 */
 
 
-import { Play } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export interface Song {
   id: number;
@@ -16,6 +16,8 @@ export interface Song {
   artist: string;
   playCount: number;
   selected?: boolean;
+  url: string;
+  track_url?: string;  // Last.fm track URL
 }
 
 export default function SongCard({ 
@@ -45,11 +47,17 @@ export default function SongCard({
         <div className={`font-semibold ${selected ? 'text-lg font-bold' : ''} text-white`}>{song.name}</div>
         <div className="text-gray-400">{song.artist}</div>
       </div>
-      {showPlayButton && (
+      {showPlayButton && (song.track_url || song.url) && (
         <div className="flex-shrink-0">
-          <div className="bg-[#654DC4] rounded-full p-3 flex items-center justify-center">
-            <Play size={20} opacity={0.8} className="text-white"/>
-          </div>
+          <a
+            href={song.track_url || song.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-400 hover:text-white transition-colors"
+            onClick={(e) => e.stopPropagation()} // Prevent triggering the parent onClick
+          >
+            <ExternalLink size={16} />
+          </a>
         </div>
       )}
     </div>

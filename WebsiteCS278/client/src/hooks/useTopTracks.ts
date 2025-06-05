@@ -7,6 +7,7 @@ interface TopTrack {
   track: string;
   artist: string;
   playcount: number;
+  lastfmtrackurl: string;
 }
 
 export function useTopTracks(username: string, period: string = '7day', limit: number = 100) {
@@ -33,6 +34,8 @@ export function useTopTracks(username: string, period: string = '7day', limit: n
           name: track.track,
           artist: track.artist,
           playCount: track.playcount,
+          url: track.lastfmtrackurl,
+          track_url: track.lastfmtrackurl
         }));
 
         setTracks(transformedTracks);
