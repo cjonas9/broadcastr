@@ -41,8 +41,8 @@ const SwapCompletedView: React.FC<SwapCompletedViewProps> = ({
     </p>
     <div className="mb-8 p-4 rounded-xl" style={{background: 'linear-gradient(90deg, #2B185A 0%, #A21CAF 100%)'}}>
       <h3 className="text-lg mb-2 text-white font-semibold">Swap Results</h3>
-      <div className="text-base text-white/80">Your track received <span className="font-bold">+{sentSwag} swag</span></div>
-      <div className="text-base text-white/80">Their track received <span className="font-bold">+{receivedSwag} swag</span></div>
+      <div className="text-base text-white/80">Your track received <span className="font-bold">+{receivedSwag} swag</span></div>
+      <div className="text-base text-white/80">Their track received <span className="font-bold">+{sentSwag} swag</span></div>
     </div>
     <div className="mb-6">
       <h3 className="text-base text-gray-400 mb-2">Your match</h3>
