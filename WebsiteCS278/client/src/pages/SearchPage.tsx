@@ -29,7 +29,7 @@ export default function SearchPage() {
 
       // Try to fetch the exact user profile
       const response = await fetch(
-        `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(searchQuery.trim())}`
+        `${API_CONFIG.baseUrl}/api/user/profile?partial=true&user=${encodeURIComponent(searchQuery.trim())}`
       );
 
       if (!response.ok) {
@@ -81,7 +81,7 @@ export default function SearchPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Enter exact username..."
+            placeholder="Enter username..."
             className="flex-1 bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-purple-500"
           />
           <ButtonWrapper
@@ -140,14 +140,14 @@ export default function SearchPage() {
           </div>
         ) : searchQuery ? (
           <div className="text-center text-gray-400">
-            <p className="mb-2">No user found with that exact username</p>
-            <p className="text-sm">Try entering the complete username</p>
+            <p className="mb-2">No user found with that username</p>
+            <p className="text-sm">Try entering a more complete username</p>
           </div>
         ) : (
           <div className="text-center text-gray-400">
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Enter a username to find their profile</p>
-            <p className="text-sm mt-2">Note: Username must be exact</p>
+            <p className="text-sm mt-2"></p>
           </div>
         )}
       </div>
