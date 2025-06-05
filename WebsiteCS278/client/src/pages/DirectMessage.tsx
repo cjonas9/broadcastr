@@ -41,7 +41,7 @@ export default function DirectMessage() {
 
       // Mark messages as read
       await fetch(
-        `${API_CONFIG.baseUrl}/api/mark-messages-read?user=${encodeURIComponent(params.username)}&recipient=${encodeURIComponent(userDetails.profile)}`,
+        `${API_CONFIG.baseUrl}/api/mark-messages-read?sender=${encodeURIComponent(params.username)}&recipient=${encodeURIComponent(userDetails.profile)}`,
         { method: 'POST' }
       );
     } catch (err) {

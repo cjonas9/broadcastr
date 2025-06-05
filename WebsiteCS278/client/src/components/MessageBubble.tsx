@@ -5,9 +5,9 @@ import { useAuth } from '@/AuthContext';
 import { API_CONFIG } from '@/config';
 
 interface Conversation {
-  user: string; // who we're talking to
+  conversant: string;
   messageCount: number;
-  unreadCount: number; 
+  unreadCount: number;
   lastConversation: string;
 }
 
@@ -37,7 +37,7 @@ export default function MessageBubble() {
 
         const data = await response.json();
         setConversations(data.conversations.map((conv: any) => ({
-          user: conv.user,
+          conversant: conv.conversant,
           messageCount: conv.messagecount,
           unreadCount: conv.unreadcount,
           lastConversation: conv.lastconversation
@@ -62,7 +62,7 @@ export default function MessageBubble() {
   if (!userDetails) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-4 left-4 z-[60]">
       {/* message bubble */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -100,15 +100,15 @@ export default function MessageBubble() {
               <div className="divide-y divide-gray-800">
                 {conversations.map((conv) => (
                   <button
-                    key={conv.user}
+                    key={conv.conversant}
                     onClick={() => {
-                      setLocation(`/dm/${conv.user}`);
+                      setLocation(`/dm/${conv.conversant}`);
                       setIsOpen(false);
                     }}
                     className="w-full p-3 hover:bg-gray-800 flex items-center justify-between text-left"
                   >
                     <div>
-                      <div className="text-white">@{conv.user}</div>
+                      <div className="text-white">@{conv.conversant}</div>
                       <div className="text-xs text-gray-400">
                         {new Date(conv.lastConversation).toLocaleDateString(undefined, {
                           month: 'short',
