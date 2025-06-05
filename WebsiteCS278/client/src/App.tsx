@@ -29,6 +29,7 @@ import SearchPage from "./pages/SearchPage";
 import TrackSwapHistory from "./pages/TrackSwapHistory";
 import TrackSwapDetail from "./pages/TrackSwapDetail";
 import TrackSwapAction from "./pages/TrackSwapAction";
+import MessageBubble from "./components/MessageBubble";
 
 function Router() {
   return (
@@ -67,6 +68,7 @@ function App() {
         <SwapProvider>
           <AuthProvider>
             <Router />
+            <MessageBubble />
           </AuthProvider>
         </SwapProvider>
       </TooltipProvider>

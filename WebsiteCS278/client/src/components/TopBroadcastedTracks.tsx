@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
-import { Heading } from "@/components/Heading";
-import TopTrackPost from "@/components/TopTrackPost";
-import { ButtonWrapper } from "@/components/ButtonWrapper";
+import { Heart, ExternalLink } from "lucide-react";
 import { useAuth } from "@/AuthContext";
-import { FeedPost } from "@/components/FeedPost";
 import { API_CONFIG } from "@/config";
 
 interface TopBroadcastedTrack {
@@ -21,47 +18,12 @@ type TopBroadcastedTracksProps = {
   limit?: number;
 };
 
-export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadcastedTracksProps) {
+export default function TopBroadcastedTracks({ username, limit = 3 }: TopBroadcastedTracksProps) {
   const [tracks, setTracks] = useState<TopBroadcastedTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const { userDetails } = useAuth();
-  const [userProfile, setUserProfile] = useState<{
-    pfpsm?: string;
-    pfpmed?: string;
-    pfplg?: string;
-    pfpxl?: string;
-  } | null>(null);
-
-  // Fetch user profile data
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (username === userDetails?.profile) {
-        setUserProfile(userDetails);
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `${API_CONFIG.baseUrl}/api/user/profile?user=${encodeURIComponent(username)}`
-        );
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch user profile');
-        }
-
-        const data = await response.json();
-        if (data.userProfile && data.userProfile.length > 0) {
-          setUserProfile(data.userProfile[0]);
-        }
-      } catch (err) {
-        console.error('Error fetching user profile:', err);
-      }
-    };
-
-    fetchUserProfile();
-  }, [username, userDetails]);
 
   useEffect(() => {
     const fetchTracks = async () => {
@@ -95,9 +57,7 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
   useEffect(() => {
     const handleBroadcastDelete = (event: CustomEvent) => {
       const broadcastId = event.detail.broadcastId;
-      // Remove the deleted broadcast immediately
       setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
-      // Then refresh to ensure consistency
       setLastRefresh(Date.now());
     };
 
@@ -109,7 +69,6 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
             ? { ...track, likes: track.likes + 1, isLiked: true }
             : track
         );
-        // Sort tracks by likes in descending order
         return [...updatedTracks].sort((a, b) => b.likes - a.likes);
       });
     };
@@ -122,7 +81,6 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
             ? { ...track, likes: track.likes - 1, isLiked: false }
             : track
         );
-        // Sort tracks by likes in descending order
         return [...updatedTracks].sort((a, b) => b.likes - a.likes);
       });
     };
@@ -140,9 +98,6 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
 
   const handleDelete = async (broadcastId: number) => {
     try {
-      console.log('Deleting broadcast:', broadcastId);
-      
-      // First send the delete request
       const deleteResponse = await fetch(
         `${API_CONFIG.baseUrl}/api/delete-broadcast?id=${broadcastId}`,
         { method: 'POST' }
@@ -151,18 +106,13 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
       if (!deleteResponse.ok) {
         throw new Error('Failed to delete broadcast');
       }
-
-      console.log('Delete request successful');
       
-      // Update local state for immediate feedback
       setTracks(prevTracks => prevTracks.filter(track => track.broadcastid !== broadcastId));
       
-      // Dispatch event to notify other components
       window.dispatchEvent(new CustomEvent('broadcastDeleted', {
         detail: { broadcastId }
       }));
       
-      // Trigger a refresh after a short delay
       setTimeout(() => {
         setLastRefresh(Date.now());
       }, 500);
@@ -201,48 +151,44 @@ export default function TopBroadcastedTracks({ username, limit = 10 }: TopBroadc
 
   return (
     <section className="mt-8">
-        <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
+      <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
       <p className="text-center text-gray-400 text-sm mb-6">
-        Tracks broadcasted that were most liked by other broadcastrs
+        Most liked broadcasts
       </p>
       
-      <div className="space-y-4">
+      <div className="space-y-2">
         {tracks.map((track) => (
-          <FeedPost
+          <div
             key={track.broadcastid}
-            id={track.broadcastid}
-            user={{
-              id: 0,
-              username,
-              swag: 0,
-              profileImage: (username === "System" || username === "@System")
-                ? "https://i.ibb.co/Q7fkzTqg/bc-logo.png"
-                : userProfile?.pfpmed || userProfile?.pfpsm || userProfile?.pfplg || userProfile?.pfpxl || "https://via.placeholder.com/100"
-            }}
-            timeAgo=""
-            content=""
-            type="track"
-            track={{
-              id: track.trackid,
-              name: track.track,
-              artist: track.artist,
-              playCount: 0
-            }}
-            likes={track.likes}
-            isLiked={track.isLiked}
-            onDelete={() => handleDelete(track.broadcastid)}
-          />
+            className="bg-gray-800 rounded-lg p-3 flex items-center justify-between group hover:bg-gray-700 transition-colors"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="text-white font-medium truncate">{track.track}</div>
+              <div className="text-gray-400 text-sm truncate">{track.artist}</div>
+            </div>
+            
+            <div className="flex items-center gap-3 ml-4">
+              <div className="flex items-center gap-1">
+                <Heart
+                  size={16}
+                  className={track.isLiked ? "fill-purple-500 text-purple-500" : "text-gray-400"}
+                />
+                <span className="text-sm text-gray-400">{track.likes}</span>
+              </div>
+              
+              {track.lastfmtrackurl && (
+                <a
+                  href={track.lastfmtrackurl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <ExternalLink size={16} />
+                </a>
+              )}
+            </div>
+          </div>
         ))}
-      </div>
-
-      <div className="mt-4 mb-8">
-        <ButtonWrapper
-          width="full"
-          variant="secondary"
-          onClick={() => {/* TODO: Implement view all */}}
-        >
-          Explore All
-        </ButtonWrapper>
       </div>
     </section>
   );
