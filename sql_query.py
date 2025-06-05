@@ -816,6 +816,33 @@ def store_user(user, first_name, last_name, email, salt, hashed_password, bootst
 	print(f"New user stored with id: {cursor.lastrowid}")
 	return cursor.lastrowid
 
+def add_swag(username, add_swag):
+	"""
+	Adds swag to a user's profile.
+	Args:
+		username: profile name of the user account
+		add_swag: integer amount of swag to add
+	Returns:
+		numeric new swag balance for this user
+	"""
+	current_swag = query_swag(username)
+	new_swag = current_swag + int(add_swag)
+	user_id = query_user_id(username)
+
+	connection = get_db_connection_isolation_none()
+	cursor = connection.cursor()
+
+	cursor.execute(
+        "UPDATE User " \
+        "SET Swag = ? " \
+        "WHERE UserID = ?",
+        (new_swag, user_id))
+
+	cursor.close()
+	connection.close()
+
+	return new_swag
+
 def user_refresh_due(user_id):
 	"""
 	Queries the database to determine if a user's top data

@@ -373,26 +373,14 @@ def api_user_add_swag():
         200 Success: Updated swag balance for this user.
     """
     user = request.args.get("user", "")
-    swag = request.args.get("swag", "0")
+    swag = request.args.get("swag", "")
+    swag = 0 if not swag.isnumeric() else int(swag)
 
     user_id = sql_query.query_user_id(user)
 
     if user_id == 0:
         return jsonify({"error": "Missing or invalid user"}), 400
 
-    current_swag = sql_query.query_swag(user)
-    new_swag = current_swag + int(swag)
-
-    connection = sql_query.get_db_connection_isolation_none()
-    cursor = connection.cursor()
-
-    cursor.execute(
-        "UPDATE User " \
-        "SET Swag = ? " \
-        "WHERE UserID = ?",
-        (new_swag, user_id))
-
-    cursor.close()
-    connection.close()
+    new_swag = sql_query.add_swag(user, swag)
 
     return jsonify({"updated swag balance": new_swag}), 200
