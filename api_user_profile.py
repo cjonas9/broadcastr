@@ -381,6 +381,6 @@ def api_user_add_swag():
     if user_id == 0:
         return jsonify({"error": "Missing or invalid user"}), 400
 
-    new_swag = sql_query.add_swag(user, swag)
+    new_swag = sql_query.add_swag(user_id, swag)
 
     return jsonify({"updated swag balance": new_swag}), 200

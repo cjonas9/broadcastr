@@ -42,10 +42,10 @@ def get_artist_tags():
     result = db_query.get_artist_tag_counts(artist_input)
     return jsonify({'output': result})
 
-@app.route('/query_users', methods=['POST'])
-def query_users():
-    result = sql_query.query_users()
-    return jsonify({'output': result})
+# @app.route('/query_users', methods=['POST'])
+# def query_users():
+#     result = sql_query.query_users()
+#     return jsonify({'output': result})
 
 @app.route('/store_top_artists', methods=['POST'])
 def store_top_artists():
