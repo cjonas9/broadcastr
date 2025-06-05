@@ -5,6 +5,7 @@ import { useAuth } from "@/AuthContext";
 import { ButtonWrapper } from "@/components/ButtonWrapper";
 import { BottomToolbar } from "@/components/BottomToolbar";
 import { API_CONFIG } from "@/config";
+import { Heading } from "@/components/Heading";
 
 interface User {
   username: string;
@@ -69,11 +70,11 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white pb-20">
+    <div className="bg-gray-900 min-h-screen text-white p-6">
       <BottomToolbar />
       
-      <div className="max-w-2xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Find Users</h1>
+      <div className="max-w-2xl mx-auto p-4 mb-24">
+        <Heading level={1}>Find Users</Heading>
 
         <div className="flex gap-2 mb-8">
           <input
@@ -87,6 +88,7 @@ export default function SearchPage() {
           <ButtonWrapper
             width="hug"
             variant="primary"
+            corner="rounded-lg"
             onClick={handleSearch}
             disabled={loading || !searchQuery.trim()}
           >

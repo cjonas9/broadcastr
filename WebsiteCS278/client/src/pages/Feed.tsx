@@ -222,7 +222,7 @@ export default function Feed() {
         </div>
       </div>
 
-      <div className="fixed bottom-24 right-6">
+      <div className="fixed bottom-24 right-6 flex flex-col gap-4">
         <ButtonWrapper
           width="hug"
           variant="primary"
@@ -231,9 +231,6 @@ export default function Feed() {
         >
           <Plus size={24} />
         </ButtonWrapper>
-      </div>
-
-      <div className="fixed bottom-24 left-6">
         <ButtonWrapper
           width="hug"
           variant="primary"

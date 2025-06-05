@@ -7,6 +7,7 @@ import SwagTag from "@/components/SwagTag";
 import { fetchSwag, awardSwag } from "@/utils/swag";
 import { API_CONFIG } from "@/config";
 import { useAuth } from "@/AuthContext";
+import { Heading } from "@/components/Heading";
 
 // API call to fetch artist by ID
 export async function getArtistById(id: number) {
@@ -157,9 +158,7 @@ export default function ArtistDetail() {
           Back to Profile
         </div>
 
-        <h1 className="text-2xl font-bold text-center mb-2">
-          Top Listens Leaderboard
-        </h1>
+        <Heading level={2}>Top Listens Leaderboard</Heading>
         <h2 className="text-xl text-center mb-8 text-purple-400">
           {artist.name}
         </h2>

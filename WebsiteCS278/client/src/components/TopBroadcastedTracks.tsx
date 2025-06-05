@@ -133,7 +133,7 @@ export default function TopBroadcastedTracks({ username, limit = 3 }: TopBroadca
 
   if (error) {
     return (
-      <section className="mt-8">
+      <section className="mt-8 mb-8">
         <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
         <p className="text-center text-gray-400 text-sm mb-6">Failed to load tracks</p>
       </section>
@@ -142,7 +142,7 @@ export default function TopBroadcastedTracks({ username, limit = 3 }: TopBroadca
 
   if (!tracks.length) {
     return (
-      <section className="mt-8">
+      <section className="mt-8 mb-4">
         <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
         <p className="text-center text-gray-400 text-sm mb-6">No broadcasted tracks yet</p>
       </section>
@@ -150,7 +150,7 @@ export default function TopBroadcastedTracks({ username, limit = 3 }: TopBroadca
   }
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 mb-8">
       <h2 className="text-center text-xl font-semibold text-white mb-2">Top Broadcasted Tracks</h2>
       <p className="text-center text-gray-400 text-sm mb-6">
         Most liked broadcasts

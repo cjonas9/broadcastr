@@ -62,7 +62,7 @@ export default function Profile() {
           Log in Page
         </ButtonWrapper> */}
 
-        {userDetails && <TopBroadcastedTracks username={userDetails.profile} />}
+        {userDetails && <TopBroadcastedTracks username={userDetails.profile} className="mb-4" />}
         {userDetails && <TopArtists username={userDetails.profile} />}
       </main>
     </div>
