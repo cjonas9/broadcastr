@@ -35,19 +35,6 @@ const BottomToolbarNoRouting: React.FC<BottomToolbarProps> = ({ active, onChange
 
     <button
       className={`flex flex-col items-center flex-1 py-2 text-white transition-colors
-        ${active === "profile" ? "text-purple-400" : "hover:text-purple-300"}
-      `}
-      aria-label="Profile"
-      aria-current={active === "profile" ? "page" : undefined}
-      onClick={() => onChange("profile")}
-      type="button"
-    >
-      <User size={20} />
-      <span className="text-xs mt-1">Profile</span>
-    </button>
-
-    <button
-      className={`flex flex-col items-center flex-1 py-2 text-white transition-colors
         ${active === "search" ? "text-purple-400" : "hover:text-purple-300"}
       `}
       aria-label="Search"
@@ -70,6 +57,19 @@ const BottomToolbarNoRouting: React.FC<BottomToolbarProps> = ({ active, onChange
     >
       <Star size={20} />
       <span className="text-xs mt-1">Track Swap</span>
+    </button>
+
+    <button
+      className={`flex flex-col items-center flex-1 py-2 text-white transition-colors
+        ${active === "profile" ? "text-purple-400" : "hover:text-purple-300"}
+      `}
+      aria-label="Profile"
+      aria-current={active === "profile" ? "page" : undefined}
+      onClick={() => onChange("profile")}
+      type="button"
+    >
+      <User size={20} />
+      <span className="text-xs mt-1">Profile</span>
     </button>
   </nav>
 );
