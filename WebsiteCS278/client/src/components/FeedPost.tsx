@@ -289,7 +289,7 @@ export const FeedPost: React.FC<FeedPostProps> = ({
             {/* Track card if it's a track */}
             {type === "track" && track && (
               <div className="mt-2">
-                <SongCard song={track} selected />
+                <SongCard song={track} selected showPlayButton={true} />
               </div>
             )}
           </div>

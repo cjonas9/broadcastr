@@ -32,6 +32,7 @@ interface Broadcast {
   relatedid: number;
   likes: number;
   isLiked: boolean;
+  track_url: string;
 }
 
 interface Conversation {
@@ -208,7 +209,9 @@ export default function Feed() {
                 id: broadcast.relatedid,
                 name: broadcast.body.split(" by ")[0],
                 artist: broadcast.body.split(" by ")[1],
-                playCount: 0
+                playCount: 0,
+                url: broadcast.track_url || '',
+                track_url: broadcast.track_url || ''
               } : undefined}
               likes={broadcast.likes}
               isLiked={broadcast.isLiked}
