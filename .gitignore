@@ -3,6 +3,4 @@ node_modules/
 .DS_Store
 .pylintrc
 renderdisk/
-data/
 localdisk/
-sql_query.py

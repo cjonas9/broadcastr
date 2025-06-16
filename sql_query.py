@@ -9,7 +9,12 @@ import sqlite3
 import constants
 
 # BROADCASTR_DB = "./localdisk/data/broadcastr.db" # Local / Development Version
-BROADCASTR_DB = "/renderdisk/data/broadcastr.db" # Production Version
+# BROADCASTR_DB = "/renderdisk/data/broadcastr.db" # Production Version
+BROADCASTR_DB = "/data/broadcastr.db" # Git Version... obviously having the DB checked into
+# source control doesn't make a lot of sense, but a paid version of the hosting
+# service is required to have a persistent disk.  I have switched it back to
+# this version for now so the hosted/free version of the app is still functional.
+
 
 def get_db_connection():
 	"""
