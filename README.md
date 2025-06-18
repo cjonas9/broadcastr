@@ -1,4 +1,7 @@
-# Broadcastr is a social music listening app developed by Christian Jonas, Lucas Scott, Asher Hensley, and Madison Fan. It aims to connect Stanford's music lovers on the basis of their shared music tastes. Our platform is seamlessly integrated with Last.fm, allowing users to have their music stats on the platform without any overhead beyond having a Last.fm account.
+# Broadcastr: a social music listening app
+Broadcastr aims to connect Stanford's music lovers on the basis of their shared music tastes. Our platform is seamlessly integrated with Last.fm, allowing users to have their music stats on the platform without any overhead beyond having a Last.fm account.
+
+Developed by Christian Jonas, Lucas Scott, Asher Hensley, and Madison Fan.
 
 ## Key Features/Pages
 
