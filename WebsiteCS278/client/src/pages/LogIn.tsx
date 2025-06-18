@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/AuthContext";
 import { API_CONFIG } from "@/config";
 
-const VITE_API_URL="https://broadcastr.onrender.com"
+const VITE_API_URL="https://broadcastr-backend2.onrender.com"
 
 export default function LogIn() {
 	const [, setLocation] = useLocation();
