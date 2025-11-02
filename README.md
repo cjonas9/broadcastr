@@ -53,3 +53,6 @@ On each artist's page (accessible through one's own profile or a friend's), view
 We were hosting this through Render, which enabled us to make live updates to the database (as it was stored through Render). Because this project has concluded, the demo that we have here is now on the free plan, which means our SQL database can no longer be updated in real-time (as it is stored through git). Functionality can still be seen through our static demo.
 
 To view our demo, visit https://broadcastr-backend2.onrender.com/ to launch the backend. Then, visit https://broadcastr-tde6.onrender.com/ to launch the main website. This process may take a minute for each to load/build.
+
+Video overview of Broadcastr: https://www.youtube.com/watch?v=JYYD4PDSipI&list=PLEfPCTMgaew0CIla9aWHitO8CmQcL_IJ1
+
